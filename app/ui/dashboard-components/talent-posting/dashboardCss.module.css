@@ -1,0 +1,13 @@
+.hoverInfo:hover .info {
+  display: block;
+}
+
+.info {
+  display: none;
+}
+
+.hoverInfo {
+  height: 20px;
+  width: 20px;
+  margin: 5px;
+}
