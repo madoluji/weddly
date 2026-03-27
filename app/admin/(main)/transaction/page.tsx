@@ -117,8 +117,8 @@ const TransactionsPage = () => {
     setSortDirection((current) => (current === "asc" ? "desc" : "asc"))
 
     const sortedTransactions = [...filteredTransactions].sort((a, b) => {
-      let compareA = field === "createdAt" ? new Date(a[field]).getTime() : a[field]
-      let compareB = field === "createdAt" ? new Date(b[field]).getTime() : b[field]
+      const compareA = field === "createdAt" ? new Date(a[field]).getTime() : a[field]
+      const compareB = field === "createdAt" ? new Date(b[field]).getTime() : b[field]
 
 
    

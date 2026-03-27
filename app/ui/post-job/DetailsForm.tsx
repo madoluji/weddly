@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "../button";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { storage } from "../../lib/firebase"; // Import Firebase storage
-import Image from "next/image";
+import SafeImage from "@/app/ui/shared/SafeImage";
 import useFirebaseAuth from "@/app/hooks/useFirebaseAuth";
 import clsx from "clsx";
 import { fetchWithAuth } from "@/app/lib/fetchWIthAuth";
@@ -123,15 +123,17 @@ const DetailsForm = () => {
         fileUrls.push(fileUrl);
       }
 
-      // Add the file URLs and other portfolio data to the form data
-      formData.fileUrls = fileUrls;
+      const payload = {
+        ...formData,
+        fileUrls,
+      };
 
       const response = await fetchWithAuth("/api/post-job", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(payload),
       });
       if (response.ok) {
         console.log("Form submitted successfully");
@@ -378,7 +380,7 @@ const DetailsForm = () => {
               <div className="flex gap-2 mt-2">
                 {files.map((file, index) => (
                   <div key={index} className="relative">
-                    <Image
+                    <SafeImage
                       src={URL.createObjectURL(file)} // Preview image using Object URL
                       alt={file.name}
                       className="h-20 w-20 object-cover rounded-md"

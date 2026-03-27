@@ -27,7 +27,7 @@ async function sendEmail(email: string, token: string) {
 }
 
 
-export async function POST(req: NextRequest, res: NextResponse) {
+export async function POST(req: NextRequest) {
     try {
 
 

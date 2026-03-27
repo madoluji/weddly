@@ -4,14 +4,16 @@ import { useState, useEffect } from "react";
 import { storage } from "../lib/firebase";
 import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
 import { PaintBrushIcon } from "@heroicons/react/24/outline";
-import Image from "next/image";
 import { fetchWithAuth } from "../lib/fetchWIthAuth";
 import { useAuth } from "@/app/providers";
+import SafeImage from "@/app/ui/shared/SafeImage";
+import { useSession } from "next-auth/react";
 
 const ProfilePictureUploader: React.FC = () => {
-  const { session, status } = useAuth();
+  const { session: authSession, status } = useAuth();
+  const { update: updateSession } = useSession();
   const [currentProfilePic, setCurrentProfilePic] = useState<string | null>(
-    session?.user?.profilePicture || null
+    authSession?.user?.profilePicture || null
   );
   const [showModal, setShowModal] = useState<boolean>(false);
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
@@ -37,7 +39,7 @@ const ProfilePictureUploader: React.FC = () => {
     setUploading(true);
     const fileRef = ref(
       storage,
-      `profile-pictures/${session?.user.id}/${selectedImage.name}`
+      `profile-pictures/${authSession?.user.id}/${selectedImage.name}`
     );
     const uploadTask = uploadBytesResumable(fileRef, selectedImage);
 
@@ -77,9 +79,16 @@ const ProfilePictureUploader: React.FC = () => {
       if (!response.ok) throw new Error("Failed to update profile picture");
 
       setCurrentProfilePic(imageUrl);
+      
+      // Refresh the session to update the profile picture in the JWT token
+      await updateSession({
+        profilePicture: imageUrl,
+      });
+      
       alert("Profile picture updated successfully!");
     } catch (error) {
       console.error("Error updating profile picture:", error);
+      alert("Error updating profile picture");
     }
   };
 
@@ -87,7 +96,7 @@ const ProfilePictureUploader: React.FC = () => {
     <div className="flex flex-col items-center">
       {/* Profile Picture Display */}
       <div className="relative w-32 h-32">
-        <Image
+        <SafeImage
           width={300}
           height={300}
           src={currentProfilePic || "/images/image.png"}
@@ -112,7 +121,7 @@ const ProfilePictureUploader: React.FC = () => {
             </h2>
 
             {preview ? (
-              <Image
+              <SafeImage
                 src={preview}
                 width={300}
                 height={300}

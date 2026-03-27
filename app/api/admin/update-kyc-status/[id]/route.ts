@@ -3,8 +3,8 @@ import KYC from "@/models/kyc";
 import User from "@/models/user";
 import { NextRequest, NextResponse } from "next/server";
 
-export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
-    const { id: userId } = params;
+export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+    const { id: userId } = await params;
     try {
         await connectMongoDB();
         const { status } = await req.json();

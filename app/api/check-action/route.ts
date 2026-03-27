@@ -7,7 +7,7 @@ import { stat } from "fs";
 // import Interview from "@/models/Interview"; // Model for interview invitations
 // import Hire from "@/models/Hire"; // Model for job hiring
 
-export async function GET(req: NextRequest, res: NextResponse) {
+export async function GET(req: NextRequest) {
     await connectMongoDB();
     const { searchParams } = new URL(req.url);
 
@@ -22,7 +22,7 @@ export async function GET(req: NextRequest, res: NextResponse) {
     }
 
     try {
-        let actions = [];
+        const actions = [];
 
         // Check if the freelancer has sent a proposal
         if (freelancerId) {

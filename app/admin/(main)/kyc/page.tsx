@@ -3,6 +3,7 @@
 import { fetchWithAuth } from "@/app/lib/fetchWIthAuth";
 import Image from "next/image";
 import React, { useState, useEffect, useCallback } from "react";
+import SafeImage from "@/app/ui/shared/SafeImage";
 
 const KYCPage = () => {
   interface Document {
@@ -205,7 +206,7 @@ const KYCPage = () => {
                   <p>
                     <strong>Profile Picture:</strong>
                   </p>
-                  <Image
+                  <SafeImage
                     src={selectedDoc.documents.profilePicture}
                     alt="Profile"
                     width={128}
@@ -217,7 +218,7 @@ const KYCPage = () => {
                   <p>
                     <strong>Citizenship Front:</strong>
                   </p>
-                  <Image
+                  <SafeImage
                     src={selectedDoc.documents.citizenshipFront}
                     alt="Citizenship Front"
                     className="w-32 h-32 object-cover rounded-md"
@@ -229,7 +230,7 @@ const KYCPage = () => {
                   <p>
                     <strong>Citizenship Back:</strong>
                   </p>
-                  <Image
+                  <SafeImage
                     src={selectedDoc.documents.citizenshipBack}
                     alt="Citizenship Back"
                     className="w-32 h-32 object-cover rounded-md"

@@ -1,9 +1,7 @@
-"use client";
 import "./ui/globals.css";
 import { montserrat, playfairDisplay } from "./ui/fonts";
 import AuthProvider from "./providers";
 import Appcontextprovider from "./context/appContext";
-import { PayPalScriptProvider } from "@paypal/react-paypal-js";
 
 export default function RootLayout({
   children,
@@ -11,7 +9,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="scroll-smooth subpixel-antialiased ">
+    <html
+      lang="en"
+      data-scroll-behavior="smooth"
+      className="scroll-smooth subpixel-antialiased "
+    >
       <head>
         <meta charSet="utf-8" />
         <meta

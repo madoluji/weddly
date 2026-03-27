@@ -22,7 +22,7 @@ import { db } from "@/app/lib/firebase"
 import { serverTimestamp } from "firebase/database"
 import { collection, doc, setDoc, updateDoc, arrayUnion, getDoc } from "firebase/firestore"
 import { Appcontext } from "@/app/context/appContext"
-import Image from "next/image"
+import SafeImage from "@/app/ui/shared/SafeImage"
 
 interface Proposal {
   _id: string
@@ -333,7 +333,7 @@ const JobProposalModal: React.FC<JobProposalModalProps> = ({ proposal, onClose }
                       <div className="flex flex-col items-center text-center">
                         <div className="h-20 w-20 rounded-full bg-gradient-to-r from-primary-100 to-primary-200 overflow-hidden mb-3 ring-2 ring-primary-100 ring-offset-2">
                           {freelancer?.profilePicture ? (
-                            <Image
+                            <SafeImage
                               src={freelancer.profilePicture || "/placeholder.svg"}
                               alt={freelancer.fullName}
                               width={80}

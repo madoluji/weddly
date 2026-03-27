@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import StarRating from "./starRating";
 import { fetchWithAuth } from "@/app/lib/fetchWIthAuth";
-import Image from "next/image";
+import SafeImage from "@/app/ui/shared/SafeImage";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/24/outline";
 
@@ -132,7 +132,7 @@ const ReviewsCard = () => {
                         whileHover={{ scale: 1.05 }}
                         className="bg-yellow-400 rounded-full h-10 w-10 flex items-center justify-center overflow-hidden"
                       >
-                        <Image
+                        <SafeImage
                           width={40}
                           height={40}
                           src={review.reviewerId.profilePicture || "/images/image.png"}

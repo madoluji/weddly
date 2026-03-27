@@ -1,7 +1,7 @@
 import ChatWindow from "@/app/ui/chat-component/chatWindow";
 
-const ChatRoom = ({ params }: { params: { id: string } }) => {
-  const { id } = params;
+const ChatRoom = async ({ params }: { params: Promise<{ id: string }> }) => {
+  const { id } = await params;
 
   return <ChatWindow />;
 };

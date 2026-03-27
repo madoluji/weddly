@@ -1,10 +1,10 @@
-import Image from "next/image";
 import React, { Suspense } from "react";
 import Link from "next/link";
 import Links from "./links";
 import MenuBar from "./menuBar";
 import LinksRight from "./linksRight";
 import SearchInput from "./navSearchBar";
+import AppLogo from "../shared/AppLogo";
 
 const NavBar = () => {
   return (
@@ -16,15 +16,12 @@ const NavBar = () => {
           </Suspense>
         </div>
         <div className="flex">
-          <Link href={"/"}>
-            <Image
-              src="/logo/weddlylogo.png"
-              alt="logo"
-              width={50}
-              height={50}
-              style={{ minBlockSize: "50px" }}
-            />
-          </Link>
+          <AppLogo
+            width={50}
+            height={50}
+            alt="logo"
+            style={{ minBlockSize: "50px", width: "auto", height: "auto" }}
+          />
           {
             <Suspense>
               <Links />

@@ -9,6 +9,7 @@ import SaveButton from "../../saveButton";
 import { Appcontext } from "@/app/context/appContext";
 import PostingSkeleton from "../skeletons/postingSkeleton";
 import { fetchWithAuth } from "@/app/lib/fetchWIthAuth";
+import SafeImage from "@/app/ui/shared/SafeImage";
 
 const truncateString = (str: string, num: number) => {
   if (str.length <= num) {
@@ -40,6 +41,7 @@ export interface Job {
   fileUrls: string[];
   status: string;
   proposalCount: number;
+  profilePicture?: string;
 }
 
 export const getTimeAgo = (dateString: string) => {
@@ -149,10 +151,21 @@ const JobList = ({ bestMatches, mostRecent, savedJobs, query }: Props) => {
               className={`flex flex-col gap-2 p-6 border border-primary-300/70 rounded-3xl bg-white shadow-[0_10px_30px_rgba(31,47,39,0.08)] group mb-5 hover:shadow-[0_14px_40px_rgba(31,47,39,0.12)] transition-all duration-300`}
               onClick={() => loadJobDetails(job)}
             >
-              <p className="text-xs text-success-600/60">
-                {" "}
-                Posted {getTimeAgo(job.createdAt)}
-              </p>
+              <div className="flex items-center gap-4 mb-2">
+                <SafeImage
+                  src={job.profilePicture || "/images/image.png"}
+                  alt={job.fullName}
+                  width={50}
+                  height={50}
+                  className="rounded-full object-cover w-12 h-12"
+                />
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-gray-700">{job.fullName}</p>
+                  <p className="text-xs text-success-600/60">
+                    Posted {getTimeAgo(job.createdAt)}
+                  </p>
+                </div>
+              </div>
               <div className="flex items-center justify-between ">
                 <h1 className="text-2xl text-success-600 font-medium group-hover:text-primary-700 transition-all duration-250 flex items-center gap-2">
                   <SparklesIcon className="w-5 h-5 text-primary-600" />

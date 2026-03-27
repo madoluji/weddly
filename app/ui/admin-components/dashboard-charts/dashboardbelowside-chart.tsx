@@ -1,7 +1,12 @@
 "use client";
 import React, { useState } from "react";
 import Card from "../../card";
-import PaymentMethodsChart from "./method-chards-chart";
+import dynamic from "next/dynamic";
+
+const PaymentMethodsChart = dynamic(() => import("./method-chards-chart"), {
+  ssr: false,
+  loading: () => <div className="h-72 w-full animate-pulse rounded-md bg-gray-100" />,
+});
 
 const DashboardSide = () => {
   const [querySelect, setQuerySelect] = useState<string>("month"); // Default to month

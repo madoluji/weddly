@@ -20,7 +20,7 @@ import {
 } from "@heroicons/react/24/outline"
 import { getTimeAgo } from "../../dashboard-components/job-list/jobList"
 import JobProposalModal from "@/app/ui/client-components/joblist-client/joblistpopupmodal"
-import Image from "next/image"
+import SafeImage from "@/app/ui/shared/SafeImage"
 
 interface Proposal {
   _id: string
@@ -271,7 +271,7 @@ const AllProposalsList: React.FC<AllProposalsListProps> = ({ jobId }) => {
                         <div className="flex items-start mb-4">
                           <div className="h-10 w-10 rounded-full bg-primary-100 flex items-center justify-center mr-3 overflow-hidden">
                             {freelancers[proposal.userId]?.profilePicture ? (
-                              <Image
+                              <SafeImage
                                 src={freelancers[proposal.userId].profilePicture || "/placeholder.svg"}
                                 alt={freelancers[proposal.userId]?.fullName || "Wedding Specialist"}
                                 width={40}

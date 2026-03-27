@@ -149,7 +149,7 @@ const OfferForm = ({ jobId, freelancerId }: OfferFormProps) => {
 
             if (chatIndex !== -1) {
               // Clone the chatsData array to avoid direct mutation
-              let updatedChatsData = [...UserChatData.chatsData];
+              const updatedChatsData = [...UserChatData.chatsData];
 
               // Ensure proposalArray exists, then push the new proposal ID
               // updatedChatsData[chatIndex].ContractArray = [

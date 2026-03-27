@@ -13,7 +13,7 @@ const SliderRating = ({ rating }: userRating) => {
   const duration = 1; // 4 seconds
 
   useEffect(() => {
-    let startValue = initialValue;
+    const startValue = initialValue;
     const maxInterval = 10; // Maximum interval for the slowest increments
     const minInterval = 15; // Minimum interval for the fastest increments
     const incrementStep = 0.09; // Smaller increment step for smoother transition

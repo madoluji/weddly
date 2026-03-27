@@ -16,8 +16,7 @@ const monthNames = [
 ];
 
 export async function GET(
-    req: NextRequest,
-    res: NextResponse<KYCGrowthResponse | { error: string }>
+    req: NextRequest
 ) {
     await connectMongoDB();
 

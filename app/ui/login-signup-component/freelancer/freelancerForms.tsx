@@ -4,7 +4,7 @@ import { Button } from "@/app/ui/button";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { storage } from "../../../lib/firebase"; // Import Firebase storage
 import { useRouter } from "next/navigation";
-import Image from "next/image";
+import SafeImage from "@/app/ui/shared/SafeImage";
 import clsx from "clsx";
 import { fetchWithAuth } from "@/app/lib/fetchWIthAuth";
 import { jobCategories, skills as predefinedSkills } from "@/app/lib/data";
@@ -548,7 +548,7 @@ const MultiStepForm = () => {
               <div className="flex gap-2 mt-2 flex-wrap">
                 {files[index]?.map((file, fileIndex) => (
                   <div key={fileIndex} className="relative">
-                    <Image
+                    <SafeImage
                       src={URL.createObjectURL(file)}
                       alt={file.name}
                       className="h-20 w-20 object-cover rounded-md"

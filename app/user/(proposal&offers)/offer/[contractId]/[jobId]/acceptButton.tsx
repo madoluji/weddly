@@ -85,7 +85,7 @@ const AcceptButton = ({ jobId, freelancerId, contractId }: Props) => {
 
           if (chatIndex !== -1) {
             // Clone the chatsData array to avoid direct mutation
-            let updatedChatsData = [...UserChatData.chatsData];
+            const updatedChatsData = [...UserChatData.chatsData];
 
             // Ensure contractArray exists, then push the new contract ID
             updatedChatsData[chatIndex].ContractArray = [

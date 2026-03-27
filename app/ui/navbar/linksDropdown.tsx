@@ -6,15 +6,15 @@ import {
   ArrowLeftStartOnRectangleIcon,
 } from "@heroicons/react/24/outline";
 import Link from "next/link";
-import Image from "next/image";
 import { signOut } from "next-auth/react";
 import { useAuth } from "@/app/providers";
 import NotificationsPage from "../dashboard-components/job-list/notification";
+import SafeImage from "@/app/ui/shared/SafeImage";
 
 interface Props {
-  isDropdownVisible?: Number;
-  isOpen?: Boolean;
-  currentMode?: String;
+  isDropdownVisible?: number;
+  isOpen?: boolean;
+  currentMode?: string;
 }
 
 const LinksDropdown = ({ isDropdownVisible, isOpen, currentMode }: Props) => {
@@ -136,7 +136,7 @@ const LinksDropdown = ({ isDropdownVisible, isOpen, currentMode }: Props) => {
                             
                      h-24 w-24"
             >
-              <Image
+              <SafeImage
               src={session?.user?.profilePicture || "/images/image.png"}
               alt="profile"
               width={96}

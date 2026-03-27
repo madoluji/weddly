@@ -1,7 +1,11 @@
 import AllProposalsList from "@/app/ui/client-components/proposallist/proposallist";
 
-const AllJobsListProps = ({ params }: { params: { jobId: string } }) => {
-  const { jobId } = params;
+const AllJobsListProps = async ({
+  params,
+}: {
+  params: Promise<{ jobId: string }>;
+}) => {
+  const { jobId } = await params;
   return (
     <>
       <div className="mx-auto text-center">

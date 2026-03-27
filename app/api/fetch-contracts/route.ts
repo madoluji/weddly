@@ -17,7 +17,7 @@ export async function GET(req: NextRequest) {
         const clientId = searchParams.get("clientId");
         const freelancerId = searchParams.get("freelancerId");
 
-        let query: { [key: string]: any } = {};
+        const query: { [key: string]: any } = {};
 
         if (contractId) {
             query._id = contractId;

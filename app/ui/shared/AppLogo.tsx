@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { CSSProperties } from "react";
+import weddlyLogo from "@/public/logo/weddlylogo.png";
 
 interface AppLogoProps {
   width?: number;
@@ -21,15 +22,22 @@ const AppLogo = ({
   style,
   priority = false,
 }: AppLogoProps) => {
+  const mergedStyle: CSSProperties = {
+    height: "auto",
+    backgroundColor: "transparent",
+    backgroundImage: "none",
+    ...style,
+  };
+
   return (
-    <Link href={href}>
+    <Link href={href} className="bg-transparent inline-block p-0">
       <Image
-        src="/logo/weddlylogo.png"
+        src={weddlyLogo}
         alt={alt}
         width={width}
         height={height}
-        className={className}
-        style={style}
+        className={`bg-transparent block ${className || ""}`}
+        style={mergedStyle}
         priority={priority}
       />
     </Link>

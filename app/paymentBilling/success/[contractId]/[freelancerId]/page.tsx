@@ -9,6 +9,7 @@ import {
   useEffect,
   useRef,
   useState,
+  use,
 } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
@@ -358,7 +359,8 @@ const PaymentSuccessContent = ({ contractId, freelancerId }: Props) => {
         delay: 0.1,
       },
     },
-  };
+  } as const;
+  
 
   const formatCurrency = (amount: string | number) => {
     if (isPayPal) {
@@ -678,9 +680,9 @@ const PaymentSuccessContent = ({ contractId, freelancerId }: Props) => {
 const PaymentSuccess = ({
   params,
 }: {
-  params: { contractId: string; freelancerId: string; clientId: string };
+  params: Promise<{ contractId: string; freelancerId: string; clientId: string }>;
 }) => {
-  const { contractId, freelancerId, clientId } = params;
+  const { contractId, freelancerId, clientId } = use(params);
 
   return (
     <Suspense

@@ -182,7 +182,7 @@ const ProjectCarousel: React.FC = () => {
           >
             {jobs.map((job) => (
               <div
-                key={job.id}
+                key={job._id || job.id}
                 className="min-w-[320px] max-w-[320px] flex-shrink-0 snap-start border border-border rounded-xl shadow-sm hover:shadow-md transition-all duration-300 bg-card overflow-hidden"
               >
                 <div className="p-5">
@@ -223,7 +223,7 @@ const ProjectCarousel: React.FC = () => {
                   <div className="flex flex-wrap gap-1.5 mb-3">
                     {job.tags.slice(0, 3).map((tag, index) => (
                       <span
-                        key={index}
+                        key={`${job._id || job.id}-tag-${tag}-${index}`}
                         className="bg-muted text-muted-foreground px-2 py-0.5 rounded-full text-xs flex items-center"
                       >
                         <TagIcon className="w-3 h-3 mr-1" />

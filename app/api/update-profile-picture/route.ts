@@ -5,7 +5,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import Admin from "@/models/admin";
 
-export async function POST(req: NextRequest, res: NextResponse) {
+export async function POST(req: NextRequest) {
     const session = await getServerSession();
     const userData = req.headers.get("user");
     const user = userData ? JSON.parse(userData) : null;

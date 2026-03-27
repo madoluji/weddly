@@ -9,8 +9,7 @@ type IndustryInsightsResponse = {
 }[];
 
 export async function GET(
-    req: NextRequest,
-    res: NextResponse<IndustryInsightsResponse | { error: string }>
+    req: NextRequest
 ) {
     await connectMongoDB();
 

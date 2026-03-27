@@ -7,7 +7,7 @@ import {
   BanknotesIcon,
   BuildingLibraryIcon,
 } from "@heroicons/react/24/outline";
-import Image from "next/image";
+import SafeImage from "@/app/ui/shared/SafeImage";
 
 interface FreelancerDetailProps {
   freelancerId: string;
@@ -56,7 +56,7 @@ const FreelancerDetail = ({ freelancerId }: FreelancerDetailProps) => {
           {/* Profile Image & Name */}
           <div className="flex items-center gap-4">
             {freelancer.profilePicture && (
-              <Image
+              <SafeImage
                 width={300}
                 height={300}
                 src={freelancer.profilePicture}

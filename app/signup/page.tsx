@@ -16,7 +16,7 @@ const SignUppage = async () => {
       <div className="w-full max-w-[1130px] lg:h-full grid lg:grid-cols-2 rounded-[30px] overflow-hidden border border-slate-200/80 bg-white">
         <div className="p-7 sm:p-10 lg:px-12 lg:py-10 overflow-y-auto">
           <div className="mb-9">
-            <AppLogo width={40} height={40} className="mb-5" />
+            <AppLogo width={72} height={42} className="mb-5 object-contain" priority />
             <h1 className="text-[44px] font-serif font-semibold text-slate-800 leading-[1.08]">
               Join WeddingJobs
             </h1>
@@ -44,6 +44,7 @@ const SignUppage = async () => {
               fill
               priority
               className="object-cover"
+              sizes="(min-width: 1024px) 50vw, 0vw"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/25 to-black/10" />
             <div className="absolute bottom-10 left-8 right-8 text-white">

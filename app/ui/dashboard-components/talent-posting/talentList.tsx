@@ -5,7 +5,7 @@ import { useState, useEffect } from "react";
 import StarRating from "../../starRating";
 import PostingSkeleton from "../skeletons/postingSkeleton";
 import SaveButton from "../../saveButton";
-import Image from "next/image";
+import SafeImage from "@/app/ui/shared/SafeImage";
 import { fetchWithAuth } from "@/app/lib/fetchWIthAuth";
 import { useRouter } from "next/navigation";
 
@@ -107,21 +107,21 @@ const FreelancerList = ({ bestMatches, savedFreelancers, query }: Props) => {
             >
               <div className="flex gap-3 items-center">
                 <div className="rounded-full overflow-hidden w-[90px] h-[90px] flex items-center">
-                  <Image
+                  <SafeImage
                     src={freelancer.profilePicture || "/images/image.png"}
                     alt="freelancer dp"
                     width={90}
                     height={90}
                   />
                 </div>
-                <span className="flex flex-col gap-2">
+                <div className="flex flex-col gap-2">
                   <h1 className="text-2xl text-success-600 font-medium group-hover:text-primary-700 transition-all duration-250">
                     {freelancer.fullName}
                   </h1>
                   <p className="text-xs text-primary-100 bg-success-500 p-1 rounded-full w-36 text-center font-light">
                     Available Now
                   </p>
-                </span>
+                </div>
               </div>
               <p className="text-sm mt-1 text-success-600/75">
                 Booking Fee / Rate: {freelancer.rate} USD/hr • Contact: {" "}

@@ -2,9 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { connectMongoDB } from '@/app/lib/mongodb';
 import Payment from '@/models/payment';
 
-export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
     await connectMongoDB();
-    const userId = params.id;
+    const { id: userId } = await params;
     const { searchParams } = new URL(req.url);
     const allTransaction = searchParams.get('alltransaction');
 

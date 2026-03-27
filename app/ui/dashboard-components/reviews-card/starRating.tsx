@@ -7,7 +7,7 @@ interface Props {
 
 // Function to render stars based on the rating
 const starRender = (rating: number) => {
-  let stars = [];
+  const stars = [];
   for (let i = 0; i < 5; i++) {
     // Loop through 5 stars
     if (i < rating) {

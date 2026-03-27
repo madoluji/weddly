@@ -6,9 +6,11 @@ import { storage } from "@/app/lib/firebase";
 import Image from "next/image";
 import { fetchWithAuth } from "@/app/lib/fetchWIthAuth";
 import { useAuth } from "../providers";
+import { useRouter } from "next/navigation";
 
 const KYCForm = () => {
   const { session, status } = useAuth();
+  const router = useRouter();
   const [uploading, setUploading] = useState(false);
 
   const [formData, setFormData] = useState({
@@ -172,11 +174,14 @@ const KYCForm = () => {
 
       if (res.ok) {
         alert("KYC Submitted Successfully!");
+        router.push("/");
       } else {
-        throw new Error("Submission failed");
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData?.message || "Submission failed");
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error submitting KYC:", error);
+      alert(error?.message || "Submission failed. Please try again.");
     } finally {
       setUploading(false);
     }
@@ -323,7 +328,7 @@ const KYCForm = () => {
           <div>
             <label className="block text-gray-700">Ward Number *</label>
             <input
-              type="text"
+              type="number"
               name="wardNumber"
               onChange={handleAddressChange}
               required

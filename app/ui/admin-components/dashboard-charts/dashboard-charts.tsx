@@ -1,12 +1,28 @@
 "use client";
 import React, { useState } from "react";
 import Card from "../../card";
-import AccountGrowthChart from "./user-count";
+import dynamic from "next/dynamic";
 import Link from "next/link";
-import KYCChart from "./kyc-count";
-import JobProposalModal from "../../client-components/joblist-client/joblistpopupmodal";
-import JobsProposalChart from "./jobs-insights-chart";
-import PopularIndustriesChart from "./popular-chart";
+
+const AccountGrowthChart = dynamic(() => import("./user-count"), {
+  ssr: false,
+  loading: () => <div className="h-72 w-full animate-pulse rounded-md bg-gray-100" />,
+});
+
+const KYCChart = dynamic(() => import("./kyc-count"), {
+  ssr: false,
+  loading: () => <div className="h-72 w-full animate-pulse rounded-md bg-gray-100" />,
+});
+
+const JobsProposalChart = dynamic(() => import("./jobs-insights-chart"), {
+  ssr: false,
+  loading: () => <div className="h-72 w-full animate-pulse rounded-md bg-gray-100" />,
+});
+
+const PopularIndustriesChart = dynamic(() => import("./popular-chart"), {
+  ssr: false,
+  loading: () => <div className="h-72 w-full animate-pulse rounded-md bg-gray-100" />,
+});
 
 const Charts = () => {
   const [querySelect, setQuerySelect] = useState<string>("monthly"); // Default to monthly

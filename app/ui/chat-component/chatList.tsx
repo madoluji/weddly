@@ -1,7 +1,7 @@
 "use client";
 
 import { useContext, useEffect, useState } from "react";
-import Image from "next/image";
+import SafeImage from "@/app/ui/shared/SafeImage";
 import {
   arrayUnion,
   collection,
@@ -150,7 +150,7 @@ const ChatList: React.FC = () => {
                   className="flex flex-row py-2 px-2 justify-center hover:bg-gray-200 items-center border-b-2"
                 >
                   <div className="w-1/4">
-                    <Image
+                    <SafeImage
                       src={item.userData.avatar || "/images/image.png"}
                       className="object-cover h-12 w-12 rounded-full"
                       alt={item.userData.username || "User"}
@@ -172,7 +172,7 @@ const ChatList: React.FC = () => {
                   onClick={() => setChat(item)}
                 >
                   <div className="w-1/4">
-                    <Image
+                    <SafeImage
                       src={item.userData.avatar || "/images/image.png"}
                       className="object-cover h-12 w-12 rounded-full"
                       alt={item.userData.username}

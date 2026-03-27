@@ -16,6 +16,7 @@ import Link from "next/link";
 import { fetchWithAuth } from "@/app/lib/fetchWIthAuth";
 import { useAuth } from "@/app/providers";
 import ApplyProposalButton from "./apply-proposal-button";
+import SafeImage from "@/app/ui/shared/SafeImage";
 
 const JobDetailsSlider: React.FC = () => {
   const { session } = useAuth();
@@ -92,10 +93,19 @@ const JobDetailsSlider: React.FC = () => {
         <h2 className="text-2xl  mb-2">{job?.title}</h2>
 
         {/* Job Meta Info */}
-        <div className="space-y-2 border-b text-sm flex pb-4 gap-5 justify-between">
-          <div className="flex items-center">
-            <UserIcon className="w-5 h-5 mr-2 text-gray-600" />
-            <p className="text-gray-600">{job?.fullName}</p>
+        <div className="space-y-2 border-b text-sm flex pb-4 gap-5 items-center">
+          <div className="flex items-center gap-3">
+            <SafeImage
+              src={job?.profilePicture || "/images/image.png"}
+              alt={job?.fullName || "Client"}
+              width={40}
+              height={40}
+              className="rounded-full object-cover w-10 h-10"
+            />
+            <div className="flex items-center">
+              <UserIcon className="w-5 h-5 mr-2 text-gray-600" />
+              <p className="text-gray-600">{job?.fullName}</p>
+            </div>
           </div>
           <div className="flex items-center">
             <BuildingLibraryIcon className="w-5 h-5 mr-2 text-gray-600" />

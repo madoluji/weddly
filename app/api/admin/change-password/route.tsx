@@ -4,7 +4,7 @@ import bcrypt from "bcryptjs";
 import { getServerSession } from "next-auth";
 import { NextRequest, NextResponse } from "next/server";
 
-export async function POST(req: NextRequest, res: NextResponse) {
+export async function POST(req: NextRequest) {
   await connectMongoDB();
 
   const session = await getServerSession();

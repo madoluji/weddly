@@ -1,6 +1,6 @@
 "use client";
 
-import { useContext, useEffect, useState, useCallback } from "react";
+import { useContext, useEffect, useState, useCallback, use } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { Suspense } from "react";
 import { fetchWithAuth } from "@/app/lib/fetchWIthAuth";
@@ -149,9 +149,9 @@ const PaymentConfirmContent = ({ method }: Props) => {
 const PaymentConfirm = ({
   params,
 }: {
-  params: { contractId: string; freelancerId: string; method: string };
+  params: Promise<{ contractId: string; freelancerId: string; method: string }>;
 }) => {
-  const { contractId, freelancerId, method } = params;
+  const { contractId, freelancerId, method } = use(params);
   return (
     <Suspense fallback={<div className="text-center p-10">Loading...</div>}>
       <PaymentConfirmContent method={method} />

@@ -1,12 +1,12 @@
 import React, { Suspense } from "react";
 import { Payment } from "@/app/ui/payment";
 
-const PaymentsPage = ({
+const PaymentsPage = async ({
   params,
 }: {
-  params: { contractId: string; userId: string };
+  params: Promise<{ contractId: string; userId: string }>;
 }) => {
-  const { contractId, userId } = params;
+  const { contractId, userId } = await params;
   return (
     <div>
       <h1 className="text-3xl font-semibold mt-5 text-center">

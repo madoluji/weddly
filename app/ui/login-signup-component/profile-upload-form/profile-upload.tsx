@@ -5,22 +5,29 @@ import { ChangeEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { createFirebaseUser, db, storage } from "../../../lib/firebase"; // Import Firebase storage
-import Image from "next/image";
+import SafeImage from "@/app/ui/shared/SafeImage";
 
 import { doc, updateDoc } from "firebase/firestore";
 import { useAuth } from "@/app/providers";
 import useFirebaseAuth from "@/app/hooks/useFirebaseAuth";
 import { fetchWithAuth } from "@/app/lib/fetchWIthAuth";
+import { useSession } from "next-auth/react";
 
 const ProfileUploadForm = () => {
   const { session, status } = useAuth();
+  const { update: updateSession } = useSession();
   const [uploading, setUploading] = useState(false);
   useFirebaseAuth();
-  createFirebaseUser(
-    session?.user.name + " " + session?.user.lastName || "",
-    session?.user.email || "",
-    session?.user.id || ""
-  );
+
+  useEffect(() => {
+    if (!session?.user?.id) return;
+
+    createFirebaseUser(
+      `${session.user.name || ""} ${session.user.lastName || ""}`.trim(),
+      session.user.email || "",
+      session.user.id
+    );
+  }, [session?.user?.id, session?.user?.name, session?.user?.lastName, session?.user?.email]);
 
   interface formData {
     dob: string;
@@ -114,6 +121,11 @@ const ProfileUploadForm = () => {
       if (response.ok) {
         alert("Portfolio submitted successfully!");
         setFormData(formData);
+        
+        // Refresh the session to update the profile picture in the JWT token
+        await updateSession({
+          profilePicture: formData.profilePicture,
+        });
 
         router.push("/signup/usermode-select");
       } else {
@@ -144,7 +156,7 @@ const ProfileUploadForm = () => {
         <div className="flex flex-row gap-32">
           <div>
             <div className="relative  rounded-[100%]  w-[150px] h-[150px] overflow-hidden ">
-              <Image
+              <SafeImage
                 src={preview}
                 alt="Profile preview"
                 width={150}

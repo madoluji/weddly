@@ -82,7 +82,7 @@ const SettingsSidebar: React.FC = () => {
         {/* Logo */}
         <div className="flex items-center justify-center px-4 mb-6">
           <Image
-            src="/logo/weddlylogo.png"
+            src="/logo/weddlylogo-v2.png"
             alt="logo"
             className="w-20 h-20 p-1"
             width={50}

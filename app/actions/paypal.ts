@@ -58,7 +58,7 @@ export async function createOrder(contractId?: string) {
         amount = contract.price + platformFee;
 
         const accessToken = await getPayPalAccessToken();
-        const headersList = headers();
+        const headersList = await headers();
         const host = headersList.get("host") || "localhost:3000";
         const protocol = process.env.NODE_ENV === "production" ? "https" : "http";
 

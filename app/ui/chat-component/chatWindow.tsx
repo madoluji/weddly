@@ -3,6 +3,7 @@
 import { Suspense, use, useContext, useEffect, useState } from "react";
 import ChatList from "./chatList";
 import Image from "next/image";
+import SafeImage from "@/app/ui/shared/SafeImage";
 import { Appcontext } from "@/app/context/appContext";
 import { db, upload } from "@/app/lib/firebase";
 import {
@@ -220,7 +221,7 @@ const ChatWindow: React.FC = () => {
         <p className="text-xl mb-1 font-semibold text-gray-700 line-clamp-3">
           {data.jobId.title}
         </p>
-        <span className="flex gap-4 mb-3">
+        <div className="flex gap-4 mb-3">
           <p className="text-gray-500 text-sm items-center flex gap-1">
             <IdentificationIcon className="w-4 h-4" />
             {msg.sId === userData?.id
@@ -231,9 +232,9 @@ const ChatWindow: React.FC = () => {
             <TrophyIcon className="w-4 h-4" />
             {data.jobId.experience}
           </p>
-        </span>
+        </div>
         <div className="flex gap-3">
-          <span className="bg-primary-400 p-3 px-4 rounded-lg w-1/2">
+          <div className="bg-primary-400 p-3 px-4 rounded-lg w-1/2">
             <p className="text-sm mb-1 flex items-center gap-2 text-gray-500">
               <span className="text-lg text-green-600">
                 <CurrencyDollarIcon className="w-6 h-6" />
@@ -241,8 +242,8 @@ const ChatWindow: React.FC = () => {
               Booking Fee / Rate
             </p>
             <p className="text-green-700 text-xl ml-2"> $ {data.bidAmount}</p>
-          </span>
-          <span className="bg-gray-100 p-3 px-4 rounded-lg w-1/2">
+          </div>
+          <div className="bg-gray-100 p-3 px-4 rounded-lg w-1/2">
             <p className="text-sm mb-1 flex items-center gap-2 text-gray-500">
               <span className="text-lg text-primary-700">
                 <ClockIcon className="w-6 h-6" />
@@ -257,7 +258,7 @@ const ChatWindow: React.FC = () => {
                 year: "numeric",
               })}
             </p>
-          </span>
+          </div>
         </div>
       </div>
       <div className="p-4 px-6 bg-gray-50">
@@ -272,7 +273,7 @@ const ChatWindow: React.FC = () => {
           </p>
         </div>
         <div className="flex mt-5 gap-3 items-center justify-between mb-2">
-          <span className="bg-green-100 p-3 px-4 rounded-lg w-1/2">
+          <div className="bg-green-100 p-3 px-4 rounded-lg w-1/2">
             <p className="text-sm mb-1 flex items-center gap-2 text-gray-500">
               <span className="text-lg text-green-600">
                 <TagIcon className="w-6 h-6" />
@@ -280,8 +281,8 @@ const ChatWindow: React.FC = () => {
               Bid Amount
             </p>
             <p className="text-green-700 text-xl ml-2"> $ {data.bidAmount}</p>
-          </span>
-          <span className="bg-gray-100 p-3 px-4 rounded-lg w-1/2">
+          </div>
+          <div className="bg-gray-100 p-3 px-4 rounded-lg w-1/2">
             <p className="text-sm mb-1 flex items-center gap-2 text-gray-500">
               <span className="text-lg text-primary-700">
                 <ClockIcon className="w-6 h-6" />
@@ -296,7 +297,7 @@ const ChatWindow: React.FC = () => {
                 year: "numeric",
               })}
             </p>
-          </span>
+          </div>
         </div>
         <div className="mt-5  text-right">
           <Link
@@ -336,9 +337,9 @@ const ChatWindow: React.FC = () => {
         </div>
       </div>
       <div className="p-4 px-6 bg-white border-b border-blue-200">
-        <span className="flex gap-4 mb-3">
-          <p className="text-gray-500 text-2xl flex">
-            <Image
+        <div className="flex gap-4 mb-3">
+          <div className="text-gray-500 text-2xl flex">
+            <SafeImage
               src={
                 msg.sId === userData?.id
                   ? userData.avatar || "/images/image.png"
@@ -349,7 +350,7 @@ const ChatWindow: React.FC = () => {
               width={100}
               height={100}
             />
-            <p>
+            <div>
               {msg.sId === userData?.id
                 ? `${userData?.username}`
                 : `${chatUser.username}`}{" "}
@@ -357,11 +358,11 @@ const ChatWindow: React.FC = () => {
               <span className="text-sm">
                 Offer send at: {convertTimestamp(msg.createdAt)}
               </span>
-            </p>
-          </p>
-        </span>
+            </div>
+          </div>
+        </div>
         <div className="flex gap-3">
-          <span className="bg-green-100 p-3 px-4 rounded-lg w-1/2">
+          <div className="bg-green-100 p-3 px-4 rounded-lg w-1/2">
             <p className="text-sm mb-1 flex items-center gap-2 text-gray-500">
               <span className="text-lg text-green-600">
                 <CurrencyDollarIcon className="w-6 h-6" />
@@ -369,8 +370,8 @@ const ChatWindow: React.FC = () => {
               Offered Amount
             </p>
             <p className="text-green-700 text-xl ml-2"> $ {data.price}</p>
-          </span>
-          <span className="bg-danger-400 p-3 px-4 rounded-lg w-1/2">
+          </div>
+          <div className="bg-danger-400 p-3 px-4 rounded-lg w-1/2">
             <p className="text-sm mb-1 flex items-center gap-2 text-gray-500">
               <span className="text-lg text-red-700">
                 <ClockIcon className="w-6 h-6" />
@@ -384,7 +385,7 @@ const ChatWindow: React.FC = () => {
                 year: "numeric",
               })}
             </p>
-          </span>
+          </div>
         </div>
 
         <div className="bg-blue-100 mt-5 p-3 w-full px-4 rounded-lg">
@@ -488,7 +489,7 @@ const ChatWindow: React.FC = () => {
                         }`}
                       >
                         {msg.image ? (
-                          <Image
+                          <SafeImage
                             width={200}
                             height={200}
                             src={msg.image}
@@ -515,7 +516,7 @@ const ChatWindow: React.FC = () => {
                           <p className="msg break-words">{msg.text}</p>
                         )}
                       </div>
-                      <Image
+                      <SafeImage
                         src={
                           msg.sId === userData?.id
                             ? userData.avatar || "/images/image.png"
@@ -571,7 +572,7 @@ const ChatWindow: React.FC = () => {
                   <div className="font-semibold text-xl py-4 ">
                     {chatUser.username}
                   </div>
-                  <Image
+                  <SafeImage
                     src={chatUser.avatar || "/images/image.png"}
                     className="object-cover rounded-full"
                     alt="Group image"
@@ -588,7 +589,7 @@ const ChatWindow: React.FC = () => {
           ) : (
             <div className={`chat-welcome ${chatVisual ? "" : "hidden"}`}>
               <Image
-                src={"/logo/weddlylogo.png"}
+                src={"/logo/weddlylogo-v2.png"}
                 width={32}
                 height={32}
                 alt={"logo"}

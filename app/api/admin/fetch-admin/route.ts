@@ -2,7 +2,7 @@ import { connectMongoDB } from "@/app/lib/mongodb";
 import Admin from "@/models/admin";
 import { NextRequest, NextResponse } from "next/server";
 
-export async function GET(req: NextRequest, res: NextResponse) {
+export async function GET(req: NextRequest) {
     await connectMongoDB();
     const userData = req.headers.get("user");
     const user = userData ? JSON.parse(userData) : null;
@@ -25,7 +25,7 @@ export async function GET(req: NextRequest, res: NextResponse) {
         }
 
         // Build query with filters
-        let query: any = { _id: { $ne: user._id } }; // Exclude the current user
+        const query: any = { _id: { $ne: user._id } }; // Exclude the current user
 
         if (searchQuery) {
             query.$or = [

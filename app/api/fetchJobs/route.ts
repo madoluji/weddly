@@ -1,5 +1,6 @@
 import Jobs from "@/models/jobs";
 import SavedJobs from "@/models/savedJobs"; // Import SavedJobs model
+import User from "@/models/user";
 import { connectMongoDB } from "../../lib/mongodb";
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
@@ -7,7 +8,6 @@ import { authOptions } from "@/app/lib/auth";
 import proposal from "@/models/proposal";
 import FreelancerInfo from "@/models/freelancerInfo";
 import { industrySkillsMapping } from "@/app/lib/data";
-import { log } from "console";
 
 export async function GET(req: NextRequest) {
   const session = await getServerSession(authOptions);
@@ -135,12 +135,17 @@ export async function GET(req: NextRequest) {
     // Add 'saved' field and include jobId for each job
     const jobsWithSavedFlag = await Promise.all(jobs.map(async (job) => {
       const proposalCount = await proposal.countDocuments({ jobId: job._id });
+      
+      // Fetch the user's profile picture
+      const user = await User.findById(job.userId).select("profilePicture");
+      const profilePicture = user?.profilePicture || null;
 
       return {
         jobId: job._id,  // Include the job ID in the response
         ...job._doc,     // Spread other job details
         saved: savedJobIds.includes(job._id.toString()), // Check if the job is saved
         proposalCount,   // Include the proposal count
+        profilePicture,  // Include the client's profile picture
       };
     }));
 

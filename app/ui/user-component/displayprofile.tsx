@@ -2,8 +2,8 @@
 
 import { fetchWithAuth } from "@/app/lib/fetchWIthAuth";
 import { useSession } from "next-auth/react";
-import Image from "next/image";
 import { useEffect, useState } from "react";
+import SafeImage from "@/app/ui/shared/SafeImage";
 
 export default function DisplayProfile() {
   const { data: session } = useSession();
@@ -97,7 +97,7 @@ export default function DisplayProfile() {
           <div className="flex flex-col md:flex-row items-start md:items-end -mt-16 gap-4">
             <div className="h-32 w-32 rounded-full border-4 border-white bg-gray-100 overflow-hidden">
               {userData?.profilePicture ? (
-                <Image
+                <SafeImage
                   width={300}
                   height={300}
                   src={userData.profilePicture || "/placeholder.svg"}
@@ -692,7 +692,7 @@ export default function DisplayProfile() {
                 ></iframe>
               ) : typeof selectedAttachment === "string" &&
                 selectedAttachment.match(/\.(jpeg|jpg|gif|png)$/i) ? (
-                <Image
+                <SafeImage
                   width={300}
                   height={300}
                   src={selectedAttachment || "/placeholder.svg"}

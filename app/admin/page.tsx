@@ -2,8 +2,6 @@ import Sidebar from "../ui/admin-components/sidebar";
 import "../ui/globals.css";
 import Charts from "../ui/admin-components/dashboard-charts/dashboard-charts";
 import FinancialHighlights from "../ui/admin-components/financial-stats";
-import { fetchWithAuth } from "../lib/fetchWIthAuth";
-import DashboardCharts from "../ui/admin-components/dashboard-charts/dashboardbelow-charts";
 import TurnOverCharts from "../ui/admin-components/dashboard-charts/dashboardbelow-charts";
 import DashboardSide from "../ui/admin-components/dashboard-charts/dashboardbelowside-chart";
 

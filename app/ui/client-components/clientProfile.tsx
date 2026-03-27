@@ -2,9 +2,9 @@
 import { fetchWithAuth } from "@/app/lib/fetchWIthAuth";
 import { useAuth } from "@/app/providers";
 import { BuildingOffice2Icon } from "@heroicons/react/24/outline";
-import Image from "next/image";
 import { useEffect, useState } from "react";
 import StarRating from "../starRating";
+import SafeImage from "@/app/ui/shared/SafeImage";
 
 export default function DisplayClientProfile() {
   const { session, status } = useAuth();
@@ -62,7 +62,7 @@ export default function DisplayClientProfile() {
           <div className="flex flex-col md:flex-row items-start md:items-end -mt-16 gap-4">
             <div className="h-32 w-32 rounded-full border-4 border-white bg-gray-100 overflow-hidden">
               {userData?.profilePicture ? (
-                <Image
+                <SafeImage
                   width={128}
                   height={128}
                   src={userData.profilePicture || "/placeholder.svg"}

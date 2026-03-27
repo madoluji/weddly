@@ -10,10 +10,10 @@ import {
 } from "@heroicons/react/24/outline";
 import { useEffect, useState } from "react";
 import SaveButton from "../saveButton";
-import Image from "next/image";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, type Variants } from "framer-motion";
 import { fetchWithAuth } from "@/app/lib/fetchWIthAuth";
 import { useRouter, useSearchParams } from "next/navigation";
+import SafeImage from "@/app/ui/shared/SafeImage";
 
 interface Freelancer {
   freelancerId?: string;
@@ -107,34 +107,34 @@ const TalentDetailsSlider: React.FC = () => {
     setSelectedProject(null);
   };
 
-  const sliderVariants = {
+  const sliderVariants: Variants = {
     hidden: { x: "100%", opacity: 0 },
     visible: {
       x: 0,
       opacity: 1,
-      transition: { duration: 0.3, ease: "easeOut" },
+      transition: { duration: 0.3, ease: "easeOut" as const },
     },
     exit: {
       x: "100%",
       opacity: 0,
-      transition: { duration: 0.3, ease: "easeIn" },
+      transition: { duration: 0.3, ease: "easeIn" as const },
     },
   };
 
-  const overlayVariants = {
+  const overlayVariants: Variants = {
     hidden: { opacity: 0 },
     visible: { opacity: 0.3, transition: { duration: 0.3 } },
     exit: { opacity: 0, transition: { duration: 0.3 } },
   };
 
-  const pulseVariants = {
+  const pulseVariants: Variants = {
     pulse: {
       opacity: [0.4, 0.8, 0.4],
-      transition: { duration: 1.5, repeat: Infinity, ease: "easeInOut" },
+      transition: { duration: 1.5, repeat: Infinity, ease: "easeInOut" as const },
     },
   };
 
-  const popupVariants = {
+  const popupVariants: Variants = {
     hidden: { opacity: 0, scale: 0.8, height: "50%" },
     visible: {
       opacity: 1,
@@ -310,14 +310,14 @@ const TalentDetailsSlider: React.FC = () => {
                   />
                 </div>
                 <div className="flex flex-row items-center space-y-10 border-b p-5 gap-10">
-                  <span className="flex items-center justify-center w-40 h-40 rounded-full overflow-hidden">
-                    <Image
+                  <div className="flex items-center justify-center w-40 h-40 rounded-full overflow-hidden">
+                    <SafeImage
                       src={freelancer.profilePicture || "/placeholder.svg"}
                       width={200}
                       height={200}
                       alt="dp"
                     />
-                  </span>
+                  </div>
                   <span className="flex flex-col gap-4">
                     <h2 className="text-5xl font-medium mb-2">
                       {freelancer.fullName}
@@ -402,12 +402,12 @@ const TalentDetailsSlider: React.FC = () => {
                           {project.portfolioFiles
                             .slice(0, 1)
                             .map((file, fileIndex) => (
-                              <span
+                              <div
                                 key={fileIndex}
                                 className="w-[200px] h-[200px] my-10 hover:shadow-xl border-neutral-200 border-2 hover:scale-105 rounded-lg transition-all duration-300"
                                 onClick={() => handleImageClick(project)}
                               >
-                                <Image
+                                <SafeImage
                                   src={file || "/placeholder.svg"}
                                   alt={`Project image ${fileIndex + 1}`}
                                   width={150}
@@ -417,7 +417,7 @@ const TalentDetailsSlider: React.FC = () => {
                                 <p className="font-medium mt-5 text-primary-600">
                                   {project.projectTitle}
                                 </p>
-                              </span>
+                              </div>
                             ))}
                         </div>
                       </div>
@@ -480,7 +480,7 @@ const TalentDetailsSlider: React.FC = () => {
                   <div className="flex flex-col gap-10 justify-center w-1/2 m-auto items-center mt-2 overflow-y-auto">
                     {selectedProject.portfolioFiles.map(
                       (file: string, index: number) => (
-                        <Image
+                        <SafeImage
                           key={index}
                           src={file || "/placeholder.svg"}
                           alt={`Project image ${index + 1}`}

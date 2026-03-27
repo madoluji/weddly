@@ -6,7 +6,7 @@ interface Props {
 }
 
 const starRender = (rating: number) => {
-  let stars = [];
+  const stars = [];
   for (let i = 0; i < 5; i++) {
     if (i < rating) {
       stars.push(<StarSolid key={i} className="h-5 w-5 text-primary-500" />);

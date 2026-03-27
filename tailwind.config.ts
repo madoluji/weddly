@@ -1,4 +1,5 @@
 import type { Config } from 'tailwindcss';
+import forms from '@tailwindcss/forms';
 
 const config: Config = {
   content: [
@@ -118,7 +119,7 @@ secondary: {
       },
     },
   },
-  plugins: [require('@tailwindcss/forms')], // Added Tremor's recommended plugin
+  plugins: [forms], // Added Tremor's recommended plugin
 };
 
 export default config;

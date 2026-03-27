@@ -1,10 +1,10 @@
 import LoginForm from "@/app/ui/login-signup-component/login-form";
 import { getServerSession } from "next-auth";
-import { HeartIcon } from "@heroicons/react/24/outline";
 import Image from "next/image";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { authOptions } from "../lib/auth";
+import AppLogo from "@/app/ui/shared/AppLogo";
 
 export default async function LoginPage() {
   const session = await getServerSession(authOptions);
@@ -17,8 +17,8 @@ export default async function LoginPage() {
       <div className="w-full max-w-[1100px] grid lg:grid-cols-2 bg-white rounded-3xl overflow-hidden shadow-2xl shadow-slate-200/50 border border-slate-100">
         <div className="flex flex-col p-8 sm:p-12 lg:p-16">
           <div className="flex flex-col items-center lg:items-start space-y-2 mb-10">
-            <div className="flex items-center justify-center size-10 rounded-xl bg-[#E8F3EE] mb-4">
-              <HeartIcon className="size-5 text-[#4A7C66]" />
+            <div className="mb-4">
+              <AppLogo width={100} height={60} alt="Weddly Logo" />
             </div>
             <h1 className="text-3xl font-semibold text-[#2D3748] tracking-tight text-center lg:text-left">
               Welcome Back

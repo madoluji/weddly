@@ -60,7 +60,7 @@ export const authOptions: NextAuthOptions = {
         const { email, password } = credentials;
         try {
           await connectMongoDB();
-          let user = await User.findOne({ email });
+          const user = await User.findOne({ email });
 
           if (!user) {
             const admin = await Admin.findOne({ userName: email });
@@ -148,8 +148,8 @@ export const authOptions: NextAuthOptions = {
         await connectMongoDB();
         const existingUser = await User.findOne({ email: user.email });
 
-        let [name, ...lastNameParts] = user.name.split(" ");
-        let lastName = lastNameParts.join(" ") || "";
+        const [name, ...lastNameParts] = user.name.split(" ");
+        const lastName = lastNameParts.join(" ") || "";
 
         if (!existingUser) {
           const newUser = await User.create({

@@ -5,12 +5,12 @@ import ContractDetailsPage from "./comp/workDetails";
 // import JobDetails from "./jobDetails";
 // import ContractDetails from "./contractDetails";
 
-export default function ContractOfferPage({
+export default async function ContractOfferPage({
   params,
 }: {
-  params: { contractId: string; jobId: string };
+  params: Promise<{ contractId: string; jobId: string }>;
 }) {
-  const { contractId, jobId } = params;
+  const { contractId, jobId } = await params;
 
   return (
     <div className="container mx-auto py-8 px-4">

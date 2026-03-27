@@ -5,8 +5,8 @@ import { getServerSession } from "next-auth";
 import Jobs from "@/models/jobs";
 import User from "@/models/user";
 
-export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
-    const { id } = params;
+export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+    const { id } = await params;
     await connectMongoDB(); // Ensure database connection
 
     try {

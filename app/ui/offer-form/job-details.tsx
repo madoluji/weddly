@@ -89,7 +89,7 @@ const JobDetails = ({ jobId }: JobDetailsProps) => {
           </div>
         </div>
       </div>
-      <p className="font-medium text-xl border-t-[1px] py-5 border-gray-300 mt-14">
+      <div className="font-medium text-xl border-t-[1px] py-5 border-gray-300 mt-14">
         Attachments
         <div className="flex gap-5 mt-2">
           {data.fileUrls?.length > 0 &&
@@ -105,7 +105,7 @@ const JobDetails = ({ jobId }: JobDetailsProps) => {
               </Link>
             ))}
         </div>
-      </p>
+      </div>
     </div>
   );
 };

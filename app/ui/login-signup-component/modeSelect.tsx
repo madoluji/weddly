@@ -9,28 +9,29 @@ import { Button } from "../button";
 import clsx from "clsx";
 import { useRouter } from "next/navigation";
 
+interface SelectProps {
+  selected: boolean;
+}
+
+const Circle = ({ selected }: SelectProps) => (
+  <div
+    className={clsx(
+      "rounded-full border-2 h-8 w-8 absolute top-3 right-3 flex items-center justify-center",
+      selected && "bg-primary-600"
+    )}
+  >
+    {selected && <div className="rounded-full h-5 w-5 border-2"></div>}
+  </div>
+);
+
 const ModeSelect = () => {
   const router = useRouter();
   const [mode, setMode] = useState("");
-
-  interface SelectProps {
-    selected: boolean; //interface for Circle component
-  }
 
   const handleModeSelection = (selectedMode: string) => {
     setMode(selectedMode);
   };
 
-  const Circle = ({ selected }: SelectProps) => (
-    <div
-      className={clsx(
-        "rounded-full border-2 h-8 w-8 absolute top-3 right-3 flex items-center justify-center",
-        selected && "bg-primary-600"
-      )}
-    >
-      {selected && <div className="rounded-full h-5 w-5 border-2"></div>}
-    </div>
-  );
   const handleContinue = () => {
     if (!mode) {
       console.log("Please select a mode");

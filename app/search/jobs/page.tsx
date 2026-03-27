@@ -14,11 +14,12 @@ interface searchParams {
 
 // Defining the interface for component props
 interface Props {
-  searchParams?: searchParams | undefined;
+  searchParams?: Promise<searchParams> | undefined;
 }
 
-const page = ({ searchParams }: Props) => {
-  const query = new URLSearchParams(searchParams as any).toString();
+const page = async ({ searchParams }: Props) => {
+  const resolvedSearchParams = await searchParams;
+  const query = new URLSearchParams((resolvedSearchParams ?? {}) as any).toString();
   return (
     <div className="flex-col flex w-full gap-8 mt-5">
       <section

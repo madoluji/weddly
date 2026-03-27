@@ -122,7 +122,7 @@ const ClientForm = () => {
     setUploading(true);
 
     try {
-      let companyLogoURL = "";
+      const companyLogoURL = "";
 
       const finalFormData = {
         ...formData,

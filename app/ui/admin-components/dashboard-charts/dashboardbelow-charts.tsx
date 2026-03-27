@@ -1,7 +1,12 @@
 "use client";
 import React, { useState } from "react";
 import Card from "../../card";
-import TurnOverChart from "./turn-overcharts";
+import dynamic from "next/dynamic";
+
+const TurnOverChart = dynamic(() => import("./turn-overcharts"), {
+  ssr: false,
+  loading: () => <div className="h-72 w-full animate-pulse rounded-md bg-gray-100" />,
+});
 
 const TurnOverCharts = () => {
   const [querySelect, setQuerySelect] = useState<string>("month"); // Default to month

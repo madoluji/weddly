@@ -1,9 +1,9 @@
 "use client";
 
-import Image from "next/image";
 import React from "react";
 import { useAuth } from "@/app/providers";
 import SkeletonProfileCard from "./skeletons/skeletonProfileCard";
+import SafeImage from "@/app/ui/shared/SafeImage";
 
 interface Props {
   mode: string;
@@ -27,7 +27,7 @@ const ProfileCard = ({ mode }: Props) => {
 
       {/* Profile image section */}
       <div className="bg-400 rounded-full bg-white absolute translate-y-[50%] overflow-hidden translate-x-1/2 right-[50%] h-24 w-24">
-        <Image
+        <SafeImage
           src={session?.user?.profilePicture || "/images/image.png"}
           alt="profile"
           width={150}

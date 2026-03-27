@@ -1,13 +1,21 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { fetchWithAuth } from "../lib/fetchWIthAuth";
+import { useSession } from "next-auth/react";
 
 const EmailVerification = () => {
-  const [email, setEmail] = useState("user@example.com"); // Replace with actual email from context/state
+  const { data: session } = useSession();
+  const [email, setEmail] = useState("");
   const [isSent, setIsSent] = useState(false);
   const [newEmail, setNewEmail] = useState("");
   const [isUpdating, setIsUpdating] = useState(false);
+
+  useEffect(() => {
+    if (session?.user?.email) {
+      setEmail(session.user.email);
+    }
+  }, [session]);
 
   const sendVerificationLink = async () => {
     try {
