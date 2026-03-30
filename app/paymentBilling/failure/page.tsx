@@ -98,13 +98,13 @@ const PaymentFailureContent = () => {
         <div className="mt-6 flex justify-center gap-4">
           <button
             className="px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700"
-            onClick={() => (window.location.href = "/payment")} // Adjust to your payment retry route
+            onClick={() => (window.location.href = "/client/best-matches")}
           >
             Try Again
           </button>
           <button
             className="px-4 py-2 bg-gray-600 text-white rounded-lg font-medium hover:bg-gray-700"
-            onClick={() => (window.location.href = "/dashboard")} // Adjust to your dashboard route
+            onClick={() => (window.location.href = "/client/best-matches")}
           >
             Back to Dashboard
           </button>

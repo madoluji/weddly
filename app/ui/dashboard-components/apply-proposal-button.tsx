@@ -53,7 +53,7 @@ const ApplyProposalButton = ({ jobId, userId }: Props) => {
             {" "}
             You&apos;ve already applied for this wedding gig
             <br />
-            <Link className="underline" href={"/user/your-proposal"}>
+            <Link className="underline" href={"/user/your-proposals"}>
               View Proposal
             </Link>
           </div>

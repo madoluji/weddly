@@ -3,6 +3,7 @@
 import type React from "react"
 import { useEffect, useState } from "react"
 import { fetchWithAuth } from "@/app/lib/fetchWIthAuth"
+import { useRouter } from "next/navigation"
 import {
   ClockIcon,
   CurrencyDollarIcon,
@@ -17,6 +18,7 @@ import {
   ChevronRightIcon,
   CalendarIcon,
   ChatBubbleLeftRightIcon,
+  TrashIcon,
 } from "@heroicons/react/24/outline"
 import { getTimeAgo } from "../../dashboard-components/job-list/jobList"
 import JobProposalModal from "@/app/ui/client-components/joblist-client/joblistpopupmodal"
@@ -58,12 +60,15 @@ interface AllProposalsListProps {
 }
 
 const AllProposalsList: React.FC<AllProposalsListProps> = ({ jobId }) => {
+  const router = useRouter()
   const [proposals, setProposals] = useState<Proposal[]>([])
   const [job, setJob] = useState<Job | null>(null)
   const [loading, setLoading] = useState<boolean>(true)
   const [selectedProposal, setSelectedProposal] = useState<Proposal | null>(null)
   const [freelancers, setFreelancers] = useState<{ [key: string]: Freelancer }>({})
   const [sortBy, setSortBy] = useState<string>("newest")
+  const [isDeleting, setIsDeleting] = useState<boolean>(false)
+  const [deleteError, setDeleteError] = useState<string>("")
 
   useEffect(() => {
     const fetchJobAndProposals = async () => {
@@ -144,6 +149,39 @@ const AllProposalsList: React.FC<AllProposalsListProps> = ({ jobId }) => {
     return text.substring(0, maxLength) + "..."
   }
 
+  const handleDeleteGig = async () => {
+    if (isDeleting) return
+
+    const isConfirmed = window.confirm(
+      "Are you sure you want to delete this gig? This action cannot be undone.",
+    )
+
+    if (!isConfirmed) return
+
+    setIsDeleting(true)
+    setDeleteError("")
+
+    try {
+      const response = await fetchWithAuth(`/api/post-job?jobId=${jobId}`, {
+        method: "DELETE",
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data?.message || "Failed to delete gig")
+      }
+
+      router.push("/client/best-matches")
+      router.refresh()
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Failed to delete gig"
+      setDeleteError(message)
+    } finally {
+      setIsDeleting(false)
+    }
+  }
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {loading ? (
@@ -157,13 +195,25 @@ const AllProposalsList: React.FC<AllProposalsListProps> = ({ jobId }) => {
           {job && (
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mb-8">
               <div className="bg-primary-50 border-b border-gray-200 px-6 py-4">
-                <div className="flex items-center">
-                  <SparklesIcon className="h-6 w-6 text-primary-600 mr-3" />
-                  <h2 className="text-xl font-bold text-gray-900">Wedding Gig Details</h2>
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="flex items-center">
+                    <SparklesIcon className="h-6 w-6 text-primary-600 mr-3" />
+                    <h2 className="text-xl font-bold text-gray-900">Wedding Gig Details</h2>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleDeleteGig}
+                    disabled={isDeleting}
+                    className="inline-flex items-center justify-center rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:cursor-not-allowed disabled:bg-red-400"
+                  >
+                    <TrashIcon className="mr-2 h-4 w-4" />
+                    {isDeleting ? "Deleting..." : "Delete Gig"}
+                  </button>
                 </div>
               </div>
 
               <div className="p-6">
+                {deleteError && <p className="mb-4 text-sm text-red-600">{deleteError}</p>}
                 <h3 className="text-2xl font-bold text-gray-900 mb-4">{job.title}</h3>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">

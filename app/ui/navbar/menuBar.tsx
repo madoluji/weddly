@@ -4,10 +4,12 @@ import clsx from "clsx";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
+import { useAuth } from "@/app/providers";
 
 const MenuBar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const currentPath = usePathname();
+  const { session } = useAuth();
 
   return (
     <div className="flex-col ">
@@ -58,7 +60,7 @@ const MenuBar = () => {
           </li>
           <li className="hover:text-primary-600 flex align-items-center justify-center">
             <Link
-              href="/user/chatroom"
+              href={session?.user?.id ? `/user/chatroom/${session.user.id}` : "/user/best-matches"}
               className={clsx({
                 "text-primary-600": currentPath == "/user/chatroom",
               })}

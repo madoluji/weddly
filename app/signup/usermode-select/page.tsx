@@ -9,7 +9,7 @@ const ResumeImportPage = async () => {
   const mode = null;
   // if (session?.mode) redirect("/");
   if (mode === "client") {
-    redirect("/client/bestmatches");
+    redirect("/client/best-matches");
   } else if (mode === "freelancer") {
     redirect("/");
   }

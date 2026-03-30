@@ -1,7 +1,6 @@
 "use client";
 import useFetch from "@/app/hooks/useFetch";
 import { fetchWithAuth } from "@/app/lib/fetchWIthAuth";
-import { Button } from "@/app/ui/button";
 import Card from "@/app/ui/card";
 import CardSkeleton from "@/app/ui/dashboard-components/skeletons/cardSkeleton";
 import {
@@ -32,12 +31,13 @@ const ProposalList = () => {
   }
 
   interface proposal {
-    id: string;
+    _id: string;
     title: string;
     bidAmount: string;
     status: string;
     createdAt: string;
     jobId: {
+      _id: string;
       title: string;
     };
   }
@@ -193,7 +193,7 @@ const ProposalList = () => {
               </div>
             ) : (
               proposal.map((p) => (
-                <Card key={p.id} className="overflow-hidden">
+                <Card key={p._id} className="overflow-hidden">
                   <div className="pb-3">
                     <div className="flex justify-between items-start">
                       <div className="text-2xl font-semibold">
@@ -238,7 +238,12 @@ const ProposalList = () => {
                     </div>
                   </div>
                   <div className="footer flex justify-between pt-3">
-                    <Button outline={true}>View Details</Button>
+                    <Link
+                      className="border flex h-10 items-center rounded-lg px-4 text-sm font-medium transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 aria-disabled:cursor-not-allowed aria-disabled:opacity-50 border-primary-500 hover:bg-zinc-100 text-primary-600 bg-transparent"
+                      href={`/user/proposal/${p.jobId._id}`}
+                    >
+                      View Details
+                    </Link>
                   </div>
                 </Card>
               ))

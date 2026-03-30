@@ -125,7 +125,7 @@ const PaymentConfirmContent = ({ method }: Props) => {
           <p className="mt-2 text-gray-600">{error}</p>
           <button
             className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-            onClick={() => router.push("/payment")}
+            onClick={() => router.push("/client/best-matches")}
           >
             Try Again
           </button>

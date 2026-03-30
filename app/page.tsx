@@ -1,14 +1,10 @@
 import Link from "next/link";
 import React from "react";
-import NavBar from "./ui/navbar/navbar";
 
 export default function Home() {
   return (
     <main className="bg-surface text-on-surface font-body selection:bg-primary-fixed selection:text-on-primary-fixed min-h-screen">
-      <header className="bg-surface/80 backdrop-blur-md sticky top-0 z-50 transition-all duration-200">
-        <NavBar />
-      </header>
-      
+
       {/* Hero Section with Antigravity Elements */}
       <section className="relative min-h-[921px] flex items-center justify-center overflow-hidden bg-surface">
         {/* Background Gradient & Floating Icons Shell */}
@@ -85,14 +81,15 @@ export default function Home() {
           </div>
 
           <div className="flex flex-col sm:flex-row gap-4 w-full max-w-md">
-            <Link href="/signup" className="flex-1">
+            <Link
+              href={{
+                pathname: "/login",
+                query: { callbackUrl: "/client/best-matches" },
+              }}
+              className="flex-1"
+            >
               <button className="w-full cta-gradient text-on-primary py-4 px-8 rounded-md font-medium text-base hover:scale-[0.98] transition-transform editorial-shadow">
-                Start Planning
-              </button>
-            </Link>
-            <Link href="/search/talent" className="flex-1">
-              <button className="w-full bg-surface-container-lowest text-primary py-4 px-8 rounded-md font-medium text-base border border-outline-variant/15 hover:bg-surface-container-low transition-colors editorial-shadow">
-                Explore Venues
+                Lets Go
               </button>
             </Link>
           </div>

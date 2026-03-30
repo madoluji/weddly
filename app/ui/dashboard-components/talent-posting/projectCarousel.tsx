@@ -154,9 +154,12 @@ const ProjectCarousel: React.FC = () => {
           <p className="text-muted-foreground mb-4">
             You haven&apos;t posted any wedding gigs yet.
           </p>
-          <button className="bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-2 rounded-md transition-colors">
+          <Link
+            href="/client/post-job"
+            className="inline-flex bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-2 rounded-md transition-colors"
+          >
             Create your first wedding gig
-          </button>
+          </Link>
         </div>
       ) : (
         <div className="relative">
