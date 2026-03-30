@@ -2,6 +2,8 @@ import { NextApiRequest, NextApiResponse } from "next";
 import { connectMongoDB } from "@/app/lib/mongodb";
 import Proposal from "@/models/proposal";
 import Contract from "@/models/contract";
+import FreelancerInfo from "@/models/freelancerInfo";
+import Jobs from "@/models/jobs";
 import { NextRequest, NextResponse } from "next/server";
 import { stat } from "fs";
 // import Interview from "@/models/Interview"; // Model for interview invitations
@@ -23,6 +25,25 @@ export async function GET(req: NextRequest) {
 
     try {
         const actions = [];
+        let isEligible = true;
+        let mismatchReason = "";
+
+        if (jobId && freelancerId) {
+            const freelancer = await FreelancerInfo.findOne({ userId: freelancerId });
+            const job = await Jobs.findById(jobId);
+
+            if (freelancer && job) {
+                const freelancerSkills = freelancer.skills || [];
+                const jobTags = job.tags || [];
+
+                const hasMatchingSkill = jobTags.length === 0 || jobTags.some((tag: string) => freelancerSkills.includes(tag));
+
+                if (!hasMatchingSkill) {
+                    isEligible = false;
+                    mismatchReason = "Skill Mismatch: You do not have any of the preferred skills for this gig.";
+                }
+            }
+        }
 
         // Check if the freelancer has sent a proposal
         if (freelancerId) {
@@ -49,7 +70,7 @@ export async function GET(req: NextRequest) {
             // if (hireExists) actions.push("hired");
         }
 
-        return NextResponse.json({ success: true, actions: actions || [] }, { status: 200 });
+        return NextResponse.json({ success: true, actions: actions || [], isEligible, mismatchReason }, { status: 200 });
     } catch (error) {
         console.error("Error checking actions:", error);
         return NextResponse.json({ success: false, message: "Server error" }, { status: 500 });

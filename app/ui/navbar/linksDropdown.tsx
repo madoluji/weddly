@@ -148,45 +148,64 @@ const LinksDropdown = ({ isDropdownVisible, isOpen, currentMode }: Props) => {
 
             <div className=" text-center pt-1 ">
               <h2 className="text-2xl  font-medium ">
-                {" "}
-                {session?.user?.name} {session?.user?.lastName}
+                {session?.user?.name}{session?.user?.lastName ? ` ${session.user.lastName}` : ""}
               </h2>
               <p className="text-xs  text-gray-400">
                 {(currentMode?.startsWith("/user") ||
                   currentMode?.startsWith("/search/jobs")) && <>Freelancer</>}
                 {(currentMode?.startsWith("/client") ||
                   currentMode?.startsWith("/search/talent")) && <>Client</>}
+                {currentMode?.startsWith("/venue") && <>Venue Manager</>}
               </p>
             </div>
           </div>
-          <div className="hover:bg-slate-200 p-1">
-            {(currentMode?.startsWith("/user") ||
-              currentMode?.startsWith("/search/jobs")) && (
-              // href={session?.user?.roles?.client === true ? "/client/best-matches" : "/signup/client"}>
 
+          {/* --- Role Switch Toggles --- */}
+          {/* Show Client switch when NOT on client paths */}
+          {!(currentMode?.startsWith("/client") || currentMode?.startsWith("/search/talent")) && (
+            <div className="hover:bg-slate-200 p-1">
               <Link href={"/client/best-matches"}>
                 <span className="flex items-center gap-1">
                   <UserCircleIcon className="size-8" />
                   <span className="flex flex-col ">
-                    {session?.user?.name} {session?.user?.lastName}
+                    {session?.user?.name}{session?.user?.lastName ? ` ${session.user.lastName}` : ""}
                     <p className="text-xs text-gray-400">Client</p>
                   </span>
                 </span>
               </Link>
-            )}
-            {(currentMode?.startsWith("/client") ||
-              currentMode?.startsWith("/search/talent")) && (
+            </div>
+          )}
+
+          {/* Show Freelancer switch when NOT on freelancer paths */}
+          {!(currentMode?.startsWith("/user") || currentMode?.startsWith("/search/jobs")) && (
+            <div className="hover:bg-slate-200 p-1">
               <Link href={"/user/best-matches"}>
                 <span className="flex items-center gap-1">
                   <UserCircleIcon className="size-8" />
                   <span className="flex flex-col ">
-                    {session?.user?.name} {session?.user?.lastName}
+                    {session?.user?.name}{session?.user?.lastName ? ` ${session.user.lastName}` : ""}
                     <p className="text-xs text-gray-400">Freelancer</p>
                   </span>
                 </span>
               </Link>
-            )}
-          </div>
+            </div>
+          )}
+
+          {/* Show Venue switch when NOT on venue paths */}
+          {!currentMode?.startsWith("/venue") && (
+            <div className="hover:bg-slate-200 p-1">
+              <Link href={"/venue/dashboard"}>
+                <span className="flex items-center gap-1">
+                  <UserCircleIcon className="size-8" />
+                  <span className="flex flex-col ">
+                    {session?.user?.name}{session?.user?.lastName ? ` ${session.user.lastName}` : ""}
+                    <p className="text-xs text-gray-400">Venue Manager</p>
+                  </span>
+                </span>
+              </Link>
+            </div>
+          )}
+
           <div className="hover:bg-slate-200 p-1">
             {currentMode?.startsWith("/client") ||
             currentMode?.startsWith("/search/talent") ? (
@@ -211,26 +230,14 @@ const LinksDropdown = ({ isDropdownVisible, isOpen, currentMode }: Props) => {
           </div>
 
           <div className="hover:bg-slate-200 p-1">
-            {currentMode?.startsWith("/client") ||
-            currentMode?.startsWith("/search/talent") ? (
-              <Link href={"/user/setting"}>
-                <span className="flex items-center gap-1">
-                  <Cog6ToothIcon className="size-8" />
-                  <span className="flex flex-col ">
-                    <p>Settings</p>
-                  </span>
+            <Link href={"/user/setting"}>
+              <span className="flex items-center gap-1">
+                <Cog6ToothIcon className="size-8" />
+                <span className="flex flex-col ">
+                  <p>Settings</p>
                 </span>
-              </Link>
-            ) : (
-              <Link href={"/user/setting"}>
-                <span className="flex items-center gap-1">
-                  <Cog6ToothIcon className="size-8" />
-                  <span className="flex flex-col ">
-                    <p>Settings</p>
-                  </span>
-                </span>
-              </Link>
-            )}
+              </span>
+            </Link>
           </div>
           <button
             onClick={() => signOut()}

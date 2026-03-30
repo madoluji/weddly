@@ -50,14 +50,27 @@ const ProposalForm = ({ jobId }: ProposalFormProps) => {
   // Handle form submission
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
-    setIsSubmitting(true);
     setIsSubmitted(true);
+    setAlert(null); // Clear previous alerts
 
+    // Frontend validation
     if (!bidAmount.trim() || !coverLetter.trim() || !duration) {
-      console.error("Form validation failed!");
-      setIsSubmitting(false);
+      setAlert({
+        type: "error",
+        message: "Please fill in all required fields.",
+      });
       return;
     }
+
+    if (parseFloat(bidAmount) < 10) {
+      setAlert({
+        type: "error",
+        message: "The minimum bid amount is $10.",
+      });
+      return;
+    }
+
+    setIsSubmitting(true);
 
     try {
       const uploadedFiles = await uploadFiles();
@@ -79,8 +92,10 @@ const ProposalForm = ({ jobId }: ProposalFormProps) => {
         }
       );
 
+      const result = await response.json();
+
       if (!response.ok) {
-        throw new Error("Failed to submit proposal");
+        throw new Error(result.error || result.message || "Failed to submit proposal");
       }
 
       console.log("Proposal submitted successfully");
@@ -91,7 +106,7 @@ const ProposalForm = ({ jobId }: ProposalFormProps) => {
     } catch (error: any) {
       setAlert({
         type: "error",
-        message: error.message || "Error uploading files",
+        message: error.message || "Error submitting proposal",
       });
 
       setFiles([]); // Clear selected files after submission

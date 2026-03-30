@@ -25,6 +25,7 @@ const KYCStatus: React.FC = () => {
   interface UserRoles {
     client?: boolean;
     freelancer?: boolean;
+    venue?: boolean;
   }
 
   interface UserData {
@@ -67,6 +68,10 @@ const KYCStatus: React.FC = () => {
     }
     if (pathname.startsWith("/client") && !roles.client) {
       router.push(`/signup/client`);
+      return;
+    }
+    if (pathname.startsWith("/venue") && !roles.venue) {
+      router.push(`/signup/venue`);
       return;
     }
 

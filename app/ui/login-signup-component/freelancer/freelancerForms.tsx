@@ -34,7 +34,6 @@ export type institution = {
 type FormData = {
   location: string;
   skills: string[];
-  industries: string[];
   workExperience?: work[];
   projectPortfolio?: project[];
   education?: institution[];
@@ -69,7 +68,6 @@ const MultiStepForm = () => {
   const initialFormData: FormData = {
     location: "",
     skills: [],
-    industries: [],
     workExperience: [],
     projectPortfolio: [],
     education: [],
@@ -82,33 +80,7 @@ const MultiStepForm = () => {
   const [step, setStep] = useState(0);
   const [uploading, setUploading] = useState<boolean>(false);
   const [files, setFiles] = useState<{ [key: number]: File[] }>([]); // Store file data
-  // State to handle input for tag fields (skills, languages, etc.)
-  const [tagInput, setTagInput] = useState<{ [key: string]: string }>({
-    skills: "",
-    languages: "",
-    industries: "",
-  });
 
-  /**
-   * Handles adding/removing tags dynamically
-   * @param e - Keyboard event (for Enter key)
-   * @param field - Field name (skills, languages, etc.)
-   */
-  const handleTagChange = (
-    e: React.KeyboardEvent<HTMLInputElement>,
-    field: "skills" | "languages" | "industries"
-  ) => {
-    if (e.key === "Enter" && tagInput[field].trim()) {
-      e.preventDefault();
-      if (!formData[field].includes(tagInput[field].trim())) {
-        setFormData((prev) => ({
-          ...prev,
-          [field]: [...prev[field], tagInput[field].trim()],
-        }));
-      }
-      setTagInput((prev) => ({ ...prev, [field]: "" }));
-    }
-  };
 
   /**
    * Handles removing tags from any tag field (skills, languages)
@@ -116,7 +88,7 @@ const MultiStepForm = () => {
    * @param tag - Tag to remove
    */
   const removeTag = (
-    field: "skills" | "languages" | "industries",
+    field: "skills" | "languages",
     tag: string
   ) => {
     setFormData((prev) => ({
@@ -125,24 +97,7 @@ const MultiStepForm = () => {
     }));
   };
 
-  // Filters recommendations for skills and languages
-  const filteredRecommendations = {
-    skills: predefinedSkills.filter(
-      (skill) =>
-        skill.toLowerCase().includes(tagInput.skills.toLowerCase()) &&
-        !formData.skills.includes(skill)
-    ),
-    languages: languageTags.filter(
-      (language) =>
-        language.toLowerCase().includes(tagInput.languages.toLowerCase()) &&
-        !formData.languages.includes(language)
-    ),
-    industries: jobCategories.filter(
-      (industry) =>
-        industry.toLowerCase().includes(tagInput.industries.toLowerCase()) &&
-        !formData.industries.includes(industry)
-    ),
-  };
+
 
   // Function to add an item to an array field files
   const handleAddItem = (field: ArrayFieldKey, defaultItem: any) => {
@@ -312,91 +267,30 @@ const MultiStepForm = () => {
                   {skill} ✕
                 </span>
               ))}
-              <input
-                type="text"
-                value={tagInput.skills}
-                onChange={(e) =>
-                  setTagInput({ ...tagInput, skills: e.target.value })
-                }
-                onKeyDown={(e) => handleTagChange(e, "skills")}
-                className="border-none outline-none flex-grow"
-                placeholder="Type a skill and press Enter..."
-              />
+              <select
+                value=""
+                onChange={(e) => {
+                  const val = e.target.value;
+                  if (val && !formData.skills.includes(val)) {
+                    setFormData((prev) => ({
+                      ...prev,
+                      skills: [...prev.skills, val],
+                    }));
+                  }
+                }}
+                className="border-none outline-none flex-grow bg-transparent text-sm min-w-[200px]"
+              >
+                <option value="" disabled>Select a skill...</option>
+                {predefinedSkills
+                  .filter((skill) => !formData.skills.includes(skill))
+                  .map((skill, index) => (
+                    <option key={index} value={skill}>{skill}</option>
+                  ))}
+              </select>
             </div>
-
-            {/* Recommended skills dropdown */}
-            {tagInput.skills && filteredRecommendations.skills.length > 0 && (
-              <div className="border rounded-md mt-2 p-2 bg-white shadow-md max-h-40 overflow-y-auto">
-                {filteredRecommendations.skills.map((skill, index) => (
-                  <div
-                    key={index}
-                    className="p-1 cursor-pointer hover:bg-gray-200"
-                    onClick={() => {
-                      setFormData((prev) => ({
-                        ...prev,
-                        skills: [...prev.skills, skill],
-                      }));
-                      setTagInput({ ...tagInput, skills: "" });
-                    }}
-                  >
-                    {skill}
-                  </div>
-                ))}
-              </div>
-            )}
           </div>
 
-          {/* Industries Input */}
-          <div>
-            <label className="block">
-              Industries <span className="text-red-500">*</span>
-            </label>
-            <div className="flex flex-wrap gap-2 border rounded-md p-2 min-h-[40px]">
-              {formData.industries.map((industries, index) => (
-                <span
-                  key={index}
-                  className="bg-blue-200 text-blue-800 px-2 py-1 rounded-md text-sm cursor-pointer"
-                  onClick={() => removeTag("industries", industries)}
-                >
-                  {industries} ✕
-                </span>
-              ))}
-              <input
-                type="text"
-                value={tagInput.industries}
-                onChange={(e) =>
-                  setTagInput({ ...tagInput, industries: e.target.value })
-                }
-                onKeyDown={(e) => handleTagChange(e, "industries")}
-                className="border-none outline-none flex-grow"
-                placeholder="Type a industries and press Enter..."
-              />
-            </div>
-
-            {/* Recommended industries dropdown */}
-            {tagInput.industries &&
-              filteredRecommendations.industries.length > 0 && (
-                <div className="border rounded-md mt-2 p-2 bg-white shadow-md max-h-40 overflow-y-auto">
-                  {filteredRecommendations.industries.map(
-                    (industries, index) => (
-                      <div
-                        key={index}
-                        className="p-1 cursor-pointer hover:bg-gray-200"
-                        onClick={() => {
-                          setFormData((prev) => ({
-                            ...prev,
-                            industries: [...prev.industries, industries],
-                          }));
-                          setTagInput({ ...tagInput, industries: "" });
-                        }}
-                      >
-                        {industries}
-                      </div>
-                    )
-                  )}
-                </div>
-              )}
-          </div>
+          {/* Industries Removed */}
 
           {/* Languages Input */}
           <div>
@@ -413,39 +307,27 @@ const MultiStepForm = () => {
                   {language} ✕
                 </span>
               ))}
-              <input
-                type="text"
-                value={tagInput.languages}
-                onChange={(e) =>
-                  setTagInput({ ...tagInput, languages: e.target.value })
-                }
-                onKeyDown={(e) => handleTagChange(e, "languages")}
-                className="border-none outline-none flex-grow"
-                placeholder="Type a language and press Enter..."
-              />
-            </div>
-
-            {/* Recommended languages dropdown */}
-            {tagInput.languages &&
-              filteredRecommendations.languages.length > 0 && (
-                <div className="border rounded-md mt-2 p-2 bg-white shadow-md max-h-40 overflow-y-auto">
-                  {filteredRecommendations.languages.map((language, index) => (
-                    <div
-                      key={index}
-                      className="p-1 cursor-pointer hover:bg-gray-200"
-                      onClick={() => {
-                        setFormData((prev) => ({
-                          ...prev,
-                          languages: [...prev.languages, language],
-                        }));
-                        setTagInput({ ...tagInput, languages: "" });
-                      }}
-                    >
-                      {language}
-                    </div>
+              <select
+                value=""
+                onChange={(e) => {
+                  const val = e.target.value;
+                  if (val && !formData.languages.includes(val)) {
+                    setFormData((prev) => ({
+                      ...prev,
+                      languages: [...prev.languages, val],
+                    }));
+                  }
+                }}
+                className="border-none outline-none flex-grow bg-transparent text-sm min-w-[200px]"
+              >
+                <option value="" disabled>Select a language...</option>
+                {languageTags
+                  .filter((lang) => !formData.languages.includes(lang))
+                  .map((lang, index) => (
+                    <option key={index} value={lang}>{lang}</option>
                   ))}
-                </div>
-              )}
+              </select>
+            </div>
           </div>
 
           <div>

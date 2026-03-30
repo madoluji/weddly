@@ -14,6 +14,7 @@ export async function GET() {
     const totalUsers = await User.countDocuments();
     const freelancers = await User.countDocuments({ "roles.freelancer": true });
     const clients = await User.countDocuments({ "roles.client": true });
+    const venues = await User.countDocuments({ "roles.venue": true });
     const totalKyc = await KYC.countDocuments();
     const approvedKyc = await KYC.countDocuments({ status: 'approved' });
     const pendingKyc = await KYC.countDocuments({ status: 'pending' });
@@ -21,7 +22,7 @@ export async function GET() {
 
 
 
-    return NextResponse.json({ totalUsers, freelancers, clients, totalKyc, approvedKyc, pendingKyc, rejectedKyc });
+    return NextResponse.json({ totalUsers, freelancers, clients, venues, totalKyc, approvedKyc, pendingKyc, rejectedKyc });
   } catch (error) {
     console.error("Error fetching user stats:", error);
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });

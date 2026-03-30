@@ -41,7 +41,7 @@ const ProfileCard = ({ mode }: Props) => {
         <div className="text-center pt-10">
           {/* Display user's name and last name */}
           <h2 className="text-3xl font-medium">
-            {session?.user?.name} {session?.user?.lastName}
+            {session?.user?.name}{session?.user?.lastName ? ` ${session.user.lastName}` : ""}
           </h2>
           {/* Display mode */}
           <p className="text-base text-gray-400">{mode}</p>

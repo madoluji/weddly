@@ -499,10 +499,6 @@ const jobCategories = [
 ];
 
 const skills = [
-  "Wedding Timeline Planning",
-  "Vendor Negotiation",
-  "Budget Planning",
-  "Guest Logistics",
   "Bridal Photography",
   "Cinematic Videography",
   "Photo Editing",
@@ -517,7 +513,6 @@ const skills = [
   "Sound Mixing",
   "Event Anchoring",
   "Invitation Design",
-  "Calligraphy",
   "Transportation Coordination",
   "Lighting Design",
   "Ritual Coordination",
@@ -525,52 +520,7 @@ const skills = [
   "Tailoring & Alterations",
 ];
 
-const industrySkillsMapping = {
-  "Wedding Planning & Coordination": [
-    "Wedding Timeline Planning",
-    "Vendor Negotiation",
-    "Budget Planning",
-    "Guest Logistics",
-  ],
-  "Photography & Videography": [
-    "Bridal Photography",
-    "Cinematic Videography",
-    "Photo Editing",
-  ],
-  "Makeup & Beauty": [
-    "Bridal Makeup",
-    "Hair Styling",
-    "Bridal Styling",
-  ],
-  "Decoration & Floral Design": [
-    "Floral Arrangement",
-    "Mandap Decoration",
-    "Stage Decoration",
-    "Lighting Design",
-  ],
-  "Catering & Bakery": ["Live Catering", "Cake Design"],
-  "Venue Management": [
-    "Wedding Timeline Planning",
-    "Guest Logistics",
-    "Vendor Negotiation",
-  ],
-  "Music & Entertainment": [
-    "DJ Performance",
-    "Sound Mixing",
-    "Event Anchoring",
-  ],
-  "Bridal Wear & Tailoring": ["Bridal Styling", "Tailoring & Alterations"],
-  "Invitation & Stationery Design": ["Invitation Design", "Calligraphy"],
-  "Transportation & Logistics": [
-    "Transportation Coordination",
-    "Guest Logistics",
-  ],
-  "Mehendi & Ritual Services": ["Ritual Coordination"],
-  "Event Hosting & Anchoring": ["Event Anchoring"],
-  "Lighting & Sound Setup": ["Lighting Design", "Sound Mixing"],
-  "Gift & Favors Curation": ["Budget Planning", "Vendor Negotiation"],
-  "Honeymoon Travel Planning": ["Guest Logistics", "Budget Planning"],
-};
+
 
 const jobTypes = [
   "Full-time",
@@ -634,5 +584,4 @@ module.exports = {
   budgetOptions,
   additionalTags,
   languageTags,
-  industrySkillsMapping,
 };

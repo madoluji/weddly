@@ -2,99 +2,79 @@
 
 import { ChangeEvent, FormEvent, useEffect, useState } from "react";
 import { useAuth } from "@/app/providers";
-import { Button } from "@/app/ui/button";
-import { useRouter } from "next/navigation";
-import clsx from "clsx";
+import { useRouter, useParams, useSearchParams } from "next/navigation";
 import { fetchWithAuth } from "@/app/lib/fetchWIthAuth";
-import { jobCategories, skills as predefinedSkills } from "@/app/lib/data";
+
+const WEDDING_STYLES = [
+  "Traditional",
+  "Modern",
+  "Rustic",
+  "Minimalist",
+  "Bohemian",
+  "Glamorous",
+  "Vintage",
+  "Destination",
+];
 
 interface ClientFormData {
   userId?: string;
   fullName: string;
-  isCompany: boolean;
-  industry: string[];
-  companySize?: "Startup" | "Small" | "Medium" | "Large";
+  isWeddingPlanner: boolean;
+  weddingStyle: string;
+  targetWeddingDate: string;
   location: string;
-  preferredSkills: string[];
   averageBudget: number;
-  rating?: number; // Default to 0, can be updated later
 }
 
 const ClientForm = () => {
   const router = useRouter();
-  const { session, status } = useAuth();
-  // Initial form data
+  const params = useParams();
+  const { session } = useAuth();
+  const [mounted, setMounted] = useState(false);
+
   const initialFormData: ClientFormData = {
     userId: "",
     fullName: "",
-    isCompany: false,
-    industry: [],
-    companySize: undefined,
+    isWeddingPlanner: false,
+    weddingStyle: "",
+    targetWeddingDate: "",
     location: "",
-    preferredSkills: [],
     averageBudget: 0,
-    rating: 0,
   };
 
   const [formData, setFormData] = useState<ClientFormData>(initialFormData);
-  const [companyLogo, setCompanyLogo] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
-  // Tag input states
-  const [tagInput, setTagInput] = useState<{ [key: string]: string }>({
-    industry: "",
-    preferredSkills: "",
-  });
+
+  // Hydration guard for date input
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const searchParams = useSearchParams();
 
   useEffect(() => {
     if (session) {
+      const dateParam = searchParams.get("date") || "";
+      const budgetParam = searchParams.get("budget") || "";
+
+      // Map budget range string to a numeric value
+      const budgetMap: Record<string, number> = {
+        "Under $10,000": 10000,
+        "$10,000 – $25,000": 25000,
+        "$25,000 – $50,000": 50000,
+        "$50,000 – $100,000": 100000,
+        "$100,000+": 150000,
+      };
+
       setFormData((prev) => ({
         ...prev,
         userId: session.user.id,
-        fullName: session.user.name + " " + session.user.lastName,
+        fullName: `${session.user.name || ""} ${session.user.lastName || ""}`.trim(),
+        ...(dateParam && { targetWeddingDate: dateParam }),
+        ...(budgetParam && budgetMap[budgetParam] && { averageBudget: budgetMap[budgetParam] }),
       }));
     }
-  }, [session]);
-
-  // Handles adding tags dynamically
-  const handleTagChange = (
-    e: React.KeyboardEvent<HTMLInputElement>,
-    field: "industry" | "preferredSkills"
-  ) => {
-    if (e.key === "Enter" && tagInput[field].trim()) {
-      e.preventDefault();
-      if (!formData[field].includes(tagInput[field].trim())) {
-        setFormData((prev) => ({
-          ...prev,
-          [field]: [...(prev[field] as string[]), tagInput[field].trim()],
-        }));
-      }
-      setTagInput((prev) => ({ ...prev, [field]: "" }));
-    }
-  };
-
-  // Removes a selected tag
-  const removeTag = (field: "industry" | "preferredSkills", tag: string) => {
-    setFormData((prev) => ({
-      ...prev,
-      [field]: Array.isArray(prev[field])
-        ? prev[field].filter((t) => t !== tag)
-        : prev[field],
-    }));
-  };
-
-  // Filters recommendations based on input
-  const filteredRecommendations = {
-    industry: jobCategories.filter(
-      (industry) =>
-        industry.toLowerCase().includes(tagInput.industry.toLowerCase()) &&
-        !formData.industry.includes(industry)
-    ),
-    preferredSkills: predefinedSkills.filter(
-      (skill) =>
-        skill.toLowerCase().includes(tagInput.preferredSkills.toLowerCase()) &&
-        !formData.preferredSkills.includes(skill)
-    ),
-  };
+  }, [session, searchParams]);
 
   const handleChange = (
     e: ChangeEvent<HTMLInputElement | HTMLSelectElement>
@@ -111,25 +91,17 @@ const ClientForm = () => {
     }
   };
 
-  const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files.length > 0) {
-      setCompanyLogo(e.target.files[0]);
-    }
-  };
-
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setUploading(true);
 
     try {
-      const companyLogoURL = "";
-
+      // Use the ID from the URL params
       const finalFormData = {
         ...formData,
-        companyLogo: companyLogoURL || null,
+        userId: params.id || formData.userId,
       };
 
-      // Send data to API
       const response = await fetchWithAuth("/api/clientInfo", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -137,12 +109,13 @@ const ClientForm = () => {
       });
 
       if (response.ok) {
-        router.push(`/client/best-matches`); // Redirect after successful registration
+        router.push(`/client/best-matches`);
       } else {
         alert("Error submitting client details.");
       }
     } catch (error) {
       console.error("Error submitting client form:", error);
+      alert("Something went wrong. Please try again.");
     } finally {
       setUploading(false);
     }
@@ -151,193 +124,190 @@ const ClientForm = () => {
   return (
     <form
       onSubmit={handleSubmit}
-      className="w-full max-w-lg mx-auto border p-6 rounded-lg shadow"
+      className="w-full max-w-lg mx-auto p-8 rounded-2xl bg-white shadow-lg border border-gray-100"
     >
-      <h2 className="text-2xl font-bold mb-4">Client Registration</h2>
+      {/* Step indicator */}
+      <p className="text-sm font-medium text-primary-500 tracking-wide mb-1">
+        Step 2 of 2
+      </p>
 
-      {/* Full Name */}
-      <div>
-        <label className="block font-medium">Full Name</label>
-        <input
-          type="text"
-          name="fullName"
-          value={formData.fullName}
-          onChange={handleChange}
-          className="w-full border rounded-md p-2"
-          required
-        />
-      </div>
+      {/* Title */}
+      <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-1">
+        Tell us about your <span className="text-primary-500">Big Day</span>
+      </h2>
+      <p className="text-sm text-gray-500 mb-8">
+        Just a few details so we can match you with the perfect vendors.
+      </p>
 
-      {/* Is Company */}
-      <div className="flex items-center mt-3">
-        <input
-          type="checkbox"
-          id="isCompany"
-          name="isCompany"
-          checked={formData.isCompany}
-          onChange={handleChange}
-          className="mr-2"
-        />
-        <label htmlFor="isCompany" className="font-medium">
-          Registering as a Company
-        </label>
-      </div>
-
-      {/* Company Size (if Company) */}
-      {formData.isCompany && (
-        <div className="mt-3">
-          <label className="block font-medium">Company Size</label>
-          <select
-            name="companySize"
-            value={formData.companySize}
-            onChange={handleChange}
-            className="w-full border rounded-md p-2"
+      <div className="flex flex-col gap-5">
+        {/* Full Name */}
+        <div>
+          <label
+            htmlFor="fullName"
+            className="block text-sm font-medium text-gray-700 mb-1"
           >
-            <option value="">Select Size</option>
-            <option value="Startup">Startup</option>
-            <option value="Small">Small</option>
-            <option value="Medium">Medium</option>
-            <option value="Large">Large</option>
+            Full Name <span className="text-red-400">*</span>
+          </label>
+          <input
+            type="text"
+            id="fullName"
+            name="fullName"
+            value={formData.fullName}
+            onChange={handleChange}
+            className="w-full border border-gray-300 rounded-lg p-2.5 shadow-sm focus:ring-primary-500 focus:border-primary-500 transition-colors"
+            required
+          />
+        </div>
+
+        {/* Location */}
+        <div>
+          <label
+            htmlFor="location"
+            className="block text-sm font-medium text-gray-700 mb-1"
+          >
+            Location <span className="text-red-400">*</span>
+          </label>
+          <input
+            type="text"
+            id="location"
+            name="location"
+            value={formData.location}
+            onChange={handleChange}
+            placeholder="City, Country"
+            className="w-full border border-gray-300 rounded-lg p-2.5 shadow-sm focus:ring-primary-500 focus:border-primary-500 transition-colors"
+            required
+          />
+        </div>
+
+        {/* Wedding Planner Checkbox */}
+        <div className="flex items-center gap-3 p-3 bg-primary-100 rounded-lg">
+          <input
+            type="checkbox"
+            id="isWeddingPlanner"
+            name="isWeddingPlanner"
+            checked={formData.isWeddingPlanner}
+            onChange={handleChange}
+            className="w-4 h-4 rounded border-gray-300 text-primary-500 focus:ring-primary-500"
+          />
+          <label
+            htmlFor="isWeddingPlanner"
+            className="text-sm font-medium text-gray-700 select-none cursor-pointer"
+          >
+            Planning on behalf of a couple (Wedding Planner)
+          </label>
+        </div>
+
+        {/* Wedding Style */}
+        <div>
+          <label
+            htmlFor="weddingStyle"
+            className="block text-sm font-medium text-gray-700 mb-1"
+          >
+            Wedding Style <span className="text-red-400">*</span>
+          </label>
+          <select
+            id="weddingStyle"
+            name="weddingStyle"
+            value={formData.weddingStyle}
+            onChange={handleChange}
+            required
+            className="w-full border border-gray-300 rounded-lg p-2.5 shadow-sm focus:ring-primary-500 focus:border-primary-500 transition-colors"
+          >
+            <option value="" disabled>
+              Choose a style
+            </option>
+            {WEDDING_STYLES.map((style) => (
+              <option key={style} value={style}>
+                {style}
+              </option>
+            ))}
           </select>
         </div>
-      )}
 
-      {/* Location */}
-      <div className="mt-3">
-        <label className="block font-medium">Location</label>
-        <input
-          type="text"
-          name="location"
-          value={formData.location}
-          onChange={handleChange}
-          className="w-full border rounded-md p-2"
-          required
-        />
-      </div>
-
-      {/* Industry Selection with Tags */}
-      <div className="mt-3">
-        <label className="block font-medium">Preferred Industry</label>
-        <div className="flex flex-wrap gap-2 border rounded-md p-2 min-h-[40px]">
-          {formData.industry.map((industry, index) => (
-            <span
-              key={index}
-              className="bg-blue-200 text-blue-800 px-2 py-1 rounded-md text-sm cursor-pointer"
-              onClick={() => removeTag("industry", industry)}
-            >
-              {industry} ✕
-            </span>
-          ))}
-          <input
-            type="text"
-            value={tagInput.industry}
-            onChange={(e) =>
-              setTagInput({ ...tagInput, industry: e.target.value })
-            }
-            onKeyDown={(e) => handleTagChange(e, "industry")}
-            className="border-none outline-none flex-grow"
-            placeholder="Type an industry and press Enter..."
-          />
-        </div>
-
-        {/* Recommended industries dropdown */}
-        {tagInput.industry && filteredRecommendations.industry.length > 0 && (
-          <div className="border rounded-md mt-2 p-2 bg-white shadow-md max-h-40 overflow-y-auto">
-            {filteredRecommendations.industry.map((industry, index) => (
-              <div
-                key={index}
-                className="p-1 cursor-pointer hover:bg-gray-200"
-                onClick={() => {
-                  setFormData((prev) => ({
-                    ...prev,
-                    industry: [...prev.industry, industry],
-                  }));
-                  setTagInput({ ...tagInput, industry: "" });
-                }}
-              >
-                {industry}
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* Preferred Skills Selection with Tags */}
-      <div className="mt-3">
-        <label className="block font-medium">Preferred Skills</label>
-        <div className="flex flex-wrap gap-2 border rounded-md p-2 min-h-[40px]">
-          {formData.preferredSkills.map((skill, index) => (
-            <span
-              key={index}
-              className="bg-green-200 text-green-800 px-2 py-1 rounded-md text-sm cursor-pointer"
-              onClick={() => removeTag("preferredSkills", skill)}
-            >
-              {skill} ✕
-            </span>
-          ))}
-          <input
-            type="text"
-            value={tagInput.preferredSkills}
-            onChange={(e) =>
-              setTagInput({ ...tagInput, preferredSkills: e.target.value })
-            }
-            onKeyDown={(e) => handleTagChange(e, "preferredSkills")}
-            className="border-none outline-none flex-grow"
-            placeholder="Type a skill and press Enter..."
-          />
-        </div>
-
-        {/* Recommended industries dropdown */}
-        {tagInput.preferredSkills &&
-          filteredRecommendations.preferredSkills.length > 0 && (
-            <div className="border rounded-md mt-2 p-2 bg-white shadow-md max-h-40 overflow-y-auto">
-              {filteredRecommendations.preferredSkills.map(
-                (preferredSkills, index) => (
-                  <div
-                    key={index}
-                    className="p-1 cursor-pointer hover:bg-gray-200"
-                    onClick={() => {
-                      setFormData((prev) => ({
-                        ...prev,
-                        preferredSkills: [
-                          ...prev.preferredSkills,
-                          preferredSkills,
-                        ],
-                      }));
-                      setTagInput({ ...tagInput, preferredSkills: "" });
-                    }}
-                  >
-                    {preferredSkills}
-                  </div>
-                )
-              )}
-            </div>
+        {/* Target Wedding Date */}
+        <div>
+          <label
+            htmlFor="targetWeddingDate"
+            className="block text-sm font-medium text-gray-700 mb-1"
+          >
+            Target Wedding Date <span className="text-red-400">*</span>
+          </label>
+          {mounted ? (
+            <input
+              type="date"
+              id="targetWeddingDate"
+              name="targetWeddingDate"
+              value={formData.targetWeddingDate}
+              onChange={handleChange}
+              required
+              min={new Date().toISOString().split("T")[0]}
+              className="w-full border border-gray-300 rounded-lg p-2.5 shadow-sm focus:ring-primary-500 focus:border-primary-500 transition-colors"
+            />
+          ) : (
+            <input
+              type="text"
+              id="targetWeddingDate"
+              name="targetWeddingDate"
+              value={formData.targetWeddingDate}
+              placeholder="YYYY-MM-DD"
+              readOnly
+              className="w-full border border-gray-300 rounded-lg p-2.5 shadow-sm bg-gray-50"
+            />
           )}
-      </div>
+        </div>
 
-      {/* Average Budget */}
-      <div className="mt-3">
-        <label className="block font-medium">Average Budget ($)</label>
-        <input
-          type="number"
-          name="averageBudget"
-          value={formData.averageBudget}
-          onChange={handleChange}
-          className="w-full border rounded-md p-2"
-          min={0}
-        />
-      </div>
+        {/* Average Budget */}
+        <div>
+          <label
+            htmlFor="averageBudget"
+            className="block text-sm font-medium text-gray-700 mb-1"
+          >
+            Average Budget ($)
+          </label>
+          <input
+            type="number"
+            id="averageBudget"
+            name="averageBudget"
+            value={formData.averageBudget}
+            onChange={handleChange}
+            className="w-full border border-gray-300 rounded-lg p-2.5 shadow-sm focus:ring-primary-500 focus:border-primary-500 transition-colors"
+            min={0}
+            placeholder="e.g. 15000"
+          />
+        </div>
 
-      {/* Submit Button */}
-      <div className="mt-5">
-        <Button
-          type="submit"
-          className={clsx("w-full bg-blue-500 text-white py-2 rounded", {
-            "opacity-50 cursor-not-allowed": uploading,
-          })}
-        >
-          {uploading ? "Submitting..." : "Register Client"}
-        </Button>
+        {/* Submit Button */}
+        <div className="pt-2">
+          <button
+            type="submit"
+            className="w-full bg-[#2f5f4a] text-white py-3 px-6 rounded-lg font-semibold text-base hover:bg-[#265040] focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 shadow-sm transition-all duration-200 disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            disabled={uploading}
+          >
+            {uploading && (
+              <svg
+                className="animate-spin h-5 w-5 text-white"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <circle
+                  className="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  strokeWidth="4"
+                />
+                <path
+                  className="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                />
+              </svg>
+            )}
+            {uploading ? "Submitting..." : "Continue"}
+          </button>
+        </div>
       </div>
     </form>
   );

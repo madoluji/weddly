@@ -3,11 +3,10 @@ import mongoose, { Model } from "mongoose";
 interface IClientInfo extends mongoose.Document {
     userId: mongoose.Schema.Types.ObjectId;
     fullName: string;
-    isCompany: boolean;
-    industry: string[];
-    companySize?: string;
+    isWeddingPlanner: boolean;
+    weddingStyle: string;
+    targetWeddingDate: string;
     averageBudget: number;
-    preferredSkills: string[];
     location?: string;
     rating: number;
 }
@@ -24,48 +23,52 @@ const clientInfoSchema = new mongoose.Schema<IClientInfo>(
             type: String,
             required: true,
         },
-        isCompany: {
+        isWeddingPlanner: {
             type: Boolean,
-            required: true, // True if the client is a company, False if an individual
-        },
-        industry: {
-            type: [String],
             required: true,
-            default: [],
+            default: false,
         },
-
-        companySize: {
+        weddingStyle: {
             type: String,
-            enum: ["Startup", "Small", "Medium", "Large"],
-            required: function (this: any) {
-                return this.isCompany === true; // Ensures only required if isCompany is true
-            },
+            required: true,
+            enum: [
+                "Traditional",
+                "Modern",
+                "Rustic",
+                "Minimalist",
+                "Bohemian",
+                "Glamorous",
+                "Vintage",
+                "Destination",
+            ],
+        },
+        targetWeddingDate: {
+            type: String,
+            required: true,
         },
         averageBudget: {
             type: Number,
-            default: 0, // Average budget of the client's posted projects
-        },
-        preferredSkills: {
-            type: [String], // Skills the client often looks for in freelancers
-            default: [],
+            default: 0,
         },
         location: {
-            type: String, // Optional, useful for localized recommendations
+            type: String,
         },
         rating: {
             type: Number,
-            default: 0, // Client rating based on freelancer feedback
+            default: 0,
             min: 0,
             max: 5,
         },
-
     },
     { timestamps: true }
 );
 
+// Delete cached model on HMR so schema changes take effect
+if (mongoose.models.ClientInfo) {
+    delete mongoose.models.ClientInfo;
+}
+
 const ClientInfo: Model<IClientInfo> =
-    mongoose.models.ClientInfo ||
-    mongoose.model<IClientInfo>("ClientInfo",
-        clientInfoSchema);
+    mongoose.model<IClientInfo>("ClientInfo", clientInfoSchema);
 
 export default ClientInfo;

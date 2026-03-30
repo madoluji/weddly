@@ -15,11 +15,7 @@ const nextConfig = {
   },
   async redirects() {
     return [
-      {
-        source: "/",
-        destination: "/user/best-matches",
-        permanent: true,
-      },
+      // existing root redirect removed for landing page
     ];
   },
   images: {

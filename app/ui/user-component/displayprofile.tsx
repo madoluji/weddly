@@ -377,7 +377,7 @@ export default function DisplayProfile() {
                   <polyline points="8 6 2 12 8 18"></polyline>
                 </svg>
                 <h2 className="text-xl font-semibold text-gray-800">
-                  Skills & Industries
+                  Skills
                 </h2>
               </div>
             </div>
@@ -397,26 +397,6 @@ export default function DisplayProfile() {
                       ))
                     ) : (
                       <p className="text-gray-500">No skills provided</p>
-                    )}
-                  </div>
-                </div>
-                <hr className="my-4" />
-                <div>
-                  <h3 className="font-medium text-gray-800 mb-2">Industries</h3>
-                  <div className="flex flex-wrap gap-2">
-                    {freelancerData?.industries?.length > 0 ? (
-                      freelancerData.industries.map(
-                        (industry: string, i: number) => (
-                          <span
-                            key={i}
-                            className="px-3 py-1 bg-gray-100 text-gray-700 text-sm rounded-full"
-                          >
-                            {industry}
-                          </span>
-                        )
-                      )
-                    ) : (
-                      <p className="text-gray-500">No industries provided</p>
                     )}
                   </div>
                 </div>

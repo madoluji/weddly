@@ -143,7 +143,7 @@ const ReviewsCard = () => {
                     </div>
                     <div className="flex flex-col gap-0.5">
                       <p className="text-gray-800 font-medium text-[1rem] leading-tight">
-                        {review.reviewerId.name} {review.reviewerId.lastName}
+                        {review.reviewerId.name}{review.reviewerId.lastName ? ` ${review.reviewerId.lastName}` : ""}
                       </p>
                       <div className="flex justify-start items-center text-[.7rem] gap-2">
                         <StarRating rating={review.rating} /> 

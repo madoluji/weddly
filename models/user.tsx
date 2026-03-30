@@ -9,6 +9,7 @@ interface IUser extends Document {
   roles: {
     client?: boolean;
     freelancer?: boolean;
+    venue?: boolean;
   };
   dob: string;
   country: string;
@@ -48,6 +49,7 @@ const userSchema = new Schema<IUser>(
     roles: {
       client: { type: Boolean, default: false },
       freelancer: { type: Boolean, default: false },
+      venue: { type: Boolean, default: false },
     },
     country: {
       type: String,

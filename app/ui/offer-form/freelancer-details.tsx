@@ -29,7 +29,6 @@ type FreelancerData = {
   rate: string;
   createdAt: string;
   updatedAt: string;
-  industries: string[];
   saved: boolean;
   profilePicture?: string;
 };
@@ -66,12 +65,6 @@ const FreelancerDetail = ({ freelancerId }: FreelancerDetailProps) => {
             )}
             <div className="">
               <p className="text-xl font-semibold">{freelancer.fullName}</p>
-              {/* Industries */}
-              {freelancer.industries && (
-                <p className="text-sm text-gray-500">
-                  {freelancer.industries.join(" | ")}
-                </p>
-              )}
             </div>
           </div>
 

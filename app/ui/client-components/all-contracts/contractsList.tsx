@@ -21,7 +21,6 @@ interface FreelancerDetails {
   fullName: string;
   location: string;
   rate: number;
-  industries: string[];
 }
 
 interface Contract {

@@ -78,6 +78,18 @@ const MenuBar = () => {
               Analytics
             </Link>
           </li>
+          {(currentPath.startsWith("/client") ||
+            currentPath.startsWith("/search/talent")) && (
+            <li className="flex align-items-center justify-center mt-4">
+              <Link
+                href="/client/post-job/job-details"
+                className="border-2 border-emerald-600 text-emerald-700 px-8 py-3 rounded-full font-bold hover:bg-emerald-50 transition-all text-center w-full"
+                onClick={() => setIsOpen(!isOpen)}
+              >
+                Post a Job
+              </Link>
+            </li>
+          )}
         </ul>
       </div>
     </div>

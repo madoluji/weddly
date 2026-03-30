@@ -144,6 +144,17 @@ const Links = () => {
             </Link>
             )}
         </li>
+        {(currentPath.startsWith("/client") ||
+          currentPath.startsWith("/search/talent")) && (
+          <li>
+            <Link
+              href="/client/post-job/job-details"
+              className="border-2 border-emerald-600 text-emerald-700 px-6 py-2 rounded-full font-bold hover:bg-emerald-50 transition-all shadow-sm whitespace-nowrap"
+            >
+              Post a Job
+            </Link>
+          </li>
+        )}
       </ul>
     </>
   );

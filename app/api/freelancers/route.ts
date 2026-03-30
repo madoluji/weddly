@@ -6,7 +6,6 @@ import { NextRequest, NextResponse } from "next/server";
 import SavedFreelancers from "@/models/savedFreelancers";
 import User from "@/models/user";
 import clientinfo from "@/models/clientinfo";
-import { industrySkillsMapping } from "@/app/lib/data";
 
 export async function GET(req: NextRequest) {
   const session = await getServerSession(authOptions);
@@ -63,21 +62,16 @@ export async function GET(req: NextRequest) {
     if (!params) {
       if (bestMatches) {
         // Fetch best match freelancers excluding current user
-        const clientPrefferedIndustriesSkills = await clientinfo.findOne
-          ({ userId: userId }).select("industry prefferedSkills");
+        const clientPreferences = await clientinfo.findOne
+          ({ userId: userId }).select("weddingStyle");
+
+        const weddingStyle = clientPreferences?.weddingStyle || "";
+        const relatedSkills: string[] = [];
 
         // Step 2: Construct a query to find matching freelancers
         const recommendedFreelancers = await FreelancerInfo.find({
           userId: { $ne: userId }, // Exclude the client
-          industries: { $in: clientPrefferedIndustriesSkills?.industry || [] }, // Match industries
-          skills: {
-            $in: [
-              ...(clientPrefferedIndustriesSkills?.industry || []), // Match preferred skills
-              ...(clientPrefferedIndustriesSkills?.industry?.flatMap(industry =>
-                industrySkillsMapping[industry as keyof typeof industrySkillsMapping] || []) || []),
-              // Match related industry skills
-            ]
-          },
+          skills: { $in: relatedSkills },
         });
 
         // Fetch other freelancers excluding recommended ones and current user

@@ -19,11 +19,6 @@ const JobsProposalChart = dynamic(() => import("./jobs-insights-chart"), {
   loading: () => <div className="h-72 w-full animate-pulse rounded-md bg-gray-100" />,
 });
 
-const PopularIndustriesChart = dynamic(() => import("./popular-chart"), {
-  ssr: false,
-  loading: () => <div className="h-72 w-full animate-pulse rounded-md bg-gray-100" />,
-});
-
 const Charts = () => {
   const [querySelect, setQuerySelect] = useState<string>("monthly"); // Default to monthly
   const [chartSelected, setChartSelected] = useState<string>("Account-Growth");
@@ -43,18 +38,11 @@ const Charts = () => {
             className={`border border-gray-300 bg-gray-50 rounded-md px-8 py-1 shadow-sm text-gray-700 focus:ring focus:ring-blue-300`}
             name="querySelect"
           >
-            {chartSelected === "popularIndustries" ? (
-              <>
-                <option value="client">client</option>
-                <option value="freelancer">freelancer</option>
-              </>
-            ) : (
-              <>
-                <option value="daily">Daily</option>
-                <option value="monthly">Monthly</option>
-                <option value="yearly">Yearly</option>
-              </>
-            )}
+            <>
+              <option value="daily">Daily</option>
+              <option value="monthly">Monthly</option>
+              <option value="yearly">Yearly</option>
+            </>
           </select>
         </div>
         <div className="flex gap-5 px-8 py-5 ">
@@ -91,17 +79,6 @@ const Charts = () => {
           >
             Jobs & Proposals
           </Link>
-          <Link
-            onClick={() => setChartSelected("popularIndustries")}
-            href={""}
-            className={`relative text-gray-700 font-medium transition-colors ${
-              chartSelected === "popularIndustries"
-                ? "before:absolute before:bottom-0 before:left-0 before:w-full before:h-[2px] before:bg-primary-500 before:rounded-full"
-                : "text-gray-500"
-            }`}
-          >
-            Popular Industries
-          </Link>
         </div>
 
         {chartSelected === "Account-Growth" && (
@@ -110,9 +87,6 @@ const Charts = () => {
         {chartSelected === "KYC-Growth" && <KYCChart timeframe={querySelect} />}
         {chartSelected === "jobProposal" && (
           <JobsProposalChart timeframe={querySelect} />
-        )}
-        {chartSelected === "popularIndustries" && (
-          <PopularIndustriesChart accountType={querySelect} />
         )}
       </Card>
     </div>

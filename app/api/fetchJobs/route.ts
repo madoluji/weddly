@@ -7,7 +7,6 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/app/lib/auth";
 import proposal from "@/models/proposal";
 import FreelancerInfo from "@/models/freelancerInfo";
-import { industrySkillsMapping } from "@/app/lib/data";
 
 export async function GET(req: NextRequest) {
   const session = await getServerSession(authOptions);
@@ -71,22 +70,18 @@ export async function GET(req: NextRequest) {
     // Fetch jobs based on query parameters
     if (!title) {
       if (bestMatches) {
-        // Step 1: Retrieve freelancer's industries and skills
+        // Step 1: Retrieve freelancer's skills
         const freelancerInfo = await FreelancerInfo.
-          findOne({ userId: userId }).select("industries skills");
+          findOne({ userId: userId }).select("skills");
 
         if (!freelancerInfo) {
           console.log("Freelancer not found");
           return;
         }
 
-        // Step 2: Extract relevant industry-related skills from mapping
-        const relatedSkills = freelancerInfo.industries.flatMap(industry =>
-          industrySkillsMapping[industry as keyof typeof industrySkillsMapping] || []);
-
-        // Step 3: Query jobs where requiredSkills match freelancer's skills or industry-related skills
+        // Step 2: Query jobs where requiredSkills match freelancer's skills
         const matchingJobs = await Jobs.find({
-          tags: { $in: [...freelancerInfo.skills, ...relatedSkills] },
+          tags: { $in: freelancerInfo.skills },
 
           userId: { $ne: userId },
           status: 'active'

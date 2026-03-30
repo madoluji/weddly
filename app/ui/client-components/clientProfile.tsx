@@ -97,19 +97,14 @@ export default function DisplayClientProfile() {
               </div>
               {clientData && (
                 <div className="flex flex-wrap gap-2 mt-3">
-                  {clientData.industry
-                    ?.slice(0, 3)
-                    .map((industry: string, i: number) => (
-                      <span
-                        key={i}
-                        className="px-2 py-1 bg-primary-100 text-primary-700 text-xs rounded-full"
-                      >
-                        {industry}
-                      </span>
-                    ))}
-                  {clientData.industry?.length > 3 && (
-                    <span className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded-full">
-                      +{clientData.industry.length - 3} more
+                  {clientData.weddingStyle && (
+                    <span className="px-2 py-1 bg-primary-100 text-primary-700 text-xs rounded-full">
+                      {clientData.weddingStyle} Wedding
+                    </span>
+                  )}
+                  {clientData.isWeddingPlanner && (
+                    <span className="px-2 py-1 bg-secondary-400 text-gray-800 text-xs rounded-full">
+                      Wedding Planner
                     </span>
                   )}
                 </div>
@@ -397,7 +392,7 @@ export default function DisplayClientProfile() {
 
       {activeTab === "client" && clientData && (
         <div className="space-y-6">
-          {/* Company Information Card */}
+          {/* Wedding Details Card */}
           <div className="bg-white rounded-xl shadow-md overflow-hidden">
             <div className="px-6 py-4 border-b">
               <div className="flex items-center gap-2">
@@ -415,7 +410,7 @@ export default function DisplayClientProfile() {
                   <polyline points="9 22 9 12 15 12 15 22"></polyline>
                 </svg>
                 <h2 className="text-xl font-semibold text-gray-800">
-                  Company Information
+                  Wedding Details
                 </h2>
               </div>
             </div>
@@ -453,20 +448,13 @@ export default function DisplayClientProfile() {
                     strokeLinecap="round"
                     strokeLinejoin="round"
                   >
-                    <rect
-                      x="2"
-                      y="7"
-                      width="20"
-                      height="14"
-                      rx="2"
-                      ry="2"
-                    ></rect>
-                    <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="12" cy="7" r="4"></circle>
                   </svg>
                   <div>
-                    <p className="font-medium text-gray-800">Company</p>
+                    <p className="font-medium text-gray-800">Wedding Planner</p>
                     <p className="text-gray-600">
-                      {clientData?.isCompany ? "Yes" : "No"}
+                      {clientData?.isWeddingPlanner ? "Yes" : "No"}
                     </p>
                   </div>
                 </div>
@@ -502,15 +490,15 @@ export default function DisplayClientProfile() {
                     strokeLinecap="round"
                     strokeLinejoin="round"
                   >
-                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                    <circle cx="9" cy="7" r="4"></circle>
-                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-                    <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                    <line x1="16" y1="2" x2="16" y2="6"></line>
+                    <line x1="8" y1="2" x2="8" y2="6"></line>
+                    <line x1="3" y1="10" x2="21" y2="10"></line>
                   </svg>
                   <div>
-                    <p className="font-medium text-gray-800">Company Size</p>
+                    <p className="font-medium text-gray-800">Target Wedding Date</p>
                     <p className="text-gray-600">
-                      {clientData?.companySize || "Not provided"}
+                      {clientData?.targetWeddingDate || "Not provided"}
                     </p>
                   </div>
                 </div>
@@ -568,7 +556,7 @@ export default function DisplayClientProfile() {
             </div>
           </div>
 
-          {/* Industry & Skills Card */}
+          {/* Wedding Preferences Card */}
           <div className="bg-white rounded-xl shadow-md overflow-hidden">
             <div className="px-6 py-4 border-b">
               <div className="flex items-center gap-2">
@@ -582,54 +570,24 @@ export default function DisplayClientProfile() {
                   strokeLinecap="round"
                   strokeLinejoin="round"
                 >
-                  <polyline points="16 18 22 12 16 6"></polyline>
-                  <polyline points="8 6 2 12 8 18"></polyline>
+                  <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
                 </svg>
                 <h2 className="text-xl font-semibold text-gray-800">
-                  Industry & Skills
+                  Wedding Preferences
                 </h2>
               </div>
             </div>
             <div className="p-6">
               <div className="space-y-4">
                 <div>
-                  <h3 className="font-medium text-gray-800 mb-2">Industry</h3>
+                  <h3 className="font-medium text-gray-800 mb-2">Wedding Style</h3>
                   <div className="flex flex-wrap gap-2">
-                    {clientData?.industry?.length > 0 ? (
-                      clientData.industry.map((industry: string, i: number) => (
-                        <span
-                          key={i}
-                          className="px-3 py-1 bg-primary-100 text-primary-700 text-sm rounded-full"
-                        >
-                          {industry}
-                        </span>
-                      ))
+                    {clientData?.weddingStyle ? (
+                      <span className="px-3 py-1 bg-primary-100 text-primary-700 text-sm rounded-full">
+                        {clientData.weddingStyle}
+                      </span>
                     ) : (
-                      <p className="text-gray-500">No industry provided</p>
-                    )}
-                  </div>
-                </div>
-                <hr className="my-4" />
-                <div>
-                  <h3 className="font-medium text-gray-800 mb-2">
-                    Preferred Skills
-                  </h3>
-                  <div className="flex flex-wrap gap-2">
-                    {clientData?.preferredSkills?.length > 0 ? (
-                      clientData.preferredSkills.map(
-                        (skill: string, i: number) => (
-                          <span
-                            key={i}
-                            className="px-3 py-1 bg-gray-100 text-gray-700 text-sm rounded-full"
-                          >
-                            {skill}
-                          </span>
-                        )
-                      )
-                    ) : (
-                      <p className="text-gray-500">
-                        No preferred skills provided
-                      </p>
+                      <p className="text-gray-500">No style selected</p>
                     )}
                   </div>
                 </div>

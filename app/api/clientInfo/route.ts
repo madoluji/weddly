@@ -7,11 +7,10 @@ import User from "@/models/user";
 interface ClientRequestBody {
     userId: string;
     fullName: string;
-    isCompany: boolean;
-    industry: string[];
-    companySize?: "Startup" | "Small" | "Medium" | "Large";
+    isWeddingPlanner: boolean;
+    weddingStyle: string;
+    targetWeddingDate: string;
     location: string;
-    preferredSkills: string[];
     averageBudget: number;
 }
 
@@ -20,27 +19,28 @@ export async function POST(req: NextRequest) {
         const {
             userId,
             fullName,
-            isCompany,
-            industry,
-            companySize,
+            isWeddingPlanner,
+            weddingStyle,
+            targetWeddingDate,
             location,
-            preferredSkills,
             averageBudget,
         }: ClientRequestBody = await req.json();
 
         await connectMongoDB();
 
-        // Save the client data in the database
-        await ClientInfo.create({
-            userId,
-            fullName,
-            isCompany,
-            industry,
-            companySize,
-            location,
-            preferredSkills,
-            averageBudget,
-        });
+        // Save or update the client data in the database (upsert handles re-submissions)
+        await ClientInfo.findOneAndUpdate(
+            { userId },
+            {
+                fullName,
+                isWeddingPlanner,
+                weddingStyle,
+                targetWeddingDate,
+                location,
+                averageBudget,
+            },
+            { upsert: true, new: true, runValidators: true }
+        );
 
         // Update the user role to client
         await User.updateOne({ _id: userId }, { $set: { "roles.client": true } });
@@ -48,11 +48,10 @@ export async function POST(req: NextRequest) {
         const responseData = {
             userId,
             fullName,
-            isCompany,
-            industry,
-            companySize,
+            isWeddingPlanner,
+            weddingStyle,
+            targetWeddingDate,
             location,
-            preferredSkills,
             averageBudget,
         };
 
@@ -60,8 +59,9 @@ export async function POST(req: NextRequest) {
             { message: "Client Registered Successfully", data: responseData },
             { status: 200 }
         );
-    } catch (error) {
-        return NextResponse.json({ error }, { status: 500 });
+    } catch (error: any) {
+        console.error("ClientInfo API Error:", error?.message || error);
+        return NextResponse.json({ error: error?.message || "Internal Server Error" }, { status: 500 });
     }
 }
 

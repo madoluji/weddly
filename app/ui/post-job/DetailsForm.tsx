@@ -30,7 +30,6 @@ const DetailsForm = () => {
   const prevStep = () => setStep(step - 1);
   const { session, status } = useAuth();
   const id = session?.user.id;
-  const [tagInput, setTagInput] = useState<string>("");
 
   const initialFormData: formData = {
     title: "",
@@ -77,19 +76,6 @@ const DetailsForm = () => {
     });
   };
 
-  const handleTagChange = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter" && tagInput.trim()) {
-      e.preventDefault();
-      if (!formData.tags.includes(tagInput.trim())) {
-        setFormData((prev) => ({
-          ...prev,
-          tags: [...(prev.tags as string[]), tagInput.trim()],
-        }));
-      }
-      setTagInput("");
-    }
-  };
-
   // Removes a selected tag
   const removeTag = (tag: string) => {
     setFormData((prev) => ({
@@ -99,13 +85,6 @@ const DetailsForm = () => {
         : prev.tags,
     }));
   };
-
-  // Filters recommendations based on input
-  const filteredRecommendations = predefinedSkills.filter(
-    (skill) =>
-      skill.toLowerCase().includes(tagInput.toLowerCase()) &&
-      !formData.tags.includes(skill)
-  );
 
   useFirebaseAuth();
 
@@ -158,7 +137,7 @@ const DetailsForm = () => {
               htmlFor="title"
               className="block text-sm font-medium text-gray-700"
             >
-              Job Title
+              Job Title <span className="text-red-500">*</span>
             </label>
             <input
               type="text"
@@ -174,7 +153,7 @@ const DetailsForm = () => {
               htmlFor="type"
               className="block text-sm font-medium text-gray-700"
             >
-              Job Type
+              Ocassion Type <span className="text-red-500">*</span>
             </label>
             <select
               name="type"
@@ -184,10 +163,14 @@ const DetailsForm = () => {
               className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm"
             >
               <option value="">Choose Job Type</option>
-              <option value="Full-time">Full-Time (Stable Career)</option>
-              <option value="Part-time">Part-Time (Flexible Hours)</option>
-              <option value="Contract">Freelance/Project-Based</option>
-              <option value="Internship">Internship (Career Starter)</option>
+              <option value="Engagement (Wagdan)">Engagement (Wagdan)</option>
+              <option value="Pre-Wedding">Pre-Wedding</option>
+              <option value="Haldi">Haldi</option>
+              <option value="Mehendi">Mehendi</option>
+              <option value="Sangeet">Sangeet</option>
+              <option value="Wedding Day (Janti & Bibaha)">Wedding Day (Janti & Bibaha)</option>
+              <option value="Reception">Reception</option>
+              <option value="Post-Wedding (Mukh Herne)">Post-Wedding (Mukh Herne)</option>
             </select>
           </div>
           <div>
@@ -195,7 +178,7 @@ const DetailsForm = () => {
               htmlFor="experience"
               className="block text-sm font-medium text-gray-700"
             >
-              Experience Level
+              Experience Level <span className="text-red-500">*</span>
             </label>
             <select
               name="experience"
@@ -218,7 +201,14 @@ const DetailsForm = () => {
             >
               Back
             </Button>
-            <Button onClick={nextStep} className="text-white">
+            <Button 
+               type="button"
+               onClick={nextStep} 
+               className={clsx("text-white", {
+                 "opacity-50 cursor-not-allowed": !formData.title.trim() || !formData.type || !formData.experience
+               })}
+               disabled={!formData.title.trim() || !formData.type || !formData.experience}
+            >
               Next
             </Button>
           </div>
@@ -231,7 +221,7 @@ const DetailsForm = () => {
               htmlFor="budget"
               className="block text-sm font-medium text-gray-700"
             >
-              Budget ($)
+              Budget ($) <span className="text-red-500">*</span>
             </label>
             <input
               type="text"
@@ -247,7 +237,7 @@ const DetailsForm = () => {
               htmlFor="description"
               className="block text-sm font-medium text-gray-700"
             >
-              Job Description
+              Job Description <span className="text-red-500">*</span>
             </label>
             <textarea
               name="description"
@@ -275,7 +265,7 @@ const DetailsForm = () => {
           </div> */}
 
           <div className="mt-3">
-            <label className="block font-medium">Preferred Skills</label>
+            <label className="block font-medium">Preferred Skills <span className="text-red-500">*</span></label>
             <div className="flex flex-wrap gap-2 border rounded-md p-2 min-h-[40px]">
               {formData.tags.map((skill, index) => (
                 <span
@@ -286,43 +276,45 @@ const DetailsForm = () => {
                   {skill} ✕
                 </span>
               ))}
-              <input
-                type="text"
-                value={tagInput}
-                onChange={(e) => setTagInput(e.target.value)}
-                onKeyDown={handleTagChange}
-                className="border-none outline-none flex-grow"
-                placeholder="Type a skill and press Enter..."
-              />
+              <select
+                value=""
+                onChange={(e) => {
+                  const skill = e.target.value;
+                  if (skill && !formData.tags.includes(skill)) {
+                    setFormData((prev) => ({
+                      ...prev,
+                      tags: [...(prev.tags as string[]), skill],
+                    }));
+                  }
+                }}
+                className="border-none outline-none flex-grow bg-transparent text-sm min-w-[200px]"
+              >
+                <option value="" disabled>
+                  Select a skill...
+                </option>
+                {predefinedSkills
+                  .filter((skill) => !formData.tags.includes(skill))
+                  .map((skill, index) => (
+                    <option key={index} value={skill}>
+                      {skill}
+                    </option>
+                  ))}
+              </select>
             </div>
-
-            {/* Recommended skills dropdown */}
-            {tagInput && filteredRecommendations.length > 0 && (
-              <div className="border rounded-md mt-2 p-2 bg-white shadow-md max-h-40 overflow-y-auto">
-                {filteredRecommendations.map((skill, index) => (
-                  <div
-                    key={index}
-                    className="p-1 cursor-pointer hover:bg-gray-200"
-                    onClick={() => {
-                      setFormData((prev) => ({
-                        ...prev,
-                        tags: [...prev.tags, skill],
-                      }));
-                      setTagInput("");
-                    }}
-                  >
-                    {skill}
-                  </div>
-                ))}
-              </div>
-            )}
           </div>
 
           <div className="flex justify-between">
-            <Button onClick={prevStep} className="text-white">
+            <Button type="button" onClick={prevStep} className="text-white">
               Back
             </Button>
-            <Button onClick={nextStep} className="text-white">
+            <Button 
+               type="button"
+               onClick={nextStep} 
+               className={clsx("text-white", {
+                 "opacity-50 cursor-not-allowed": !formData.budget.trim() || !formData.description.trim() || formData.tags.length === 0
+               })}
+               disabled={!formData.budget.trim() || !formData.description.trim() || formData.tags.length === 0}
+            >
               Next
             </Button>
           </div>
@@ -335,22 +327,30 @@ const DetailsForm = () => {
               htmlFor="location"
               className="block text-sm font-medium text-gray-700"
             >
-              Location
+              Location <span className="text-red-500">*</span>
             </label>
             <input
               type="text"
               name="location"
               id="location"
+              required
               value={formData.location}
               onChange={handleChange}
               className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm"
             />
           </div>
           <div className="flex justify-between">
-            <Button onClick={prevStep} className="text-white">
+            <Button type="button" onClick={prevStep} className="text-white">
               Back
             </Button>
-            <Button onClick={nextStep} className="text-white">
+            <Button 
+               type="button"
+               onClick={nextStep} 
+               className={clsx("text-white", {
+                 "opacity-50 cursor-not-allowed": !formData.location.trim()
+               })}
+               disabled={!formData.location.trim()}
+            >
               Next
             </Button>
           </div>
@@ -365,6 +365,9 @@ const DetailsForm = () => {
             >
               Upload Files
             </label>
+            <p className="text-xs text-gray-500 mb-2 mt-1">
+              Add inspirational photos, moodboards, or references to help vendors understand your vision.
+            </p>
             <input
               type="file"
               name="file"
@@ -399,13 +402,13 @@ const DetailsForm = () => {
               </div>
             </div>
             <div className="flex justify-between">
-              <Button onClick={prevStep} className="text-white">
+              <Button type="button" onClick={prevStep} className="text-white">
                 Back
               </Button>
               <Button
-                onClick={() => handleSubmit}
+                type="submit"
                 className={clsx("text-white bg-primary-500", {
-                  "bg-neutral-400": uploading,
+                  "bg-neutral-400 opacity-50 cursor-not-allowed": uploading,
                 })}
                 success={true}
                 disabled={uploading}

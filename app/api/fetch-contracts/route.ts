@@ -57,7 +57,7 @@ export async function GET(req: NextRequest) {
                     if (contract.freelancerId) {
                         const freelancerDetails = await FreelancerInfo.findOne({
                             userId: contract.freelancerId,
-                        }).select("fullName location rate industries");
+                        }).select("fullName location rate");
                         return { ...contract.toObject(), freelancerDetails };
                     }
                     return contract.toObject();
@@ -71,7 +71,7 @@ export async function GET(req: NextRequest) {
                     if (contract.clientId) {
                         const clientDetails = await ClientInfo.findOne({
                             userId: contract.clientId,
-                        }).select("fullName location rate industries");
+                        }).select("fullName location rate");
                         return { ...contract.toObject(), clientDetails };
                     }
                     return contract.toObject();
