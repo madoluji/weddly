@@ -8,6 +8,56 @@ import { authOptions } from "@/app/lib/auth";
 import proposal from "@/models/proposal";
 import FreelancerInfo from "@/models/freelancerInfo";
 
+const parseJobLocation = (location: unknown) => {
+  if (!location || typeof location !== "object") {
+    return null;
+  }
+
+  const value = location as Record<string, unknown>;
+  const lat = value.lat;
+  const lng = value.lng;
+
+  if (
+    typeof lat === "number" &&
+    Number.isFinite(lat) &&
+    typeof lng === "number" &&
+    Number.isFinite(lng)
+  ) {
+    return {
+      lat,
+      lng,
+      address: typeof value.address === "string" ? value.address : undefined,
+      type: "Point" as const,
+      coordinates: [lng, lat] as [number, number],
+    };
+  }
+
+  return null;
+};
+
+const getLocationDisplay = (location: unknown) => {
+  if (typeof location === "string" && location.trim().length > 0) {
+    return location;
+  }
+
+  const parsed = parseJobLocation(location);
+  if (!parsed) {
+    return "Remote";
+  }
+
+  if (parsed.address && parsed.address.trim().length > 0) {
+    return parsed.address;
+  }
+
+  return `${parsed.lat.toFixed(6)}, ${parsed.lng.toFixed(6)}`;
+};
+
+const withLocationFields = (jobObject: Record<string, any>) => ({
+  ...jobObject,
+  location: getLocationDisplay(jobObject.location),
+  locationMeta: parseJobLocation(jobObject.location),
+});
+
 export async function GET(req: NextRequest) {
   const session = await getServerSession(authOptions);
   const { searchParams } = new URL(req.url);
@@ -42,13 +92,24 @@ export async function GET(req: NextRequest) {
       if (isSaved) {
         const Saved = await SavedJobs.exists({ userId, jobId: jobId }); // Check if the job is saved by the user
         if (Saved) {
-          return NextResponse.json({ ...job.toObject(), proposalCount, isSaved: true }); // Add the isSaved flag
+          return NextResponse.json({
+            ...withLocationFields(job.toObject()),
+            proposalCount,
+            isSaved: true,
+          }); // Add the isSaved flag
         } else {
-          return NextResponse.json({ ...job.toObject(), proposalCount, isSaved: false }); // Add the isSaved flag
+          return NextResponse.json({
+            ...withLocationFields(job.toObject()),
+            proposalCount,
+            isSaved: false,
+          }); // Add the isSaved flag
         }
       }
 
-      return NextResponse.json({ ...job.toObject(), proposalCount });
+      return NextResponse.json({
+        ...withLocationFields(job.toObject()),
+        proposalCount,
+      });
     }
 
     if (clientId) {
@@ -59,7 +120,10 @@ export async function GET(req: NextRequest) {
       const jobsWithProposalCounts = await Promise.all(
         jobs.map(async (job) => {
           const proposalCount = await proposal.countDocuments({ jobId: job._id });
-          return { ...job.toObject(), proposalCount };
+          return {
+            ...withLocationFields(job.toObject()),
+            proposalCount,
+          };
         })
       );
 
@@ -137,7 +201,7 @@ export async function GET(req: NextRequest) {
 
       return {
         jobId: job._id,  // Include the job ID in the response
-        ...job._doc,     // Spread other job details
+        ...withLocationFields(job._doc),     // Spread other job details
         saved: savedJobIds.includes(job._id.toString()), // Check if the job is saved
         proposalCount,   // Include the proposal count
         profilePicture,  // Include the client's profile picture

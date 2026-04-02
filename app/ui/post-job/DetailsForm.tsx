@@ -1,7 +1,7 @@
 "use client";
 import { ChangeEvent, FormEvent, useState } from "react";
+import dynamic from "next/dynamic";
 
-import { useAuth } from "@/app/providers";
 import { useRouter } from "next/navigation";
 import { Button } from "../button";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
@@ -11,16 +11,34 @@ import useFirebaseAuth from "@/app/hooks/useFirebaseAuth";
 import clsx from "clsx";
 import { fetchWithAuth } from "@/app/lib/fetchWIthAuth";
 import { skills as predefinedSkills } from "@/app/lib/data";
+import {
+  type JobLocation,
+  getLocationDisplay,
+  toLocationPayload,
+} from "@/app/lib/jobLocation";
+
+const JobLocationPicker = dynamic(
+  () => import("@/app/ui/maps/JobLocationPicker"),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="rounded-md border border-gray-200 p-4 text-sm text-gray-500">
+        Loading map...
+      </div>
+    ),
+  }
+);
 
 const DetailsForm = () => {
-  type formData = {
+  type FormDataState = {
     title: string;
     type: string;
     experience: string;
     budget: string;
     description: string;
     tags: string[];
-    location: string;
+    location: JobLocation | null;
+    locationText: string;
     fileUrls: string[];
   };
 
@@ -28,21 +46,20 @@ const DetailsForm = () => {
   const [step, setStep] = useState(0);
   const nextStep = () => setStep(step + 1);
   const prevStep = () => setStep(step - 1);
-  const { session, status } = useAuth();
-  const id = session?.user.id;
 
-  const initialFormData: formData = {
+  const initialFormData: FormDataState = {
     title: "",
     type: "",
     experience: "",
     budget: "",
     description: "",
     tags: [],
-    location: "",
+    location: null,
+    locationText: "",
     fileUrls: [],
   };
 
-  const [formData, setFormData] = useState<formData>(initialFormData);
+  const [formData, setFormData] = useState<FormDataState>(initialFormData);
   const [files, setFiles] = useState<File[]>([]); // Store file data
   const [uploading, setUploading] = useState<boolean>(false); // State for file upload
 
@@ -64,15 +81,6 @@ const DetailsForm = () => {
     setFormData({
       ...formData,
       [name]: value,
-    });
-  };
-
-  const handleChangeArray = (e: ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    const array = value.split(",").map((element) => element.trim());
-    setFormData({
-      ...formData,
-      [name]: array,
     });
   };
 
@@ -104,6 +112,8 @@ const DetailsForm = () => {
 
       const payload = {
         ...formData,
+        location: formData.location ? toLocationPayload(formData.location) : null,
+        locationText: formData.locationText,
         fileUrls,
       };
 
@@ -324,20 +334,50 @@ const DetailsForm = () => {
         <>
           <div>
             <label
-              htmlFor="location"
+              htmlFor="locationText"
               className="block text-sm font-medium text-gray-700"
             >
               Location <span className="text-red-500">*</span>
             </label>
-            <input
-              type="text"
-              name="location"
-              id="location"
-              required
+            <p className="text-xs text-gray-500 mt-1 mb-3">
+              Search a place, use your current location, or click on the map to pin the venue.
+            </p>
+
+            <JobLocationPicker
               value={formData.location}
-              onChange={handleChange}
-              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm"
+              onChange={(location) => {
+                setFormData((prev) => ({
+                  ...prev,
+                  location,
+                  locationText: getLocationDisplay(location, ""),
+                }));
+              }}
             />
+
+            <div className="mt-3">
+              <label
+                htmlFor="locationText"
+                className="block text-sm font-medium text-gray-700"
+              >
+                Selected Address
+              </label>
+              <input
+                type="text"
+                name="locationText"
+                id="locationText"
+                required
+                value={formData.locationText}
+                onChange={handleChange}
+                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm"
+                placeholder="Address will appear here after pinning"
+              />
+            </div>
+
+            {formData.location && (
+              <p className="mt-2 text-xs text-gray-600">
+                Coordinates: {formData.location.lat.toFixed(6)}, {formData.location.lng.toFixed(6)}
+              </p>
+            )}
           </div>
           <div className="flex justify-between">
             <Button type="button" onClick={prevStep} className="text-white">
@@ -347,9 +387,9 @@ const DetailsForm = () => {
                type="button"
                onClick={nextStep} 
                className={clsx("text-white", {
-                 "opacity-50 cursor-not-allowed": !formData.location.trim()
+                 "opacity-50 cursor-not-allowed": !formData.location || !formData.locationText.trim()
                })}
-               disabled={!formData.location.trim()}
+               disabled={!formData.location || !formData.locationText.trim()}
             >
               Next
             </Button>

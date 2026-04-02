@@ -6,6 +6,14 @@ interface StatusHistory {
   changedAt: Date;
 }
 
+interface JobLocation {
+  lat: number;
+  lng: number;
+  address?: string;
+  type: "Point";
+  coordinates: [number, number];
+}
+
 interface IJobs extends Document {
   userId: mongoose.Schema.Types.ObjectId;
   fullName: string;
@@ -15,7 +23,8 @@ interface IJobs extends Document {
   budget: string;
   description: string;
   tags: string[];
-  location: string;
+  location: JobLocation;
+  locationText: string;
   fileUrls: string[];
   status: "active" | "in-progress" | "completed" | "canceled";
   statusHistory: StatusHistory[];
@@ -36,6 +45,32 @@ const jobsSchema = new Schema<IJobs>(
       required: true,
     },
     location: {
+      lat: {
+        type: Number,
+        required: true,
+        min: -90,
+        max: 90,
+      },
+      lng: {
+        type: Number,
+        required: true,
+        min: -180,
+        max: 180,
+      },
+      address: {
+        type: String,
+      },
+      type: {
+        type: String,
+        enum: ["Point"],
+        default: "Point",
+      },
+      coordinates: {
+        type: [Number],
+        required: true,
+      },
+    },
+    locationText: {
       type: String,
       required: true,
     },
@@ -88,6 +123,10 @@ const jobsSchema = new Schema<IJobs>(
 // ✅ Indexing for optimized queries
 jobsSchema.index({ createdAt: 1 });
 jobsSchema.index({ "statusHistory.changedAt": 1 });
+jobsSchema.index(
+  { location: "2dsphere" },
+  { partialFilterExpression: { "location.type": "Point" } }
+);
 
 // Create the model
 const Jobs: Model<IJobs> =

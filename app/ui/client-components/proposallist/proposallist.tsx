@@ -2,6 +2,7 @@
 
 import type React from "react"
 import { useEffect, useState } from "react"
+import dynamic from "next/dynamic"
 import { fetchWithAuth } from "@/app/lib/fetchWIthAuth"
 import { useRouter } from "next/navigation"
 import {
@@ -23,6 +24,11 @@ import {
 import { getTimeAgo } from "../../dashboard-components/job-list/jobList"
 import JobProposalModal from "@/app/ui/client-components/joblist-client/joblistpopupmodal"
 import SafeImage from "@/app/ui/shared/SafeImage"
+import { getLocationDisplay } from "@/app/lib/jobLocation"
+
+const JobLocationPreview = dynamic(() => import("@/app/ui/maps/JobLocationPreview"), {
+  ssr: false,
+})
 
 interface Proposal {
   _id: string
@@ -44,6 +50,7 @@ interface Job {
   proposalCount: number
   fullName: string
   location: string
+  locationMeta?: unknown
   createdAt: string
   budget: number
   tags: string[]
@@ -229,7 +236,7 @@ const AllProposalsList: React.FC<AllProposalsListProps> = ({ jobId }) => {
                     <BuildingLibraryIcon className="w-5 h-5 text-gray-500 mr-2" />
                     <div>
                       <p className="text-sm text-gray-500">Venue / Location</p>
-                      <p className="font-medium">{job.location || "Remote"}</p>
+                      <p className="font-medium">{getLocationDisplay(job.locationMeta ?? job.location)}</p>
                     </div>
                   </div>
 
@@ -266,6 +273,11 @@ const AllProposalsList: React.FC<AllProposalsListProps> = ({ jobId }) => {
                     </div>
                   </div>
                 )}
+
+                <JobLocationPreview
+                  location={job.locationMeta ?? job.location}
+                  className="mt-4"
+                />
               </div>
             </div>
           )}

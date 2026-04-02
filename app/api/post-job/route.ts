@@ -8,6 +8,14 @@ import Contract from "@/models/contract";
 import Payment from "@/models/payment";
 import ProjectDetails from "@/models/projectDetails";
 
+type JobLocationInput = {
+  lat: number;
+  lng: number;
+  address?: string;
+  type?: "Point";
+  coordinates?: [number, number] | number[];
+};
+
 interface RequestBody {
   userId: string;
   fullName: string;
@@ -17,10 +25,16 @@ interface RequestBody {
   budget: string;
   description: string;
   tags: string[];
-  location: string;
+  location: JobLocationInput | null;
+  locationText?: string;
   fileUrls: string[];
-
 }
+
+const isValidLatitude = (value: unknown): value is number =>
+  typeof value === "number" && Number.isFinite(value) && value >= -90 && value <= 90;
+
+const isValidLongitude = (value: unknown): value is number =>
+  typeof value === "number" && Number.isFinite(value) && value >= -180 && value <= 180;
 
 export async function POST(req: NextRequest) {
   const status = "active";
@@ -43,8 +57,24 @@ export async function POST(req: NextRequest) {
       description,
       tags,
       location,
+      locationText,
       fileUrls,
     }: RequestBody = await req.json();
+
+    if (!location || !isValidLatitude(location.lat) || !isValidLongitude(location.lng)) {
+      return NextResponse.json(
+        { message: "Invalid location. Latitude and longitude are required." },
+        { status: 400 }
+      );
+    }
+
+    const normalizedLocation = {
+      lat: location.lat,
+      lng: location.lng,
+      address: typeof location.address === "string" ? location.address : "",
+      type: "Point" as const,
+      coordinates: [location.lng, location.lat] as [number, number],
+    };
 
     await connectMongoDB();
     // Save the data in the database
@@ -57,12 +87,15 @@ export async function POST(req: NextRequest) {
       budget,
       description,
       tags,
-      location,
+      location: normalizedLocation,
+      locationText:
+        (locationText && locationText.trim()) ||
+        normalizedLocation.address ||
+        `${normalizedLocation.lat.toFixed(6)}, ${normalizedLocation.lng.toFixed(6)}`,
       fileUrls,
       status,
-
-
     });
+
     const responseData = {
       userId,
       fullName,
@@ -72,7 +105,11 @@ export async function POST(req: NextRequest) {
       budget,
       description,
       tags,
-      location,
+      location: normalizedLocation,
+      locationText:
+        (locationText && locationText.trim()) ||
+        normalizedLocation.address ||
+        `${normalizedLocation.lat.toFixed(6)}, ${normalizedLocation.lng.toFixed(6)}`,
       fileUrls,
     };
 

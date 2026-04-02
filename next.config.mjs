@@ -5,6 +5,9 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   outputFileTracingRoot: __dirname,
+  // React Strict Mode can double-invoke effects in development, which breaks
+  // Leaflet ("Map container is already initialized") unless extra guarding is used.
+  reactStrictMode: false,
   experimental: {
     optimizePackageImports: [
       "@heroicons/react",

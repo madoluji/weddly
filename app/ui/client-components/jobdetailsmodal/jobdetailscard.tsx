@@ -2,6 +2,7 @@
 
 import type React from "react"
 import { useEffect, useRef } from "react"
+import dynamic from "next/dynamic"
 import {
   ClockIcon,
   CurrencyDollarIcon,
@@ -17,11 +18,17 @@ import {
 } from "@heroicons/react/24/outline"
 import { getTimeAgo } from "../../dashboard-components/job-list/jobList"
 import Link from "next/link"
+import { getLocationDisplay } from "@/app/lib/jobLocation"
+
+const JobLocationPreview = dynamic(() => import("@/app/ui/maps/JobLocationPreview"), {
+  ssr: false,
+})
 
 interface Job {
   _id: string
   fullName: string
   location: string
+  locationMeta?: unknown
   createdAt: string
   budget: number
   tags: string[]
@@ -38,6 +45,8 @@ interface JobDetailsModalProps {
 
 const JobDetailsModal: React.FC<JobDetailsModalProps> = ({ job, onClose }) => {
   const modalRef = useRef<HTMLDivElement>(null)
+  const locationValue = job?.locationMeta ?? job?.location
+  const locationLabel = getLocationDisplay(locationValue)
 
   useEffect(() => {
     // Handle escape key press
@@ -110,7 +119,7 @@ const JobDetailsModal: React.FC<JobDetailsModalProps> = ({ job, onClose }) => {
               <BuildingLibraryIcon className="h-5 w-5 text-gray-500" />
               <div>
                 <p className="text-sm text-gray-500">Location</p>
-                <p className="font-medium text-gray-900">{job.location || "Remote"}</p>
+                <p className="font-medium text-gray-900">{locationLabel}</p>
               </div>
             </div>
 
@@ -129,6 +138,14 @@ const JobDetailsModal: React.FC<JobDetailsModalProps> = ({ job, onClose }) => {
                 <p className="font-medium text-gray-900">₹{job.budget.toLocaleString()}</p>
               </div>
             </div>
+          </div>
+
+          <div className="mb-6">
+            <div className="flex items-center mb-3">
+              <BuildingLibraryIcon className="h-5 w-5 text-primary-600 mr-2" />
+              <h3 className="text-lg font-semibold text-gray-900">Pinned Location</h3>
+            </div>
+            <JobLocationPreview location={locationValue} />
           </div>
 
           {/* Gig Description */}
