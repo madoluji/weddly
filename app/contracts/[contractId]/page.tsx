@@ -19,7 +19,7 @@ const Page = async ({
   await connectMongoDB();
   const contract = await Contract.findById(contractId)
     .select("jobId clientId freelancerId")
-    .lean();
+    .exec();
 
   if (!contract?.jobId) {
     redirect("/user/your-contracts");

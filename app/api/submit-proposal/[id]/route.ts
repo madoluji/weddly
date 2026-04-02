@@ -4,6 +4,7 @@ import Proposal from "@/models/proposal";
 import { getServerSession } from "next-auth";
 import Jobs from "@/models/jobs";
 import User from "@/models/user";
+import { emitNotificationEventSafe } from "@/app/lib/notification-events";
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
     const { id } = await params;
@@ -52,6 +53,17 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
             coverLetter,
             duration,
             attachments,
+        });
+
+        await emitNotificationEventSafe({
+            eventType: "PROPOSAL_SUBMITTED",
+            userId: String(clientId),
+            metadata: {
+                proposalId: String(newProposal._id),
+                jobId: String(jobId),
+                freelancerId: String(id),
+                href: `/client/job-proposal/${String(jobId)}`,
+            },
         });
 
         return NextResponse.json({ message: "Proposal submitted successfully", proposal: newProposal }, { status: 201 });

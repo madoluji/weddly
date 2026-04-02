@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import Payment from "@/models/payment";
 import Contract from "@/models/contract";
+import { emitNotificationEventSafe } from "@/app/lib/notification-events";
 // import { generateEsewaSignature } from "@/app/lib/generateEsewaSignature"; // if needed, can be implemented
 
 export async function GET(req: NextRequest) {
@@ -81,6 +82,18 @@ export async function GET(req: NextRequest) {
                 }
             );
             console.log("contract and payment updated successfully");
+
+            await emitNotificationEventSafe({
+                eventType: "PAYMENT_SUCCESS",
+                userId: String(payment.freelancerId),
+                metadata: {
+                    contractId: String(payment.contractId),
+                    paymentId: String(payment._id),
+                    transactionId: transaction_uuid,
+                    method: "esewa",
+                    href: "/user/business/paymenthistory",
+                },
+            });
 
             // Perform direct redirect
 

@@ -38,3 +38,8 @@ next-env.d.ts
 
 .vercel
 .env*.local
+
+# notification-service (NestJS)
+/notification-service/node_modules/
+/notification-service/dist/
+/notification-service/coverage/

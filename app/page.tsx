@@ -81,17 +81,12 @@ export default function Home() {
           </div>
 
           <div className="flex flex-col sm:flex-row gap-4 w-full max-w-md">
-            <Link
-              href={{
-                pathname: "/login",
-                query: { callbackUrl: "/client/best-matches" },
-              }}
-              className="flex-1"
+            <a
+              href="/login?callbackUrl=%2Fuser%2Fbest-matches"
+              className="flex-1 block w-full cta-gradient text-on-primary py-4 px-8 rounded-md font-medium text-base hover:scale-[0.98] transition-transform editorial-shadow text-center"
             >
-              <button className="w-full cta-gradient text-on-primary py-4 px-8 rounded-md font-medium text-base hover:scale-[0.98] transition-transform editorial-shadow">
-                Lets Go
-              </button>
-            </Link>
+              Lets Go
+            </a>
           </div>
 
           {/* Trusted By Bar (Subtle) */}

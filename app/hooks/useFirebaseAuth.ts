@@ -1,23 +1,43 @@
 import { useEffect } from "react";
-import { authenticateWithFirebase } from "@/app/lib/firebase";
+import { auth, authenticateWithFirebase } from "@/app/lib/firebase";
 import { fetchWithAuth } from "../lib/fetchWIthAuth";
 import { useAuth } from "../providers";
 
+let firebaseAuthInFlight: Promise<void> | null = null;
+let lastAuthedUserId: string | null = null;
+
 const useFirebaseAuth = () => {
-    const { session, status } = useAuth();
+    const { session } = useAuth();
 
     useEffect(() => {
         const fetchFirebaseToken = async () => {
-            if (session) {
-                try {
+            const sessionUserId = session?.user?.id;
+            if (!sessionUserId) {
+                return;
+            }
+
+            if (auth.currentUser?.uid === sessionUserId || lastAuthedUserId === sessionUserId) {
+                return;
+            }
+
+            try {
+                if (firebaseAuthInFlight) {
+                    await firebaseAuthInFlight;
+                    return;
+                }
+
+                firebaseAuthInFlight = (async () => {
                     const res = await fetchWithAuth("/api/firebase-token");
                     const { token } = await res.json();
-
-                    // Authenticate with Firebase using the custom token
                     await authenticateWithFirebase(token);
-                } catch (error) {
-                    console.error("Error fetching Firebase token:", error);
-                }
+                    lastAuthedUserId = sessionUserId;
+                })();
+
+                await firebaseAuthInFlight;
+            } catch (error) {
+                console.error("Error fetching Firebase token:", error);
+            } finally {
+                firebaseAuthInFlight = null;
             }
         };
 

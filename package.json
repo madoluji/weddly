@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "/opt/homebrew/opt/node@22/bin/node scripts/dev-safe.mjs",
+    "dev:stack": "zsh scripts/dev-stack.sh",
     "dev:restart": "/opt/homebrew/opt/node@22/bin/node scripts/dev-safe.mjs --fresh",
     "dev:app": "next dev --webpack",
     "dev:22": "/opt/homebrew/opt/node@22/bin/npm run dev:app",

@@ -26,6 +26,7 @@ import {
 } from "@heroicons/react/24/outline";
 import UserProfileLoader from "@/app/lib/userProfileLoader";
 import Link from "next/link";
+import { fetchWithAuth } from "@/app/lib/fetchWIthAuth";
 
 interface Message {
   sId: string;
@@ -68,6 +69,31 @@ const ChatWindow: React.FC = () => {
     return () => unsubscribe();
   }, [userData, chatUser]);
 
+  const notifyNewMessage = async (textPreview: string) => {
+    if (!userData?.id || !chatUser?.id || !messagesId) {
+      return;
+    }
+
+    if (userData.id === chatUser.id) {
+      return;
+    }
+
+    try {
+      await fetchWithAuth("/api/notifications/new-message", {
+        method: "POST",
+        body: JSON.stringify({
+          recipientId: chatUser.id,
+          messageId: messagesId,
+          textPreview,
+          senderName: userData.username || userData.name || "Someone",
+          senderAvatar: userData.avatar || null,
+        }),
+      });
+    } catch (error) {
+      console.warn("Failed to emit chat notification:", error);
+    }
+  };
+
   const sendMessage = async () => {
     try {
       if (input && messagesId && userData) {
@@ -101,6 +127,8 @@ const ChatWindow: React.FC = () => {
             });
           }
         });
+
+        await notifyNewMessage(input);
       }
     } catch (error) {
       console.error((error as any).message);
@@ -144,6 +172,8 @@ const ChatWindow: React.FC = () => {
             });
           }
         });
+
+        await notifyNewMessage("Sent an image");
       }
     } catch (error) {
       console.error(error);

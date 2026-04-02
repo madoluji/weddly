@@ -1,0 +1,522 @@
+"use client";
+
+import { BellIcon } from "@heroicons/react/24/outline";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { fetchWithAuth } from "@/app/lib/fetchWIthAuth";
+import { usePathname, useRouter } from "next/navigation";
+
+type NotificationItem = {
+  _id: string;
+  title: string;
+  body: string;
+  type: string;
+  readAt: string | null;
+  createdAt?: string;
+  metadata?: Record<string, unknown>;
+};
+
+type NotificationDisplayItem = {
+  item: NotificationItem;
+  groupedIds: string[];
+  groupedCount: number;
+};
+
+const NOTIFICATION_POLL_INTERVAL_MS = 8000;
+
+const NotificationBell = () => {
+  const router = useRouter();
+  const pathname = usePathname();
+  const [isOpen, setIsOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [notifications, setNotifications] = useState<NotificationItem[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const baseTitleRef = useRef("");
+  const internalTitleUpdateRef = useRef(false);
+  const originalFaviconHrefRef = useRef<string | null>(null);
+  const isFetchingUnreadRef = useRef(false);
+  const isFetchingListRef = useRef(false);
+  const panelRef = useRef<HTMLDivElement | null>(null);
+
+  const getIconLink = () => {
+    if (typeof document === "undefined") {
+      return null;
+    }
+
+    const existing = document.querySelector("link[rel~='icon']") as HTMLLinkElement | null;
+    if (existing) {
+      return existing;
+    }
+
+    const created = document.createElement("link");
+    created.rel = "icon";
+    document.head.appendChild(created);
+    return created;
+  };
+
+  const createBadgeFaviconDataUrl = (count: number) => {
+    const label = count > 99 ? "99+" : String(count);
+    const fontSize = label.length > 2 ? "8" : "9";
+    const textX = label.length > 2 ? "48" : "49";
+
+    const svg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'>
+  <rect width='64' height='64' rx='14' fill='#0f172a'/>
+  <path d='M32 13c-7.2 0-13 5.8-13 13v8.7l-4.4 7.2c-.5.8-.5 1.8 0 2.7.5.8 1.4 1.4 2.4 1.4h30c1 0 1.9-.5 2.4-1.4.5-.8.5-1.9 0-2.7L45 34.7V26c0-7.2-5.8-13-13-13zm0 37c3.4 0 6.2-2.3 7-5.4H25c.8 3.1 3.6 5.4 7 5.4z' fill='#ffffff'/>
+  <circle cx='48' cy='16' r='14' fill='#dc2626'/>
+  <text x='${textX}' y='20' text-anchor='middle' font-family='Arial, sans-serif' font-size='${fontSize}' font-weight='700' fill='#fff'>${label}</text>
+</svg>`;
+
+    return `data:image/svg+xml,${encodeURIComponent(svg)}`;
+  };
+
+  const hasUnread = unreadCount > 0;
+
+  const displayNotifications = useMemo<NotificationDisplayItem[]>(() => {
+    const sorted = [...notifications].sort((a, b) => {
+      if (!a.readAt && b.readAt) {
+        return -1;
+      }
+      if (a.readAt && !b.readAt) {
+        return 1;
+      }
+      return 0;
+    });
+
+    const grouped: NotificationDisplayItem[] = [];
+    const groupIndexBySender = new Map<string, number>();
+    const RAPID_GROUP_WINDOW_MS = 5 * 60 * 1000;
+
+    for (const item of sorted) {
+      const senderId = typeof item.metadata?.senderId === "string" ? item.metadata.senderId : null;
+      const isUnreadNewMessage = item.type === "NEW_MESSAGE" && !item.readAt && Boolean(senderId);
+
+      if (!isUnreadNewMessage || !senderId) {
+        grouped.push({ item, groupedIds: [item._id], groupedCount: 1 });
+        continue;
+      }
+
+      const existingIndex = groupIndexBySender.get(senderId);
+      if (existingIndex === undefined) {
+        grouped.push({ item, groupedIds: [item._id], groupedCount: 1 });
+        groupIndexBySender.set(senderId, grouped.length - 1);
+        continue;
+      }
+
+      const existingGroup = grouped[existingIndex];
+      const existingTime = existingGroup.item.createdAt ? Date.parse(existingGroup.item.createdAt) : NaN;
+      const currentTime = item.createdAt ? Date.parse(item.createdAt) : NaN;
+      const inRapidWindow =
+        Number.isFinite(existingTime) && Number.isFinite(currentTime)
+          ? Math.abs(existingTime - currentTime) <= RAPID_GROUP_WINDOW_MS
+          : true;
+
+      if (!inRapidWindow) {
+        grouped.push({ item, groupedIds: [item._id], groupedCount: 1 });
+        groupIndexBySender.set(senderId, grouped.length - 1);
+        continue;
+      }
+
+      const senderName =
+        (typeof existingGroup.item.metadata?.senderName === "string" && existingGroup.item.metadata.senderName) ||
+        (typeof item.metadata?.senderName === "string" && item.metadata.senderName) ||
+        "someone";
+
+      existingGroup.groupedIds.push(item._id);
+      existingGroup.groupedCount += 1;
+      existingGroup.item = {
+        ...existingGroup.item,
+        title: `${existingGroup.groupedCount} new messages from ${senderName}`,
+      };
+    }
+
+    return grouped;
+  }, [notifications]);
+
+  const fetchUnreadCount = async () => {
+    if (isFetchingUnreadRef.current) {
+      return;
+    }
+
+    isFetchingUnreadRef.current = true;
+    try {
+      const response = await fetchWithAuth("/api/notifications/unread-count", {
+        method: "GET",
+      });
+
+      if (!response.ok) {
+        return;
+      }
+
+      const data = await response.json();
+      setUnreadCount(Number(data.unreadCount ?? 0));
+    } catch (error) {
+      console.error("Failed to load unread notifications count:", error);
+    } finally {
+      isFetchingUnreadRef.current = false;
+    }
+  };
+
+  const fetchNotifications = async () => {
+    if (isFetchingListRef.current) {
+      return;
+    }
+
+    isFetchingListRef.current = true;
+    setIsLoading(true);
+    try {
+      const response = await fetchWithAuth("/api/notifications?limit=12", {
+        method: "GET",
+      });
+
+      if (!response.ok) {
+        setNotifications([]);
+        return;
+      }
+
+      const data = await response.json();
+      const list = Array.isArray(data) ? data : [];
+      setNotifications(list);
+    } catch (error) {
+      console.error("Failed to load notifications:", error);
+      setNotifications([]);
+    } finally {
+      setIsLoading(false);
+      isFetchingListRef.current = false;
+    }
+  };
+
+  const markAsRead = async (id: string) => {
+    try {
+      const response = await fetchWithAuth(`/api/notifications/${id}/read`, {
+        method: "PATCH",
+      });
+
+      if (!response.ok) {
+        return;
+      }
+
+      setNotifications((prev) =>
+        prev.map((item) => (item._id === id ? { ...item, readAt: new Date().toISOString() } : item)),
+      );
+      setUnreadCount((prev) => Math.max(prev - 1, 0));
+    } catch (error) {
+      console.error("Failed to mark notification as read:", error);
+    }
+  };
+
+  const markManyAsRead = async (ids: string[]) => {
+    if (ids.length === 0) {
+      return;
+    }
+
+    await Promise.all(ids.map(async (id) => markAsRead(id)));
+  };
+
+  const getNotificationHref = (item: NotificationItem): string | null => {
+    const metadata = item.metadata;
+    const isClientArea = pathname?.startsWith("/client") ?? false;
+    const contractsBasePath = isClientArea ? "/client/your-contracts" : "/user/your-contracts";
+
+    if (metadata) {
+      const candidateKeys = ["href", "url", "path", "route"] as const;
+      for (const key of candidateKeys) {
+        const value = metadata[key];
+        if (typeof value === "string" && value.trim().length > 0) {
+          return value;
+        }
+      }
+
+      const contractId = metadata.contractId;
+      const jobId = metadata.jobId;
+      if (typeof contractId === "string" && typeof jobId === "string") {
+        return `${contractsBasePath}/${contractId}/${jobId}`;
+      }
+
+      if (typeof contractId === "string") {
+        return contractsBasePath;
+      }
+
+      if (item.type === "PROPOSAL_SUBMITTED" && typeof jobId === "string") {
+        return isClientArea ? `/client/job-proposal/${jobId}` : "/user/your-proposals";
+      }
+    }
+
+    if (item.type === "CONTRACT_ACCEPTED") {
+      return contractsBasePath;
+    }
+
+    if (item.type === "PAYMENT_SUCCESS") {
+      return isClientArea ? "/client/your-contracts" : "/user/business/paymenthistory";
+    }
+
+    if (item.type === "PROPOSAL_SUBMITTED") {
+      return isClientArea ? "/client/your-contracts" : "/user/your-proposals";
+    }
+
+    if (item.type === "NEW_MESSAGE") {
+      const recipientId = item.metadata?.recipientId;
+      if (typeof recipientId === "string" && recipientId.length > 0) {
+        return isClientArea ? `/client/chatroom/${recipientId}` : `/user/chatroom/${recipientId}`;
+      }
+    }
+
+    if (item.type === "USER_REGISTERED") {
+      return "/user/profile";
+    }
+
+    return null;
+  };
+
+  const handleNotificationClick = async (item: NotificationItem, groupedIds: string[] = [item._id]) => {
+    if (!item.readAt) {
+      await markManyAsRead(groupedIds);
+    }
+
+    const href = getNotificationHref(item);
+    setIsOpen(false);
+
+    if (href) {
+      router.push(href);
+    }
+  };
+
+  useEffect(() => {
+    const runRefresh = () => {
+      void fetchUnreadCount();
+      if (isOpen) {
+        void fetchNotifications();
+      }
+    };
+
+    runRefresh();
+
+    const intervalId = setInterval(() => {
+      runRefresh();
+    }, NOTIFICATION_POLL_INTERVAL_MS);
+
+    const onFocus = () => {
+      runRefresh();
+    };
+
+    const onVisibilityChange = () => {
+      if (!document.hidden) {
+        runRefresh();
+      }
+    };
+
+    window.addEventListener("focus", onFocus);
+    document.addEventListener("visibilitychange", onVisibilityChange);
+
+    return () => {
+      clearInterval(intervalId);
+      window.removeEventListener("focus", onFocus);
+      document.removeEventListener("visibilitychange", onVisibilityChange);
+    };
+  }, [isOpen]);
+
+  useEffect(() => {
+    if (!isOpen) {
+      return;
+    }
+
+    void fetchNotifications();
+  }, [isOpen]);
+
+  useEffect(() => {
+    if (!isOpen) {
+      return;
+    }
+
+    const onPointerDown = (event: MouseEvent | TouchEvent) => {
+      const target = event.target as Node;
+      if (!panelRef.current?.contains(target)) {
+        setIsOpen(false);
+      }
+    };
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setIsOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", onPointerDown);
+    document.addEventListener("touchstart", onPointerDown);
+    document.addEventListener("keydown", onKeyDown);
+
+    return () => {
+      document.removeEventListener("mousedown", onPointerDown);
+      document.removeEventListener("touchstart", onPointerDown);
+      document.removeEventListener("keydown", onKeyDown);
+    };
+  }, [isOpen]);
+
+  useEffect(() => {
+    if (typeof document === "undefined") {
+      return;
+    }
+
+    baseTitleRef.current = document.title.replace(/^\(\d+\)\s*/, "");
+  }, []);
+
+  useEffect(() => {
+    if (typeof document === "undefined") {
+      return;
+    }
+
+    const baseTitle = baseTitleRef.current || document.title.replace(/^\(\d+\)\s*/, "");
+    const nextTitle = unreadCount > 0 ? `(${unreadCount}) ${baseTitle}` : baseTitle;
+
+    if (document.title === nextTitle) {
+      return;
+    }
+
+    internalTitleUpdateRef.current = true;
+    document.title = nextTitle;
+    internalTitleUpdateRef.current = false;
+  }, [unreadCount]);
+
+  useEffect(() => {
+    const iconLink = getIconLink();
+    if (!iconLink) {
+      return;
+    }
+
+    if (originalFaviconHrefRef.current === null) {
+      originalFaviconHrefRef.current = iconLink.href;
+    }
+
+    if (unreadCount > 0) {
+      iconLink.href = createBadgeFaviconDataUrl(unreadCount);
+      return;
+    }
+
+    if (originalFaviconHrefRef.current) {
+      iconLink.href = originalFaviconHrefRef.current;
+    }
+  }, [unreadCount]);
+
+  useEffect(() => {
+    return () => {
+      const iconLink = getIconLink();
+      if (!iconLink) {
+        return;
+      }
+
+      if (originalFaviconHrefRef.current) {
+        iconLink.href = originalFaviconHrefRef.current;
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    if (typeof document === "undefined") {
+      return;
+    }
+
+    const titleElement = document.querySelector("title");
+    if (!titleElement) {
+      return;
+    }
+
+    const observer = new MutationObserver(() => {
+      if (internalTitleUpdateRef.current) {
+        return;
+      }
+
+      const cleanTitle = document.title.replace(/^\(\d+\)\s*/, "");
+      baseTitleRef.current = cleanTitle;
+
+      const expectedTitle = unreadCount > 0 ? `(${unreadCount}) ${cleanTitle}` : cleanTitle;
+      if (document.title === expectedTitle) {
+        return;
+      }
+
+      internalTitleUpdateRef.current = true;
+      document.title = expectedTitle;
+      internalTitleUpdateRef.current = false;
+    });
+
+    observer.observe(titleElement, { childList: true });
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [unreadCount]);
+
+  return (
+    <div className="relative" ref={panelRef}>
+      <button
+        type="button"
+        className="relative"
+        onClick={() => setIsOpen((prev) => !prev)}
+        aria-label="Open notifications"
+      >
+        <BellIcon className="size-8" />
+        {hasUnread && (
+          <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-600 px-1 text-xs font-semibold text-white">
+            {unreadCount > 99 ? "99+" : unreadCount}
+          </span>
+        )}
+      </button>
+
+      {isOpen && (
+        <div className="absolute right-0 top-11 z-20 w-96 rounded-xl bg-white p-3 shadow-[0_0px_20px_rgba(228,228,228,1)] before:absolute before:-top-1 before:right-2 before:z-10 before:rotate-[135deg] before:border-8 before:border-white before:bg-white after:absolute after:-top-5 after:right-0 after:h-6 after:w-full">
+          <div className="mb-2 flex items-center justify-between">
+            <h3 className="text-sm font-semibold text-gray-800">Notifications</h3>
+            <button
+              type="button"
+              className="text-xs text-gray-500 hover:text-gray-700"
+              onClick={() => setIsOpen(false)}
+            >
+              Close
+            </button>
+          </div>
+
+          {isLoading ? (
+            <p className="py-3 text-sm text-gray-500">Loading...</p>
+          ) : displayNotifications.length === 0 ? (
+            <p className="py-3 text-sm text-gray-500">No notifications yet.</p>
+          ) : (
+            <ul className="max-h-96 space-y-2 overflow-auto pr-1">
+              {displayNotifications.map(({ item, groupedIds, groupedCount }) => {
+                const isRead = Boolean(item.readAt);
+                const itemHref = getNotificationHref(item);
+                return (
+                  <li
+                    key={item._id}
+                    className={`rounded-lg border p-3 ${isRead ? "bg-gray-50" : "bg-blue-50"} ${itemHref ? "cursor-pointer hover:border-primary-300 hover:bg-primary-50/50" : ""}`}
+                    onClick={() => void handleNotificationClick(item, groupedIds)}
+                  >
+                    <p className="text-sm font-semibold text-gray-800">{item.title}</p>
+                    <p className="mt-1 text-sm text-gray-600">
+                      {groupedCount > 1 ? `${item.body} (${groupedCount} unread)` : item.body}
+                    </p>
+                    <div className="mt-2 flex items-center justify-between">
+                      <span className="text-xs uppercase tracking-wide text-gray-400">{item.type}</span>
+                      {!isRead ? (
+                        <button
+                          type="button"
+                          className="text-xs font-medium text-primary-600 hover:text-primary-700"
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            void markManyAsRead(groupedIds);
+                          }}
+                        >
+                          {groupedCount > 1 ? `Mark all ${groupedCount} as read` : "Mark as read"}
+                        </button>
+                      ) : (
+                        <span className="text-xs text-gray-400">Read</span>
+                      )}
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default NotificationBell;

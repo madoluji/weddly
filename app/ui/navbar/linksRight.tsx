@@ -2,12 +2,12 @@
 import {
   QuestionMarkCircleIcon,
   RectangleGroupIcon,
-  BellIcon,
   UserCircleIcon,
 } from "@heroicons/react/24/outline";
 import { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import LinksDropdown from "./linksDropdown";
+import NotificationBell from "./notificationBell";
 
 const LinksRight = () => {
   const [isDropdownVisible, setDropdownVisible] = useState(0);
@@ -51,14 +51,7 @@ const LinksRight = () => {
 
       
       <li className="relative">
-        <BellIcon
-          className="size-8"
-          onMouseEnter={() => setDropdownVisible(4)}
-          onMouseLeave={() => setDropdownVisible(0)}
-        />
-        {isDropdownVisible === 4 && (
-          <LinksDropdown isDropdownVisible={isDropdownVisible} />
-        )}
+        <NotificationBell />
       </li>
       <li>
         <div

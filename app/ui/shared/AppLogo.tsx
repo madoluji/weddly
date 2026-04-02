@@ -23,6 +23,7 @@ const AppLogo = ({
   priority = false,
 }: AppLogoProps) => {
   const mergedStyle: CSSProperties = {
+    width: "auto",
     height: "auto",
     backgroundColor: "transparent",
     backgroundImage: "none",

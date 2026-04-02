@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import Payment from "@/models/payment";
 import Contract from "@/models/contract";
+import { emitNotificationEventSafe } from "@/app/lib/notification-events";
 
 export async function GET(req: NextRequest) {
     try {
@@ -65,6 +66,18 @@ export async function GET(req: NextRequest) {
                     },
                 }
             );
+
+            await emitNotificationEventSafe({
+                eventType: "PAYMENT_SUCCESS",
+                userId: String(payment.freelancerId),
+                metadata: {
+                    contractId: String(payment.contractId),
+                    paymentId: String(payment._id),
+                    transactionId: purchase_order_id,
+                    method: "khalti",
+                    href: "/user/business/paymenthistory",
+                },
+            });
 
             // Perform direct redirect
             const redirectUrl = new URL(

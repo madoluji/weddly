@@ -5,6 +5,7 @@ import User from "../../../models/user";
 import { NextRequest } from "next/server";
 import nodemailer from "nodemailer";
 import { createVerificationToken } from "@/app/lib/tokenGenerator";
+import { emitNotificationEventSafe } from "@/app/lib/notification-events";
 
 interface UserRequestBody {
   email: string;
@@ -67,6 +68,17 @@ export async function POST(req: NextRequest) {
 
     // Send email verification
     await sendEmail(email, token);
+
+    await emitNotificationEventSafe({
+      eventType: "USER_REGISTERED",
+      userId: newUser._id.toString(),
+      metadata: {
+        email,
+        name,
+        lastName,
+        href: "/user/profile",
+      },
+    });
 
     // Return user _id along with success message
     return NextResponse.json({

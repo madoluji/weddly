@@ -3,6 +3,7 @@ import { connectMongoDB } from "@/app/lib/mongodb";
 import Contract from "@/models/contract";
 import Jobs from "@/models/jobs";
 import ProjectDetails from "@/models/projectDetails";
+import { emitNotificationEventSafe } from "@/app/lib/notification-events";
 
 type ContractStatus = "pending" | "active" | "declined" | "completed" | "canceled";
 type JobStatus = "active" | "in-progress" | "completed" | "canceled";
@@ -93,6 +94,19 @@ export async function PATCH(req: NextRequest) {
 
         // Save contract
         await contract.save();
+
+        if (newStatus === "active") {
+            await emitNotificationEventSafe({
+                eventType: "CONTRACT_ACCEPTED",
+                userId: String(contract.clientId),
+                metadata: {
+                    contractId: String(contract._id),
+                    jobId: String(contract.jobId?._id ?? contract.jobId),
+                    freelancerId: String(contract.freelancerId),
+                    href: `/client/your-contracts/${String(contract._id)}/${String(contract.jobId?._id ?? contract.jobId)}`,
+                },
+            });
+        }
 
         // Update job status if needed
         if (updatedJobStatus && contract.jobId) {

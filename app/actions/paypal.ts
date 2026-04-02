@@ -4,6 +4,7 @@ import { headers } from "next/headers";
 import { connectMongoDB } from "../lib/mongodb";
 import Contract from "@/models/contract";
 import Payment from "@/models/payment"; // Import the Payment model
+import { emitNotificationEventSafe } from "@/app/lib/notification-events";
 
 const PAYPAL_API_URL =
     process.env.NODE_ENV === "production" ? "https://api-m.sandbox.paypal.com" : "https://api-m.sandbox.paypal.com";
@@ -154,6 +155,19 @@ export async function captureOrder(orderId: string) {
                 },
             }
         );
+        if (updatedPayment?.freelancerId) {
+            await emitNotificationEventSafe({
+                eventType: "PAYMENT_SUCCESS",
+                userId: updatedPayment.freelancerId.toString(),
+                metadata: {
+                    contractId: updatedPayment.contractId?.toString(),
+                    paymentId: updatedPayment._id?.toString(),
+                    transactionId: updatedPayment.transactionId,
+                    method: "paypal",
+                    href: "/user/business/paymenthistory",
+                },
+            });
+        }
         const freelancerId = updatedPayment?.freelancerId.toString();
 
         return { data, freelancerId, transcation_uuid: updatedPayment?.transactionId, transaction_code: updatedPayment?.transactionCode };
