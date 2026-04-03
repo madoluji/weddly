@@ -30,8 +30,12 @@ const JobLocationPreview = ({ location, className }: JobLocationPreviewProps) =>
   const mapMountKey = useId();
   const mapInstanceRef = useRef<LeafletMap | null>(null);
 
-  const setMapInstanceRef = useCallback((map: LeafletMap) => {
+  const setMapInstanceRef = useCallback((map: LeafletMap | null) => {
     mapInstanceRef.current = map;
+
+    if (!map) {
+      return;
+    }
 
     // Leaflet throws if map removal happens after another map instance has
     // taken over the same container (_leaflet_id mismatch).
@@ -84,7 +88,7 @@ const JobLocationPreview = ({ location, className }: JobLocationPreviewProps) =>
           boxZoom={false}
           keyboard={false}
           zoomControl={false}
-          whenCreated={setMapInstanceRef}
+          ref={setMapInstanceRef}
         >
           <TileLayer
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
