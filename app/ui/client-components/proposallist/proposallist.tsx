@@ -6,20 +6,20 @@ import dynamic from "next/dynamic"
 import { fetchWithAuth } from "@/app/lib/fetchWIthAuth"
 import { useRouter } from "next/navigation"
 import {
-  ClockIcon,
-  CurrencyDollarIcon,
-  BuildingLibraryIcon,
-  TagIcon,
-  UserIcon,
-  PaperClipIcon,
-  SparklesIcon,
-  UserGroupIcon,
   ArrowPathIcon,
-  CheckBadgeIcon,
-  ChevronRightIcon,
+  BuildingLibraryIcon,
   CalendarIcon,
   ChatBubbleLeftRightIcon,
+  CheckBadgeIcon,
+  ChevronRightIcon,
+  CurrencyDollarIcon,
+  SparklesIcon,
+  TagIcon,
   TrashIcon,
+  UserGroupIcon,
+  UserIcon,
+  PaperClipIcon,
+  ClockIcon,
 } from "@heroicons/react/24/outline"
 import { getTimeAgo } from "../../dashboard-components/job-list/jobList"
 import JobProposalModal from "@/app/ui/client-components/joblist-client/joblistpopupmodal"
@@ -54,6 +54,7 @@ interface Job {
   createdAt: string
   budget: number
   tags: string[]
+  eventDate?: string
 }
 
 interface Freelancer {
@@ -80,17 +81,14 @@ const AllProposalsList: React.FC<AllProposalsListProps> = ({ jobId }) => {
   useEffect(() => {
     const fetchJobAndProposals = async () => {
       try {
-        // Fetch job details
         const jobResponse = await fetchWithAuth(`/api/fetchJobs?jobId=${jobId}`)
         const jobData = await jobResponse.json()
         setJob(jobData)
 
-        // Fetch proposals
         const proposalsResponse = await fetchWithAuth(`/api/jobproposal?jobId=${jobId}`)
         const proposalsData = await proposalsResponse.json()
         setProposals(proposalsData.proposals)
 
-        // Fetch freelancer data for each proposal
         const freelancerData = await Promise.all(
           proposalsData.proposals.map(async (proposal: Proposal) => {
             const response = await fetchWithAuth(`/api/freelancers?userId=${proposal.userId}`)
@@ -103,7 +101,6 @@ const AllProposalsList: React.FC<AllProposalsListProps> = ({ jobId }) => {
           }),
         )
 
-        // Store freelancer data in state
         const freelancerMap: { [key: string]: Freelancer } = {}
         freelancerData.forEach((freelancer) => {
           freelancerMap[freelancer.userId] = freelancer
@@ -131,11 +128,14 @@ const AllProposalsList: React.FC<AllProposalsListProps> = ({ jobId }) => {
     return [...proposals].sort((a, b) => {
       if (sortBy === "newest") {
         return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-      } else if (sortBy === "oldest") {
+      }
+      if (sortBy === "oldest") {
         return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
-      } else if (sortBy === "highest") {
+      }
+      if (sortBy === "highest") {
         return b.bidAmount - a.bidAmount
-      } else if (sortBy === "lowest") {
+      }
+      if (sortBy === "lowest") {
         return a.bidAmount - b.bidAmount
       }
       return 0
@@ -149,6 +149,18 @@ const AllProposalsList: React.FC<AllProposalsListProps> = ({ jobId }) => {
       month: "short",
       day: "numeric",
     }).format(date)
+  }
+
+  const formatEventDate = (dateString?: string) => {
+    if (!dateString) return "Date to be confirmed"
+
+    return new Intl.DateTimeFormat("en-US", {
+      weekday: "short",
+      month: "long",
+      day: "numeric",
+      year: "numeric",
+      timeZone: "UTC",
+    }).format(new Date(dateString))
   }
 
   const truncateText = (text: string, maxLength: number) => {
@@ -189,210 +201,305 @@ const AllProposalsList: React.FC<AllProposalsListProps> = ({ jobId }) => {
     }
   }
 
+  const sortedProposals = getSortedProposals()
+  const highestBid = proposals.length ? Math.max(...proposals.map((proposal) => proposal.bidAmount)) : 0
+  const lowestBid = proposals.length ? Math.min(...proposals.map((proposal) => proposal.bidAmount)) : 0
+
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
       {loading ? (
-        <div className="flex flex-col items-center justify-center h-64">
-          <ArrowPathIcon className="h-10 w-10 text-primary-500 animate-spin mb-4" />
+        <div className="flex h-72 flex-col items-center justify-center rounded-[2rem] border border-[#e8dece] bg-white">
+          <ArrowPathIcon className="mb-4 h-10 w-10 animate-spin text-primary-500" />
           <p className="text-gray-600">Loading proposals...</p>
         </div>
       ) : (
         <>
-          {/* Wedding Gig Details Card */}
           {job && (
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mb-8">
-              <div className="bg-primary-50 border-b border-gray-200 px-6 py-4">
-                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                  <div className="flex items-center">
-                    <SparklesIcon className="h-6 w-6 text-primary-600 mr-3" />
-                    <h2 className="text-xl font-bold text-gray-900">Wedding Gig Details</h2>
+            <section className="mb-8 overflow-hidden rounded-[2rem] border border-[#e8dece] bg-white editorial-shadow">
+              <div className="border-b border-[#efe5d6] bg-gradient-to-br from-[#fff7ee] via-white to-primary-50 px-6 py-8 sm:px-8">
+                <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
+                  <div className="max-w-3xl">
+                    <div className="inline-flex items-center gap-2 rounded-full border border-primary-100 bg-white/90 px-4 py-2 text-xs font-semibold uppercase tracking-[0.22em] text-primary-700">
+                      <SparklesIcon className="h-4 w-4" />
+                      Client proposal review
+                    </div>
+                    <h1 className="mt-5 text-3xl font-medium leading-tight text-slate-900 sm:text-4xl">
+                      {job.title}
+                    </h1>
+                    <p className="mt-4 max-w-2xl text-sm leading-7 text-slate-600">
+                      Review proposals, compare rates, and move forward with the
+                      wedding specialist that best matches this event.
+                    </p>
                   </div>
-                  <button
-                    type="button"
-                    onClick={handleDeleteGig}
-                    disabled={isDeleting}
-                    className="inline-flex items-center justify-center rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:cursor-not-allowed disabled:bg-red-400"
-                  >
-                    <TrashIcon className="mr-2 h-4 w-4" />
-                    {isDeleting ? "Deleting..." : "Delete Gig"}
-                  </button>
+
+                  <div className="flex flex-col gap-3 sm:flex-row lg:flex-col">
+                    <button
+                      type="button"
+                      onClick={handleDeleteGig}
+                      disabled={isDeleting}
+                      className="inline-flex items-center justify-center rounded-xl bg-red-600 px-4 py-3 text-sm font-medium text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:bg-red-400"
+                    >
+                      <TrashIcon className="mr-2 h-4 w-4" />
+                      {isDeleting ? "Deleting..." : "Delete Gig"}
+                    </button>
+                  </div>
                 </div>
               </div>
 
-              <div className="p-6">
-                {deleteError && <p className="mb-4 text-sm text-red-600">{deleteError}</p>}
-                <h3 className="text-2xl font-bold text-gray-900 mb-4">{job.title}</h3>
+              <div className="grid gap-6 px-6 py-6 sm:px-8 lg:grid-cols-[minmax(0,1.1fr)_360px] lg:items-start">
+                <div className="space-y-6">
+                  {deleteError && (
+                    <div className="rounded-2xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-600">
+                      {deleteError}
+                    </div>
+                  )}
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-                  <div className="flex items-center">
-                    <UserIcon className="w-5 h-5 text-gray-500 mr-2" />
-                    <div>
-                      <p className="text-sm text-gray-500">Posted by</p>
-                      <p className="font-medium">{job.fullName}</p>
+                  <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                    <div className="rounded-[1.5rem] border border-[#eadfce] bg-[#fffdfa] p-5">
+                      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
+                        Event Date
+                      </p>
+                      <p className="mt-3 text-lg font-semibold text-slate-900">
+                        {formatEventDate(job.eventDate)}
+                      </p>
+                    </div>
+
+                    <div className="rounded-[1.5rem] border border-[#eadfce] bg-[#fffdfa] p-5">
+                      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
+                        Proposals
+                      </p>
+                      <p className="mt-3 text-2xl font-semibold text-slate-900">
+                        {proposals.length}
+                      </p>
+                    </div>
+
+                    <div className="rounded-[1.5rem] border border-[#eadfce] bg-[#fffdfa] p-5">
+                      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
+                        Lowest Bid
+                      </p>
+                      <p className="mt-3 text-2xl font-semibold text-slate-900">
+                        Rs {lowestBid ? lowestBid.toLocaleString() : "0"}
+                      </p>
+                    </div>
+
+                    <div className="rounded-[1.5rem] border border-[#eadfce] bg-[#fffdfa] p-5">
+                      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
+                        Highest Bid
+                      </p>
+                      <p className="mt-3 text-2xl font-semibold text-slate-900">
+                        Rs {highestBid ? highestBid.toLocaleString() : "0"}
+                      </p>
                     </div>
                   </div>
 
-                  <div className="flex items-center">
-                    <BuildingLibraryIcon className="w-5 h-5 text-gray-500 mr-2" />
-                    <div>
-                      <p className="text-sm text-gray-500">Venue / Location</p>
-                      <p className="font-medium">{getLocationDisplay(job.locationMeta ?? job.location)}</p>
-                    </div>
-                  </div>
+                  <div className="rounded-[1.5rem] border border-[#eadfce] bg-white p-5">
+                    <div className="grid gap-5 sm:grid-cols-2">
+                      <div className="flex items-start gap-3">
+                        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-primary-50 text-primary-700">
+                          <UserIcon className="h-5 w-5" />
+                        </div>
+                        <div>
+                          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
+                            Posted by
+                          </p>
+                          <p className="mt-2 text-sm font-medium leading-6 text-slate-900">
+                            {job.fullName}
+                          </p>
+                        </div>
+                      </div>
 
-                  <div className="flex items-center">
-                    <ClockIcon className="w-5 h-5 text-gray-500 mr-2" />
-                    <div>
-                      <p className="text-sm text-gray-500">Posted</p>
-                      <p className="font-medium">{getTimeAgo(job.createdAt)}</p>
-                    </div>
-                  </div>
+                      <div className="flex items-start gap-3">
+                        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-primary-50 text-primary-700">
+                          <BuildingLibraryIcon className="h-5 w-5" />
+                        </div>
+                        <div>
+                          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
+                            Venue / Location
+                          </p>
+                          <p className="mt-2 text-sm font-medium leading-6 text-slate-900">
+                            {getLocationDisplay(job.locationMeta ?? job.location)}
+                          </p>
+                        </div>
+                      </div>
 
-                  <div className="flex items-center">
-                    <CurrencyDollarIcon className="w-5 h-5 text-gray-500 mr-2" />
-                    <div>
-                      <p className="text-sm text-gray-500">Booking Fee / Rate</p>
-                      <p className="font-medium">Rs{job.budget.toLocaleString()}</p>
+                      <div className="flex items-start gap-3">
+                        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-primary-50 text-primary-700">
+                          <ClockIcon className="h-5 w-5" />
+                        </div>
+                        <div>
+                          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
+                            Posted
+                          </p>
+                          <p className="mt-2 text-sm font-medium leading-6 text-slate-900">
+                            {getTimeAgo(job.createdAt)}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-start gap-3">
+                        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-primary-50 text-primary-700">
+                          <CurrencyDollarIcon className="h-5 w-5" />
+                        </div>
+                        <div>
+                          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
+                            Booking Fee / Rate
+                          </p>
+                          <p className="mt-2 text-sm font-medium leading-6 text-slate-900">
+                            Rs {job.budget.toLocaleString()}
+                          </p>
+                        </div>
+                      </div>
                     </div>
+
+                    {job.tags && job.tags.length > 0 && (
+                      <div className="mt-5 border-t border-[#efe5d6] pt-5">
+                        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
+                          Required Skills
+                        </p>
+                        <div className="mt-3 flex flex-wrap gap-2">
+                          {job.tags.map((tag, index) => (
+                            <span
+                              key={index}
+                              className="inline-flex items-center gap-2 rounded-full border border-primary-100 bg-primary-50 px-3 py-1.5 text-sm font-medium text-primary-700"
+                            >
+                              <TagIcon className="h-3.5 w-3.5" />
+                              {tag}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
 
-                {job.tags && job.tags.length > 0 && (
-                  <div className="mb-4">
-                    <p className="text-sm text-gray-500 mb-2">Required Skills</p>
-                    <div className="flex flex-wrap gap-2">
-                      {job.tags.map((tag, index) => (
-                        <span
-                          key={index}
-                          className="bg-gray-100 text-gray-800 px-3 py-1 rounded-full text-sm flex items-center"
-                        >
-                          <TagIcon className="w-3 h-3 mr-1" />
-                          {tag}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                <JobLocationPreview
-                  location={job.locationMeta ?? job.location}
-                  className="mt-4"
-                />
+                <div className="rounded-[1.75rem] border border-[#eadfce] bg-white p-4">
+                  <JobLocationPreview location={job.locationMeta ?? job.location} className="rounded-[1.25rem]" />
+                </div>
               </div>
-            </div>
+            </section>
           )}
 
-          {/* Proposals Section */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-            <div className="bg-primary-50 border-b border-gray-200 px-6 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between">
-              <div className="flex items-center mb-4 sm:mb-0">
-                <UserGroupIcon className="h-6 w-6 text-primary-600 mr-3" />
-                <div>
-                  <h2 className="text-xl font-bold text-gray-900">Proposals</h2>
-                  <p className="text-sm text-gray-500">
-                    {proposals.length} {proposals.length === 1 ? "wedding specialist has" : "wedding specialists have"} applied to this
-                    gig
-                  </p>
+          <section className="overflow-hidden rounded-[2rem] border border-[#e8dece] bg-white editorial-shadow">
+            <div className="border-b border-[#efe5d6] px-6 py-5 sm:px-8">
+              <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+                <div className="flex items-center">
+                  <UserGroupIcon className="mr-3 h-6 w-6 text-primary-600" />
+                  <div>
+                    <h2 className="text-2xl font-semibold text-slate-900">Proposals</h2>
+                    <p className="text-sm text-slate-500">
+                      {proposals.length} {proposals.length === 1 ? "proposal has" : "proposals have"} been submitted for this gig
+                    </p>
+                  </div>
                 </div>
-              </div>
 
-              <div className="flex items-center">
-                <label htmlFor="sortBy" className="text-sm text-gray-500 mr-2">
-                  Sort by:
-                </label>
-                <select
-                  id="sortBy"
-                  value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value)}
-                  className="block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm rounded-md"
-                >
-                  <option value="newest">Newest First</option>
-                  <option value="oldest">Oldest First</option>
-                  <option value="highest">Highest Bid</option>
-                  <option value="lowest">Lowest Bid</option>
-                </select>
+                <div className="flex items-center gap-3">
+                  <label htmlFor="sortBy" className="text-sm font-medium text-slate-500">
+                    Sort by
+                  </label>
+                  <select
+                    id="sortBy"
+                    value={sortBy}
+                    onChange={(e) => setSortBy(e.target.value)}
+                    className="rounded-xl border border-[#d8cdb9] bg-[#fffdfa] px-4 py-2.5 text-sm text-slate-700 outline-none transition focus:border-primary-300"
+                  >
+                    <option value="newest">Newest First</option>
+                    <option value="oldest">Oldest First</option>
+                    <option value="highest">Highest Bid</option>
+                    <option value="lowest">Lowest Bid</option>
+                  </select>
+                </div>
               </div>
             </div>
 
             {proposals.length === 0 ? (
               <div className="p-12 text-center">
-                <UserGroupIcon className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-1">No proposals yet</h3>
+                <UserGroupIcon className="mx-auto mb-4 h-12 w-12 text-gray-300" />
+                <h3 className="mb-1 text-lg font-medium text-gray-900">No proposals yet</h3>
                 <p className="text-gray-500">Check back later for new proposals.</p>
               </div>
             ) : (
-              <div className="p-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {getSortedProposals().map((proposal) => (
+              <div className="p-6 sm:p-8">
+                <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
+                  {sortedProposals.map((proposal) => (
                     <div
                       key={`${proposal._id}-${proposal.userId}`}
                       onClick={() => handleProposalClick(proposal)}
-                      className="border border-gray-200 rounded-lg overflow-hidden hover:shadow-md transition-shadow duration-300 cursor-pointer bg-white flex flex-col"
+                      className="group cursor-pointer overflow-hidden rounded-[1.75rem] border border-[#e8dece] bg-white transition hover:-translate-y-0.5 hover:shadow-[0_18px_42px_rgba(27,28,26,0.08)]"
                     >
-                      <div className="p-5 flex-grow">
-                        <div className="flex items-start mb-4">
-                          <div className="h-10 w-10 rounded-full bg-primary-100 flex items-center justify-center mr-3 overflow-hidden">
-                            {freelancers[proposal.userId]?.profilePicture ? (
-                              <SafeImage
-                                src={freelancers[proposal.userId].profilePicture || "/placeholder.svg"}
-                                alt={freelancers[proposal.userId]?.fullName || "Wedding Specialist"}
-                                width={40}
-                                height={40}
-                                className="h-full w-full object-cover"
-                              />
-                            ) : (
-                              <UserIcon className="h-5 w-5 text-primary-600" />
-                            )}
-                          </div>
-                          <div>
-                            <h3 className="font-semibold text-gray-900">
-                              {freelancers[proposal.userId]?.fullName || "Wedding Specialist"}
-                            </h3>
-                            <p className="text-sm text-gray-500 flex items-center">
-                              <CalendarIcon className="h-3 w-3 mr-1" />
-                              {formatDate(proposal.createdAt)}
-                            </p>
-                          </div>
-                        </div>
-
-                        <div className="mb-4">
-                          <div className="flex items-center mb-1">
-                            <ChatBubbleLeftRightIcon className="h-4 w-4 text-gray-500 mr-1" />
-                            <p className="text-sm text-gray-500">Cover Letter</p>
-                          </div>
-                          <p className="text-gray-700 text-sm line-clamp-3">
-                            {truncateText(proposal.coverLetter, 150)}
-                          </p>
-                        </div>
-
-                        <div className="flex items-center justify-between mb-2">
-                          <div className="flex items-center">
-                            <CurrencyDollarIcon className="h-5 w-5 text-green-600 mr-1" />
-                            <span className="font-bold text-green-600">Rs {proposal.bidAmount.toLocaleString()}</span>
-                          </div>
-
-                          {proposal.attachments && (
-                            <div className="flex items-center text-primary-600 text-sm">
-                              <PaperClipIcon className="h-4 w-4 mr-1" />
-                              <span>Attachment</span>
+                      <div className="border-b border-[#efe5d6] bg-gradient-to-br from-[#fffaf2] to-white px-5 py-5">
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="flex min-w-0 items-start gap-3">
+                            <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary-100">
+                              {freelancers[proposal.userId]?.profilePicture ? (
+                                <SafeImage
+                                  src={freelancers[proposal.userId].profilePicture || "/placeholder.svg"}
+                                  alt={freelancers[proposal.userId]?.fullName || "Wedding Specialist"}
+                                  width={48}
+                                  height={48}
+                                  className="h-full w-full object-cover"
+                                />
+                              ) : (
+                                <UserIcon className="h-5 w-5 text-primary-600" />
+                              )}
                             </div>
-                          )}
+                            <div className="min-w-0">
+                              <h3 className="truncate text-lg font-semibold text-slate-900">
+                                {freelancers[proposal.userId]?.fullName || "Wedding Specialist"}
+                              </h3>
+                              <p className="mt-1 flex items-center text-sm text-slate-500">
+                                <CalendarIcon className="mr-1.5 h-3.5 w-3.5" />
+                                Submitted {formatDate(proposal.createdAt)}
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="rounded-full bg-green-50 px-3 py-1.5 text-sm font-semibold text-green-700">
+                            Rs {proposal.bidAmount.toLocaleString()}
+                          </div>
                         </div>
                       </div>
 
-                      <div className="bg-gray-50 px-5 py-3 border-t border-gray-200 flex justify-between items-center">
-                        <div className="flex items-center">
-                          <CheckBadgeIcon className="h-4 w-4 text-primary-600 mr-1" />
-                          <span className="text-sm text-gray-600">View Details</span>
+                      <div className="space-y-5 p-5">
+                        <div>
+                          <div className="mb-2 flex items-center">
+                            <ChatBubbleLeftRightIcon className="mr-2 h-4 w-4 text-slate-400" />
+                            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
+                              Cover Letter
+                            </p>
+                          </div>
+                          <p className="text-sm leading-7 text-slate-700">
+                            {truncateText(proposal.coverLetter, 180)}
+                          </p>
                         </div>
-                        <ChevronRightIcon className="h-4 w-4 text-gray-400" />
+
+                        <div className="flex items-center justify-between border-t border-[#efe5d6] pt-4">
+                          <div className="flex items-center gap-4 text-sm text-slate-500">
+                            <div className="flex items-center gap-1.5">
+                              <CurrencyDollarIcon className="h-4 w-4 text-green-600" />
+                              <span className="font-medium text-slate-800">Bid placed</span>
+                            </div>
+
+                            {proposal.attachments && (
+                              <div className="flex items-center gap-1.5 text-primary-700">
+                                <PaperClipIcon className="h-4 w-4" />
+                                <span>Attachment</span>
+                              </div>
+                            )}
+                          </div>
+
+                          <div className="flex items-center text-sm font-medium text-primary-700">
+                            <CheckBadgeIcon className="mr-1.5 h-4 w-4" />
+                            View Details
+                            <ChevronRightIcon className="ml-1 h-4 w-4 transition group-hover:translate-x-0.5" />
+                          </div>
+                        </div>
                       </div>
                     </div>
                   ))}
                 </div>
               </div>
             )}
-          </div>
+          </section>
 
           {selectedProposal && <JobProposalModal proposal={selectedProposal} onClose={handleCloseModal} />}
         </>
@@ -402,4 +509,3 @@ const AllProposalsList: React.FC<AllProposalsListProps> = ({ jobId }) => {
 }
 
 export default AllProposalsList
-

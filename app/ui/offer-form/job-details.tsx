@@ -1,14 +1,14 @@
 "use client";
 
 import useFetch from "@/app/hooks/useFetch";
-import React, { useEffect } from "react";
+import React from "react";
 import { getTimeAgo } from "../dashboard-components/job-list/jobList";
 import {
   BanknotesIcon,
   BuildingLibraryIcon,
+  CalendarDaysIcon,
   TrophyIcon,
 } from "@heroicons/react/24/outline";
-import { CurrencyRupeeIcon } from "@heroicons/react/24/solid";
 import Link from "next/link";
 interface JobDetailsProps {
   jobId: string;
@@ -26,6 +26,7 @@ type Data = {
   title: string;
   createdAt: string;
   fileUrls: string[] | [];
+  eventDate?: string;
 };
 
 export function formatPostedDate(createdAt: string) {
@@ -86,6 +87,21 @@ const JobDetails = ({ jobId }: JobDetailsProps) => {
               <BuildingLibraryIcon className="w-5 h-5 text-primary-500" />
               <p className="text-black">{data?.location}</p>
             </div>
+            {data?.eventDate && (
+              <div className="flex gap-2 justify-start items-center">
+                <CalendarDaysIcon className="w-5 h-5 text-primary-500" />
+                <p className="text-black">
+                  Event Date:{" "}
+                  {new Date(data.eventDate).toLocaleDateString(undefined, {
+                    weekday: "short",
+                    month: "long",
+                    day: "numeric",
+                    year: "numeric",
+                    timeZone: "UTC",
+                  })}
+                </p>
+              </div>
+            )}
           </div>
         </div>
       </div>

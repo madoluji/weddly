@@ -113,12 +113,11 @@ export async function PATCH(req: NextRequest) {
             const job = await Jobs.findById(contract.jobId._id);
 
             if (job) {
-                job.status = updatedJobStatus,
-                    // Add the new job status change to statusHistory
-                    job.statusHistory.push({
-                        status: updatedJobStatus,
-                        changedAt: new Date()
-                    });
+                job.status = updatedJobStatus;
+                job.statusHistory.push({
+                    status: updatedJobStatus,
+                    changedAt: new Date()
+                });
 
                 // Update the job's status and statusHistory
                 await job.save();
@@ -145,7 +144,7 @@ export async function PATCH(req: NextRequest) {
                     }],
                     project_files: [],
                     deliveries: [],
-                    requirements: "Everything mentioned in the job posting.",
+                    requirements: ["Everything mentioned in the job posting."],
                     meetings: [],
                     created_at: new Date(),
                     updated_at: new Date()

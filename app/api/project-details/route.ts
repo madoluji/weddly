@@ -16,12 +16,46 @@ export async function GET(req: NextRequest) {
             return NextResponse.json({ message: "Missing contractId" }, { status: 400 });
         }
 
-        const project = await ProjectDetails.findOne({ contractId }).populate([
+        let project = await ProjectDetails.findOne({ contractId }).populate([
             { path: "jobId", select: "title description" },
             { path: "contractId", select: "status paymentType price deadline" }
         ]);
+
         if (!project) {
-            return NextResponse.json({ message: "Project not found for this contract" }, { status: 404 });
+            const contract = await Contract.findById(contractId).populate([
+                { path: "jobId", select: "title description" },
+            ]);
+
+            if (!contract) {
+                return NextResponse.json({ message: "Contract not found" }, { status: 404 });
+            }
+
+            project = await ProjectDetails.create({
+                jobId: contract.jobId,
+                contractId: contract._id,
+                freelancerId: contract.freelancerId,
+                clientId: contract.clientId,
+                status: "ongoing",
+                project_todo: [
+                    {
+                        task: "Project Initiated",
+                        deadline: contract.deadline || new Date(),
+                        status: "Completed",
+                        memo: "Project workspace created automatically.",
+                    },
+                ],
+                project_files: [],
+                deliveries: [],
+                requirements: ["Everything mentioned in the job posting."],
+                meetings: [],
+                created_at: new Date(),
+                updated_at: new Date(),
+            });
+
+            project = await ProjectDetails.findById(project._id).populate([
+                { path: "jobId", select: "title description" },
+                { path: "contractId", select: "status paymentType price deadline" }
+            ]);
         }
 
         return NextResponse.json({ message: "Project retrieved successfully", project }, { status: 200 });

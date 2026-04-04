@@ -1,15 +1,18 @@
 "use client";
 
 import useFetch from "@/app/hooks/useFetch";
-import React, { useEffect } from "react";
+import React from "react";
 import { getTimeAgo } from "../dashboard-components/job-list/jobList";
 import {
+  ArrowTopRightOnSquareIcon,
   BanknotesIcon,
-  BuildingLibraryIcon,
+  ClockIcon,
+  DocumentTextIcon,
+  MapPinIcon,
   TrophyIcon,
 } from "@heroicons/react/24/outline";
-import { CurrencyRupeeIcon } from "@heroicons/react/24/solid";
 import Link from "next/link";
+
 interface JobDetailsProps {
   jobId: string;
 }
@@ -47,73 +50,140 @@ export function formatPostedDate(createdAt: string) {
 }
 
 const JobDetails = ({ jobId }: JobDetailsProps) => {
-  // useEffect(()=>{  const response = await fetch(`/api/fetchJobs?jobId=${jobId}`, {
-  //     method: "GET",
-  //     headers: {
-  //       "Content-Type": "application/json",
-  //     },
-  //     next: {
-  //       revalidate: 3600, // Revalidate the data every 1 hour
-  //     },
-  //   });}
-  // )
   const { data } = useFetch<Data>(`/fetchJobs?jobId=${jobId}`);
-  if (!data) {
-    return;
-  }
 
-  return (
-    <div className="border-[1px] border-gray-300 rounded-xl p-5 ">
-      <p className="font-semibold text-xl">Wedding Gig Details</p>
-      <div className="flex justify-between mt-2">
-        <div className="py-5 space-y-8 border-r-[1px] border-gray-300 pr-5 flex-1">
-          <p className="text-xl">{data?.title}</p>
-          <p className="mt-3">
-            {data?.tags.map((tag) => (
-              <span key={tag} className="bg-gray-200 p-2 rounded-2xl  text-sm ">
-                {tag}
-              </span>
-            ))}
-            <span className=" p-1 mx-1 text-sm text-gray-500">
-              Posted {formatPostedDate(data?.createdAt || "")}
-            </span>
-          </p>
-          <p className="text-gray-500 text-sm">{data?.description}</p>
-        </div>
-        <div className="py-5 m-10 pr-14 text-md">
-          <div className="flex flex-col gap-5">
-            <div className="flex gap-2 justify-start items-center">
-              <TrophyIcon className="w-5 h-5 text-primary-500" />
-              <p className="text-black">{data?.experience}</p>
-            </div>
-            <div className="flex gap-2 justify-start items-center">
-              <BanknotesIcon className="w-5 h-5 text-primary-500" />
-              <p className="text-black">
-                Booking Fee / Rate: $ {data?.budget}
-              </p>
-            </div>
-            <div className="flex gap-2 justify-start items-center">
-              <BuildingLibraryIcon className="w-5 h-5 text-primary-500" />
-              <p className="text-black">{data?.location}</p>
-            </div>
+  if (!data) {
+    return (
+      <div className="rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-sm">
+        <div className="animate-pulse space-y-4">
+          <div className="h-5 w-32 rounded bg-slate-200" />
+          <div className="h-8 w-3/4 rounded bg-slate-200" />
+          <div className="h-20 rounded-2xl bg-slate-100" />
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <div className="h-20 rounded-2xl bg-slate-100" />
+            <div className="h-20 rounded-2xl bg-slate-100" />
           </div>
         </div>
       </div>
-      <div className="font-medium text-xl border-t-[1px] py-5 border-gray-300 mt-14">
-        Attachments
-        <div className="flex gap-5 mt-2">
-          {data.fileUrls?.length > 0 &&
-            data?.fileUrls.map((url, index) => (
-              <Link
-                key={index}
-                className="text-primary-500 text-sm hover:underline"
-                href={url}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                Attachment {index + 1}
-              </Link>
-            ))}
+    );
+  }
+
+  return (
+    <div className="overflow-hidden rounded-[1.75rem] border border-slate-200 bg-white shadow-sm">
+      <div className="border-b border-slate-200 bg-gradient-to-br from-white to-slate-50 px-5 py-5 sm:px-6">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-primary-700">
+              Gig summary
+            </p>
+            <h2 className="mt-2 text-2xl font-medium leading-tight text-slate-900">
+              {data.title}
+            </h2>
+          </div>
+          <div className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-slate-600 shadow-sm">
+            Posted {formatPostedDate(data.createdAt || "")}
+          </div>
+        </div>
+        <div className="mt-4 flex flex-wrap gap-2">
+          {data.tags.map((tag) => (
+            <span
+              key={tag}
+              className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-medium text-slate-700"
+            >
+              {tag}
+            </span>
+          ))}
+        </div>
+      </div>
+
+      <div className="space-y-6 px-5 py-5 sm:px-6 sm:py-6">
+        <div className="rounded-[1.5rem] bg-slate-50 p-4">
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="rounded-2xl border border-slate-200 bg-white p-4">
+              <div className="flex items-center gap-3 text-slate-700">
+                <TrophyIcon className="h-5 w-5 text-primary-600" />
+                <div>
+                  <p className="text-xs uppercase tracking-[0.2em] text-slate-400">
+                    Experience
+                  </p>
+                  <p className="mt-1 text-sm font-medium text-slate-900">
+                    {data.experience}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="rounded-2xl border border-slate-200 bg-white p-4">
+              <div className="flex items-center gap-3 text-slate-700">
+                <BanknotesIcon className="h-5 w-5 text-primary-600" />
+                <div>
+                  <p className="text-xs uppercase tracking-[0.2em] text-slate-400">
+                    Budget
+                  </p>
+                  <p className="mt-1 text-sm font-medium text-slate-900">
+                    Booking Fee / Rate: Rs {data.budget}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="rounded-2xl border border-slate-200 bg-white p-4 sm:col-span-2">
+              <div className="flex items-center gap-3 text-slate-700">
+                <MapPinIcon className="h-5 w-5 text-primary-600" />
+                <div>
+                  <p className="text-xs uppercase tracking-[0.2em] text-slate-400">
+                    Location
+                  </p>
+                  <p className="mt-1 text-sm font-medium text-slate-900">
+                    {data.location}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div className="mb-3 flex items-center gap-2">
+            <DocumentTextIcon className="h-5 w-5 text-primary-600" />
+            <p className="text-base font-semibold text-slate-900">
+              Project brief
+            </p>
+          </div>
+          <div className="rounded-[1.5rem] border border-slate-200 bg-slate-50 p-4">
+            <p className="text-sm leading-7 text-slate-600">
+              {data.description}
+            </p>
+          </div>
+        </div>
+
+        <div>
+          <div className="mb-3 flex items-center gap-2">
+            <ClockIcon className="h-5 w-5 text-primary-600" />
+            <p className="text-base font-semibold text-slate-900">
+              Attachments
+            </p>
+          </div>
+          {data.fileUrls?.length > 0 ? (
+            <div className="space-y-3">
+              {data.fileUrls.map((url, index) => (
+                <Link
+                  key={index}
+                  className="flex items-center justify-between rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-700 transition hover:border-primary-200 hover:text-primary-700"
+                  href={url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <span>Attachment {index + 1}</span>
+                  <ArrowTopRightOnSquareIcon className="h-4 w-4" />
+                </Link>
+              ))}
+            </div>
+          ) : (
+            <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-4 py-6 text-sm text-slate-500">
+              No attachments were included with this gig.
+            </div>
+          )}
         </div>
       </div>
     </div>

@@ -2,6 +2,7 @@
 
 import {
   BuildingLibraryIcon,
+  CalendarDaysIcon,
   SparklesIcon,
 } from "@heroicons/react/24/outline";
 import { useState, useEffect, useContext } from "react";
@@ -42,6 +43,7 @@ export interface Job {
   status: string;
   proposalCount: number;
   profilePicture?: string;
+  eventDate?: string;
 }
 
 export const getTimeAgo = (dateString: string) => {
@@ -136,6 +138,18 @@ const JobList = ({ bestMatches, mostRecent, savedJobs, query }: Props) => {
     console.log("Job details loaded:", job);
   };
 
+  const formatEventDate = (dateString?: string) => {
+    if (!dateString) return "Date to be confirmed";
+
+    return new Date(dateString).toLocaleDateString(undefined, {
+      weekday: "short",
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+      timeZone: "UTC",
+    });
+  };
+
   return (
     <div className="flex  flex-col mt-8 w-full ">
       {loading ? (
@@ -176,6 +190,10 @@ const JobList = ({ bestMatches, mostRecent, savedJobs, query }: Props) => {
               ) : (
                 <Unliked className="w-6 h-6  " />
               )} */}
+              </div>
+              <div className="mt-2 inline-flex w-fit items-center gap-2 rounded-full border border-primary-200 bg-primary-50 px-4 py-2 text-sm font-semibold text-primary-700">
+                <CalendarDaysIcon className="h-4 w-4" />
+                Event Date: {formatEventDate(job.eventDate)}
               </div>
               <p className="text-sm mt-1 text-success-600/75">
                 {job.type} • {job.experience} • Booking Fee / Rate: ${job.budget}

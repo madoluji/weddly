@@ -6,11 +6,14 @@ import {authenticateToken} from "./app/lib/authorizationMiddleware";
 export async function proxy(req: NextRequest) {
   const token = await getToken({req, secret: process.env.NEXTAUTH_SECRET});
   const pathname = req.nextUrl.pathname;
+  const allowE2EBypass = process.env.NEXT_PUBLIC_ENABLE_E2E === "true";
+  const isE2EPage = allowE2EBypass && pathname.startsWith("/e2e");
 
   const isAuthPage =
     pathname === "/login" ||
     pathname === "/signup" ||
-    pathname === "/api/register";
+    pathname === "/api/register" ||
+    isE2EPage;
 
   const isAdminAuthPage =
     pathname === "/admin/login" || pathname === "/api/admin/register";

@@ -17,7 +17,7 @@ const SignUppage = async () => {
         <div className="p-7 sm:p-10 lg:px-12 lg:py-10 overflow-y-auto">
           <div className="mb-9">
             <AppLogo width={72} height={42} className="mb-5 object-contain" priority />
-            <h1 className="text-[44px] font-serif font-semibold text-slate-800 leading-[1.08]">
+            <h1 className="font-headline text-[44px] font-semibold text-slate-800 leading-[1.08]">
               Join WeddingJobs
             </h1>
             <p className="mt-2 text-[20px] text-slate-500">Create your vendor profile in minutes</p>
@@ -48,7 +48,7 @@ const SignUppage = async () => {
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/25 to-black/10" />
             <div className="absolute bottom-10 left-8 right-8 text-white">
-              <h2 className="text-[52px] font-serif font-semibold leading-[1.06]">Start your wedding vendor journey</h2>
+              <h2 className="font-headline text-[52px] font-semibold leading-[1.06]">Start your wedding vendor journey</h2>
               <p className="mt-4 max-w-md text-xl leading-relaxed text-white/90">
                 Join thousands of vendors who are building their dream wedding business on our platform.
               </p>

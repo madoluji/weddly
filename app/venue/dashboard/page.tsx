@@ -9,11 +9,8 @@ const VenueDashboard = () => {
   return (
     <>
       <style jsx>{`
-        @import url("https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@400;500;600&display=swap");
-
         .vd-page {
-          font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI",
-            sans-serif;
+          font-family: var(--font-montserrat), sans-serif;
           padding: 2rem 1.5rem;
           max-width: 1200px;
           margin: 0 auto;
@@ -24,7 +21,7 @@ const VenueDashboard = () => {
         }
 
         .vd-greeting {
-          font-family: "Playfair Display", Georgia, serif;
+          font-family: var(--font-playfair-display), serif;
           font-size: 2rem;
           font-weight: 700;
           color: #1a1a1a;
@@ -80,7 +77,7 @@ const VenueDashboard = () => {
         }
 
         .vd-card-value {
-          font-family: "Playfair Display", Georgia, serif;
+          font-family: var(--font-playfair-display), serif;
           font-size: 1.6rem;
           font-weight: 700;
           color: #2f5f4a;

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useContext, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import JobDetails from "./job-details";
 import Terms from "./term";
 import Expiration from "./expiration";
@@ -20,9 +20,8 @@ import { fetchWithAuth } from "@/app/lib/fetchWIthAuth";
 import FreelancerDetail from "./freelancer-details";
 import Alert from "../alert";
 import { Appcontext } from "@/app/context/appContext";
-import proposal from "@/models/proposal";
-import { log } from "console";
 import UserProfileLoader from "@/app/lib/userProfileLoader";
+import useFetch from "@/app/hooks/useFetch";
 
 interface OfferFormProps {
   jobId: string;
@@ -35,17 +34,25 @@ const OfferForm = ({ jobId, freelancerId }: OfferFormProps) => {
   const [deadline, setDeadline] = useState<string>("");
   const [expiration, setExpiration] = useState("");
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
-  const [isSubmitted, setIsSubmitted] = useState<boolean>(false);
+  const [isSubmitted] = useState<boolean>(false);
   const [alert, setAlert] = useState<{
     type: "success" | "error";
     message: string;
   } | null>(null);
 
-  interface UserData {
-    id: string;
-  }
-
   const { userData, chatData } = useContext(Appcontext);
+  const { data: jobData } = useFetch<{ eventDate?: string; title?: string }>(
+    `/fetchJobs?jobId=${jobId}`
+  );
+
+  useEffect(() => {
+    if (deadline || !jobData?.eventDate) return;
+
+    const normalizedDate = new Date(jobData.eventDate)
+      .toISOString()
+      .split("T")[0];
+    setDeadline(normalizedDate);
+  }, [deadline, jobData?.eventDate]);
 
   const sendContractToChat = async (proposal: any) => {
     try {
@@ -59,7 +66,7 @@ const OfferForm = ({ jobId, freelancerId }: OfferFormProps) => {
 
       let chatId = chatExists?.messageId;
 
-      const initialMessage = `New contract offer: ${paymentType}, Deadline: ${deadline}`;
+      const initialMessage = `New wedding offer: ${paymentType}, Event Date: ${deadline}`;
 
       if (!chatExists) {
         // Create new chat
@@ -119,7 +126,7 @@ const OfferForm = ({ jobId, freelancerId }: OfferFormProps) => {
             },
             {
               sId: userData?.id,
-              text: `Contract details:\nBid: $${paymentType}\nDeadline: ${deadline}`,
+              text: `Offer details:\nRate: ${paymentType}\nEvent Date: ${deadline}`,
               attachment: {
                 type: "contractOffer",
                 data: proposal,
@@ -245,6 +252,7 @@ const OfferForm = ({ jobId, freelancerId }: OfferFormProps) => {
           deadline={deadline}
           setDeadline={setDeadline}
           isSubmitted={false}
+          suggestedEventDate={jobData?.eventDate}
         />
 
         <Expiration

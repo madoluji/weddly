@@ -15,7 +15,7 @@ export default async function ContractOfferPage({
   return (
     <div className="container mx-auto py-8 px-4">
       <Link
-        href="/user/your-contracts"
+        href="/client/your-contracts"
         className="flex items-center text-sm text-gray-500 hover:text-gray-900"
       >
         <ArrowLeftIcon className="mr-2 h-4 w-4" />

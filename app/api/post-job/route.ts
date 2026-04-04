@@ -37,6 +37,28 @@ const isValidLatitude = (value: unknown): value is number =>
 const isValidLongitude = (value: unknown): value is number =>
   typeof value === "number" && Number.isFinite(value) && value >= -180 && value <= 180;
 
+const parseDateOnlyUTC = (raw: string): Date | null => {
+  const match = raw.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!match) {
+    return null;
+  }
+
+  const year = Number(match[1]);
+  const month = Number(match[2]);
+  const day = Number(match[3]);
+  const date = new Date(Date.UTC(year, month - 1, day, 0, 0, 0, 0));
+
+  if (
+    date.getUTCFullYear() !== year ||
+    date.getUTCMonth() !== month - 1 ||
+    date.getUTCDate() !== day
+  ) {
+    return null;
+  }
+
+  return date;
+};
+
 export async function POST(req: NextRequest) {
   const status = "active";
   try {
@@ -80,10 +102,10 @@ export async function POST(req: NextRequest) {
 
     let normalizedEventDate: Date | undefined;
     if (eventDate) {
-      const parsedEventDate = new Date(eventDate);
-      if (Number.isNaN(parsedEventDate.getTime())) {
+      const parsedEventDate = parseDateOnlyUTC(eventDate);
+      if (!parsedEventDate) {
         return NextResponse.json(
-          { message: "Invalid eventDate format." },
+          { message: "Invalid eventDate format. Use YYYY-MM-DD." },
           { status: 400 }
         );
       }

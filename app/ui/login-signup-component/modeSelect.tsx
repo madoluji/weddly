@@ -104,11 +104,8 @@ const ModeSelect = () => {
   return (
     <>
       <style jsx>{`
-        @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
-
         .mode-page {
-          font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI",
-            sans-serif;
+          font-family: var(--font-montserrat), sans-serif;
           min-height: 100vh;
           display: flex;
           flex-direction: column;

@@ -1,8 +1,6 @@
 "use client";
 import useFetch from "@/app/hooks/useFetch";
-import { fetchWithAuth } from "@/app/lib/fetchWIthAuth";
 import { CalendarDaysIcon, UserIcon } from "@heroicons/react/24/outline";
-import React, { useEffect, useState } from "react";
 
 type Data = {
   _id: string;
@@ -42,6 +40,12 @@ export default function JobDetails({ jobId }: { jobId: string }) {
     loading,
     error,
   } = useFetch<Data>(`/fetchJobs?jobId=${jobId}`);
+
+  const projectStartDate =
+    Array.isArray(job?.statusHistory) && job.statusHistory.length > 0
+      ? job.statusHistory[job.statusHistory.length - 1]?.changedAt ||
+        job.createdAt
+      : job?.createdAt;
 
   if (loading) return <p>Loading...</p>;
   if (error || !job) return <p>Error loading job details</p>;
@@ -124,7 +128,9 @@ export default function JobDetails({ jobId }: { jobId: string }) {
           <span className="inline-flex items-center rounded-full px-3 py-1 text-sm font-medium bg-gray-100 text-gray-800">
             <CalendarDaysIcon className="h-4 w-4 mr-1" />
             Project Start Date:{" "}
-            {new Date(job.statusHistory[1].changedAt).toDateString()}
+            {projectStartDate
+              ? new Date(projectStartDate).toDateString()
+              : "Not available"}
           </span>
         </div>
       </div>

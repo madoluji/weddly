@@ -7,6 +7,7 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/app/lib/auth";
 import proposal from "@/models/proposal";
 import FreelancerInfo from "@/models/freelancerInfo";
+import { applyServerFilters, paginateItems } from "@/app/lib/jobFilters";
 
 const parseJobLocation = (location: unknown) => {
   if (!location || typeof location !== "object") {
@@ -64,11 +65,39 @@ export async function GET(req: NextRequest) {
   const bestMatches = searchParams.get('bestMatches');
   const mostRecent = searchParams.get('mostRecent');
   const savedJobs = searchParams.get('savedJobs');
+  const search = searchParams.get('search');
   const title = searchParams.get('title');
-  const experience = searchParams.get('Experience');
+  const experience = searchParams.get('experience') || searchParams.get('Experience');
+  const location = searchParams.get('location');
+  const category = searchParams.get('category');
+  const minBudget = searchParams.get('minBudget');
+  const maxBudget = searchParams.get('maxBudget');
+  const eventDate = searchParams.get('eventDate');
+  const sortBy = searchParams.get('sortBy');
+  const pageParam = searchParams.get('page');
+  const limitParam = searchParams.get('limit');
   const jobId = searchParams.get('jobId');
   const clientId = searchParams.get('userId'); // Get userId from query parameters
   const isSaved = searchParams.get('s');
+
+  const shouldPaginate = pageParam !== null || limitParam !== null;
+  const pageValue = Number.parseInt(pageParam || "1", 10);
+  const limitValue = Number.parseInt(limitParam || "10", 10);
+
+  const minBudgetValue =
+    minBudget !== null && minBudget !== "" && Number.isFinite(Number(minBudget))
+      ? Number(minBudget)
+      : null;
+  const maxBudgetValue =
+    maxBudget !== null && maxBudget !== "" && Number.isFinite(Number(maxBudget))
+      ? Number(maxBudget)
+      : null;
+  const experienceFilters = experience
+    ? experience
+        .split(',')
+        .map((value) => value.trim())
+        .filter((value) => value.length > 0)
+    : [];
 
   const userId = session?.user.id;
 
@@ -139,8 +168,7 @@ export async function GET(req: NextRequest) {
           findOne({ userId: userId }).select("skills");
 
         if (!freelancerInfo) {
-          console.log("Freelancer not found");
-          return;
+          return NextResponse.json({ jobs: [] });
         }
 
         // Step 2: Query jobs where requiredSkills match freelancer's skills
@@ -187,28 +215,87 @@ export async function GET(req: NextRequest) {
         .where('experience').in(experience.split(','));
     }
 
-    // Fetch saved job ids for the current user
-    const savedJobRecords = await SavedJobs.find({ userId });
-    const savedJobIds = savedJobRecords.map((record) => record.jobId.toString());
+    const normalizedJobs = jobs.map((job) =>
+      typeof job?.toObject === "function" ? job.toObject() : job
+    );
 
-    // Add 'saved' field and include jobId for each job
-    const jobsWithSavedFlag = await Promise.all(jobs.map(async (job) => {
-      const proposalCount = await proposal.countDocuments({ jobId: job._id });
-      
-      // Fetch the user's profile picture
-      const user = await User.findById(job.userId).select("profilePicture");
-      const profilePicture = user?.profilePicture || null;
+    const jobObjectIds = normalizedJobs.map((job) => job._id);
+
+    // Fetch saved job ids for the current user
+    const savedJobRecords = await SavedJobs.find({ userId }).select("jobId").lean();
+    const savedJobIds = new Set(savedJobRecords.map((record) => record.jobId.toString()));
+
+    const [proposalCountRows, userProposalRows] = await Promise.all([
+      proposal.aggregate([
+        { $match: { jobId: { $in: jobObjectIds } } },
+        { $group: { _id: "$jobId", count: { $sum: 1 } } },
+      ]),
+      proposal
+        .find({ userId, jobId: { $in: jobObjectIds } })
+        .sort({ createdAt: -1 })
+        .select("jobId status")
+        .lean(),
+    ]);
+
+    const proposalCountsByJobId = new Map<string, number>();
+    for (const row of proposalCountRows) {
+      proposalCountsByJobId.set(row._id.toString(), Number(row.count) || 0);
+    }
+
+    const userProposalStatusByJobId = new Map<string, string>();
+    for (const row of userProposalRows) {
+      const normalizedJobId = row.jobId.toString();
+      if (!userProposalStatusByJobId.has(normalizedJobId)) {
+        userProposalStatusByJobId.set(normalizedJobId, row.status);
+      }
+    }
+
+    const clientUserIds = Array.from(
+      new Set(normalizedJobs.map((job) => job.userId.toString()))
+    );
+    const clientUsers = await User.find({ _id: { $in: clientUserIds } })
+      .select("_id profilePicture")
+      .lean();
+    const profilePictureByUserId = new Map<string, string | null>();
+    for (const user of clientUsers) {
+      profilePictureByUserId.set(user._id.toString(), user.profilePicture || null);
+    }
+
+    const jobsWithSavedFlag = normalizedJobs.map((job) => {
+      const normalizedJobId = job._id.toString();
+      const proposalStatus = userProposalStatusByJobId.get(normalizedJobId) || null;
 
       return {
-        jobId: job._id,  // Include the job ID in the response
-        ...withLocationFields(job._doc),     // Spread other job details
-        saved: savedJobIds.includes(job._id.toString()), // Check if the job is saved
-        proposalCount,   // Include the proposal count
-        profilePicture,  // Include the client's profile picture
+        jobId: normalizedJobId,
+        ...withLocationFields(job),
+        saved: savedJobIds.has(normalizedJobId),
+        proposalCount: proposalCountsByJobId.get(normalizedJobId) || 0,
+        profilePicture: profilePictureByUserId.get(job.userId.toString()) || null,
+        hasApplied: proposalStatus !== null,
+        myProposalStatus: proposalStatus,
       };
-    }));
+    });
 
-    return NextResponse.json({ jobs: jobsWithSavedFlag });
+    const filteredJobs = applyServerFilters(jobsWithSavedFlag, {
+      search: search || title,
+      location,
+      category,
+      experiences: experienceFilters,
+      minBudget: minBudgetValue,
+      maxBudget: maxBudgetValue,
+      eventDate,
+      sortBy,
+    });
+
+    if (shouldPaginate) {
+      const paginated = paginateItems(filteredJobs, pageValue, limitValue);
+      return NextResponse.json({
+        jobs: paginated.items,
+        pagination: paginated.pagination,
+      });
+    }
+
+    return NextResponse.json({ jobs: filteredJobs });
   } catch (error) {
     console.error("Error fetching Jobs:", error);
     return NextResponse.json(

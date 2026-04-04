@@ -37,7 +37,7 @@ export async function GET(req: NextRequest) {
 
         // Fetch contract(s) with job details
         let contracts = await Contract.find(query)
-            .populate({ path: 'jobId', model: Jobs, select: "title budget description" }) // Populate job details
+            .populate({ path: 'jobId', model: Jobs, select: "title budget description eventDate location experience tags" }) // Populate job details
             .exec();
 
         if (!contracts.length) {
@@ -71,7 +71,7 @@ export async function GET(req: NextRequest) {
                     if (contract.clientId) {
                         const clientDetails = await ClientInfo.findOne({
                             userId: contract.clientId,
-                        }).select("fullName location rate");
+                        }).select("fullName location rate targetWeddingDate");
                         return { ...contract.toObject(), clientDetails };
                     }
                     return contract.toObject();

@@ -4,9 +4,18 @@ import { authOptions } from "@/app/lib/auth";
 import { connectMongoDB } from "@/app/lib/mongodb";
 import User from "@/models/user";
 import { redirect } from "next/navigation";
+import { toInitialFindJobFilters } from "@/app/lib/findJobFlow";
 
 interface searchParams {
+  search?: string;
   title?: string;
+  location?: string;
+  category?: string;
+  experience?: string;
+  minBudget?: string;
+  maxBudget?: string;
+  eventDate?: string;
+  sortBy?: string;
 }
 
 // Defining the interface for component props
@@ -28,7 +37,11 @@ const page = async ({ searchParams }: Props) => {
   }
 
   const resolvedSearchParams = await searchParams;
-  return <FindJobBoard initialTitle={resolvedSearchParams?.title || ""} />;
+  return (
+    <FindJobBoard
+      initialFilters={toInitialFindJobFilters(resolvedSearchParams)}
+    />
+  );
 };
 
 export default page;

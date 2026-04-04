@@ -8,9 +8,22 @@
 }
 
 body {
-  background-color: #fffdf7;
+  background-color: #f9fafb;
   color: #1f2f27;
   font-family: var(--font-montserrat), sans-serif;
+}
+
+.font-body {
+  font-family: var(--font-montserrat), sans-serif;
+}
+
+.font-headline {
+  font-family: var(--font-playfair-display), serif;
+}
+
+.font-label {
+  font-family: var(--font-montserrat), sans-serif;
+  letter-spacing: 0.08em;
 }
 
 h1,
@@ -108,4 +121,3 @@ input[type="search"]:hover {
 .cta-gradient {
   background: linear-gradient(135deg, #154734 0%, #2f5f4a 100%);
 }
-

@@ -50,4 +50,8 @@ const ProposalSchema: Schema = new Schema(
     { timestamps: true }
 );
 
+ProposalSchema.index({ jobId: 1, createdAt: -1 });
+ProposalSchema.index({ userId: 1, jobId: 1, createdAt: -1 });
+ProposalSchema.index({ clientId: 1, status: 1, createdAt: -1 });
+
 export default mongoose.models.Proposal || mongoose.model<IProposal>("Proposal", ProposalSchema);

@@ -7,7 +7,6 @@ import { useState } from "react";
 const VenueWelcome = () => {
   const router = useRouter();
   const { session } = useAuth();
-  const userName = session?.user.name;
   const id = session?.user.id;
 
   const [venueName, setVenueName] = useState("");
@@ -16,11 +15,8 @@ const VenueWelcome = () => {
   return (
     <>
       <style jsx>{`
-        @import url("https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap");
-
         .vw-page {
-          font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI",
-            sans-serif;
+          font-family: var(--font-montserrat), sans-serif;
           min-height: 100vh;
           display: flex;
           align-items: center;
@@ -46,7 +42,7 @@ const VenueWelcome = () => {
 
         /* --- Left Column --- */
         .vw-content h1 {
-          font-family: "Playfair Display", Georgia, serif;
+          font-family: var(--font-playfair-display), serif;
           font-size: 2.6rem;
           font-weight: 700;
           color: #1a1a1a;
@@ -102,7 +98,7 @@ const VenueWelcome = () => {
         }
 
         .vw-card-title {
-          font-family: "Playfair Display", Georgia, serif;
+          font-family: var(--font-playfair-display), serif;
           font-size: 1.5rem;
           font-weight: 600;
           color: #1a1a1a;

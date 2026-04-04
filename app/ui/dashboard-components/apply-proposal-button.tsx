@@ -14,7 +14,6 @@ const ApplyProposalButton = ({ jobId, userId }: Props) => {
   const [mismatchReason, setMismatchReason] = useState<string>("");
 
   useEffect(() => {
-    // Fetch the actions data when the component mounts
     const fetchActions = async () => {
       try {
         const response = await fetchWithAuth(
@@ -22,15 +21,13 @@ const ApplyProposalButton = ({ jobId, userId }: Props) => {
         );
         const data = await response.json();
         console.log("Fetched data:", data);
-
-        // Set the actions state with the returned actions data
         setActions(data?.actions || []);
         setIsEligible(data?.isEligible !== false);
         setMismatchReason(data?.mismatchReason || "");
         setLoading(false);
       } catch (error) {
         console.error("Fetch error:", error);
-        setLoading(false); // Stop loading in case of error
+        setLoading(false);
       }
     };
 
@@ -39,39 +36,44 @@ const ApplyProposalButton = ({ jobId, userId }: Props) => {
 
   if (loading)
     return (
-      <div className="w-full mt-10 h-12 bg-primary-500 animate-pulse text-white py-3 rounded-lg px-8 "></div>
-    ); // Show loading while fetching data
+      <div className="mt-6 h-12 w-full animate-pulse rounded-xl bg-slate-200" />
+    );
 
   return (
     <>
       {Array.isArray(actions) && actions.includes("proposal_submitted") ? (
         <>
-          <div className="w-full mt-10 bg-primary-900 text-white py-3 rounded-lg px-8 cursor-not-allowed sm:text-center text-center">
+          <div className="mt-6 w-full cursor-not-allowed rounded-xl bg-slate-900 px-6 py-3.5 text-center text-sm font-semibold text-white">
             Apply for this Wedding Gig
           </div>
-          <div className="mt-10 text-primary-500 sm:text-center text-center">
-            {" "}
-            You&apos;ve already applied for this wedding gig
+          <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 px-4 py-4 text-center text-sm leading-6 text-slate-600">
+            You&apos;ve already applied for this wedding gig.
             <br />
-            <Link className="underline" href={"/user/your-proposals"}>
+            <Link
+              className="font-semibold text-primary-700 underline"
+              href={"/user/your-proposals"}
+            >
               View Proposal
             </Link>
           </div>
         </>
       ) : !isEligible ? (
         <>
-          <button disabled className="w-full mt-10 bg-gray-400 text-white py-3 rounded-lg px-8 cursor-not-allowed sm:text-center text-center">
+          <button
+            disabled
+            className="mt-6 w-full cursor-not-allowed rounded-xl bg-slate-400 px-6 py-3.5 text-center text-sm font-semibold text-white"
+          >
             Apply for this Wedding Gig
           </button>
-          <div className="mt-4 text-red-500 text-sm sm:text-center text-center px-4 font-medium">
-            {mismatchReason || "You do not meet the preferred requirements for this gig."}
+          <div className="mt-4 rounded-xl border border-red-100 bg-red-50 px-4 py-4 text-center text-sm font-medium leading-6 text-red-600">
+            {mismatchReason ||
+              "You do not meet the preferred requirements for this gig."}
           </div>
         </>
       ) : (
-        <div className="mt-10">
-          {/* Apply Button */}
+        <div className="mt-6">
           <Link
-            className="w-full bg-primary-600 text-white py-3 rounded-lg px-8 block sm:text-center text-center hover:bg-primary-700 transition"
+            className="block w-full rounded-xl bg-primary-700 px-6 py-3.5 text-center text-sm font-semibold text-white transition hover:bg-primary-800"
             href={`/user/proposal/${jobId}`}
           >
             Apply for this Wedding Gig

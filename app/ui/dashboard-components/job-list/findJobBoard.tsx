@@ -2,7 +2,7 @@
 
 import clsx from "clsx";
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   CalendarDaysIcon,
   ClockIcon,
@@ -10,9 +10,16 @@ import {
   MagnifyingGlassIcon,
   MapPinIcon,
 } from "@heroicons/react/24/outline";
+import { usePathname, useRouter } from "next/navigation";
 import SaveButton from "../../saveButton";
 import PostingSkeleton from "../skeletons/postingSkeleton";
 import { fetchWithAuth } from "@/app/lib/fetchWIthAuth";
+import {
+  buildFindJobQueryParams,
+  defaultFindJobFilters,
+  type FindJobFilters,
+  getApplyAction,
+} from "@/app/lib/findJobFlow";
 
 interface FindJob {
   jobId: string;
@@ -28,13 +35,23 @@ interface FindJob {
   fullName: string;
   status: "active" | "in-progress" | "completed" | "canceled" | string;
   eventDate?: string;
+  hasApplied?: boolean;
+  myProposalStatus?:
+    | "pending"
+    | "shortlisted"
+    | "accepted"
+    | "rejected"
+    | "withdrawn"
+    | "canceled"
+    | null;
 }
 
 interface Props {
-  initialTitle?: string;
+  initialFilters?: Partial<FindJobFilters>;
 }
 
 const BRAND = "#2f5f4a";
+const PAGE_SIZE = 6;
 
 const getTimeAgo = (dateString: string) => {
   const units = [
@@ -67,21 +84,6 @@ const truncate = (text: string, limit = 190) => {
   return `${text.slice(0, limit).trim()}...`;
 };
 
-const parseBudgetRange = (budget: string | number): [number, number] | null => {
-  const raw = typeof budget === "number" ? `${budget}` : `${budget ?? ""}`;
-  const matches = raw.match(/\d+(?:\.\d+)?/g);
-  if (!matches || matches.length === 0) return null;
-
-  const values = matches.map((value) => Number(value)).filter(Number.isFinite);
-  if (values.length === 0) return null;
-
-  if (values.length === 1) {
-    return [values[0], values[0]];
-  }
-
-  return [Math.min(...values), Math.max(...values)];
-};
-
 const statusClasses: Record<string, string> = {
   active: "bg-[#2f5f4a]/10 text-[#2f5f4a] border-[#2f5f4a]/20",
   "in-progress": "bg-amber-100/70 text-amber-800 border-amber-200",
@@ -89,24 +91,116 @@ const statusClasses: Record<string, string> = {
   canceled: "bg-rose-100/70 text-rose-700 border-rose-200",
 };
 
-const FindJobBoard = ({ initialTitle = "" }: Props) => {
+const FindJobBoard = ({ initialFilters }: Props) => {
+  const router = useRouter();
+  const pathname = usePathname();
+
+  const mergedInitialFilters: FindJobFilters = {
+    ...defaultFindJobFilters,
+    ...initialFilters,
+    experienceFilters: initialFilters?.experienceFilters || [],
+    sortBy: initialFilters?.sortBy === "budget" ? "budget" : "newest",
+  };
+
   const [jobs, setJobs] = useState<FindJob[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [titleSearch, setTitleSearch] = useState(initialTitle);
-  const [locationSearch, setLocationSearch] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("All Categories");
-  const [experienceFilters, setExperienceFilters] = useState<string[]>([]);
-  const [budgetMin, setBudgetMin] = useState("");
-  const [budgetMax, setBudgetMax] = useState("");
-  const [eventDateFilter, setEventDateFilter] = useState("");
-  const [sortBy, setSortBy] = useState<"newest" | "budget">("newest");
-  const [visibleCount, setVisibleCount] = useState(6);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [loadingMore, setLoadingMore] = useState<boolean>(false);
+  const [titleSearch, setTitleSearch] = useState(mergedInitialFilters.search);
+  const [locationSearch, setLocationSearch] = useState(mergedInitialFilters.location);
+  const [selectedCategory, setSelectedCategory] = useState(mergedInitialFilters.category);
+  const [experienceFilters, setExperienceFilters] = useState<string[]>(
+    mergedInitialFilters.experienceFilters
+  );
+  const [budgetMin, setBudgetMin] = useState(mergedInitialFilters.minBudget);
+  const [budgetMax, setBudgetMax] = useState(mergedInitialFilters.maxBudget);
+  const [eventDateFilter, setEventDateFilter] = useState(mergedInitialFilters.eventDate);
+  const [sortBy, setSortBy] = useState<"newest" | "budget">(
+    mergedInitialFilters.sortBy
+  );
+  const [page, setPage] = useState(1);
+  const [totalJobs, setTotalJobs] = useState(0);
+  const [hasMore, setHasMore] = useState(false);
+  const lastSyncedQueryRef = useRef("");
+
+  const categories = useMemo(() => {
+    const baseCategories = [
+      "All Categories",
+      "Engagement (Wagdan)",
+      "Pre-Wedding",
+      "Haldi",
+      "Mehendi",
+      "Sangeet",
+      "Wedding Day (Janti & Bibaha)",
+      "Reception",
+      "Post-Wedding (Mukh Herne)",
+    ];
+
+    const dynamicCategories = Array.from(
+      new Set(jobs.map((job) => job.type).filter((type) => type && type.trim().length > 0))
+    );
+
+    return [...baseCategories, ...dynamicCategories.filter((category) => !baseCategories.includes(category))];
+  }, [jobs]);
+
+  const resetPageToFirst = () => {
+    setPage(1);
+  };
+
+  const buildFiltersState = (): FindJobFilters => ({
+    search: titleSearch,
+    location: locationSearch,
+    category: selectedCategory,
+    experienceFilters,
+    minBudget: budgetMin,
+    maxBudget: budgetMax,
+    eventDate: eventDateFilter,
+    sortBy,
+  });
 
   useEffect(() => {
+    const query = buildFindJobQueryParams(buildFiltersState()).toString();
+    if (query === lastSyncedQueryRef.current) {
+      return;
+    }
+
+    lastSyncedQueryRef.current = query;
+    const target = query.length > 0 ? `${pathname}?${query}` : pathname;
+    router.replace(target, { scroll: false });
+  }, [
+    titleSearch,
+    locationSearch,
+    selectedCategory,
+    experienceFilters,
+    budgetMin,
+    budgetMax,
+    eventDateFilter,
+    sortBy,
+    pathname,
+    router,
+  ]);
+
+  useEffect(() => {
+    let active = true;
+
     const loadJobs = async () => {
-      setLoading(true);
+      const isFirstPage = page === 1;
+
+      if (active && isFirstPage) {
+        setLoading(true);
+      }
+
+      if (active && !isFirstPage) {
+        setLoadingMore(true);
+      }
+
       try {
-        const response = await fetchWithAuth("/api/fetchJobs?mostRecent=true", {
+        const params = buildFindJobQueryParams(buildFiltersState());
+        params.set("mostRecent", "true");
+        params.set("sortBy", sortBy);
+        params.set("page", `${page}`);
+        params.set("limit", `${PAGE_SIZE}`);
+
+        const response = await fetchWithAuth(`/api/fetchJobs?${params.toString()}`, {
           method: "GET",
           next: { revalidate: 3600 },
         });
@@ -116,85 +210,53 @@ const FindJobBoard = ({ initialTitle = "" }: Props) => {
         }
 
         const payload = await response.json();
-        setJobs(Array.isArray(payload?.jobs) ? payload.jobs : []);
+        const incomingJobs = Array.isArray(payload?.jobs) ? payload.jobs : [];
+        const pagination = payload?.pagination;
+
+        if (active) {
+          setJobs((previous) => {
+            if (isFirstPage) {
+              return incomingJobs;
+            }
+
+            const previousIds = new Set(previous.map((job) => job.jobId));
+            const uniqueIncoming = incomingJobs.filter((job: FindJob) => !previousIds.has(job.jobId));
+            return [...previous, ...uniqueIncoming];
+          });
+
+          setTotalJobs(
+            typeof pagination?.total === "number"
+              ? pagination.total
+              : incomingJobs.length
+          );
+          setHasMore(Boolean(pagination?.hasMore));
+        }
       } catch (error) {
         console.error("Error loading jobs:", error);
-        setJobs([]);
+        if (active) {
+          if (page === 1) {
+            setJobs([]);
+            setTotalJobs(0);
+          }
+          setHasMore(false);
+        }
       } finally {
-        setLoading(false);
+        if (active) {
+          setLoading(false);
+          setLoadingMore(false);
+        }
       }
     };
 
-    loadJobs();
-  }, []);
+    const timeoutId = setTimeout(() => {
+      loadJobs();
+    }, page === 1 ? 300 : 0);
 
-  const categories = useMemo(() => {
-    const uniqueTypes = Array.from(
-      new Set(jobs.map((job) => job.type).filter((type) => type && type.trim().length > 0))
-    );
-
-    return ["All Categories", ...uniqueTypes];
-  }, [jobs]);
-
-  const filteredJobs = useMemo(() => {
-    const min = budgetMin ? Number(budgetMin) : null;
-    const max = budgetMax ? Number(budgetMax) : null;
-
-    let result = jobs.filter((job) => {
-      const matchesTitle =
-        titleSearch.trim().length === 0 ||
-        job.title.toLowerCase().includes(titleSearch.toLowerCase()) ||
-        job.description.toLowerCase().includes(titleSearch.toLowerCase()) ||
-        job.tags.some((tag) => tag.toLowerCase().includes(titleSearch.toLowerCase()));
-
-      const matchesLocation =
-        locationSearch.trim().length === 0 ||
-        job.location.toLowerCase().includes(locationSearch.toLowerCase());
-
-      const matchesCategory =
-        selectedCategory === "All Categories" || job.type === selectedCategory;
-
-      const matchesExperience =
-        experienceFilters.length === 0 || experienceFilters.includes(job.experience);
-
-      const range = parseBudgetRange(job.budget);
-      const matchesBudget =
-        (!min && !max) ||
-        (range !== null &&
-          (min === null || range[1] >= min) &&
-          (max === null || range[0] <= max));
-
-      const matchesEventDate =
-        eventDateFilter.length === 0 ||
-        (job.eventDate
-          ? new Date(job.eventDate).toISOString().slice(0, 10) === eventDateFilter
-          : false);
-
-      return (
-        matchesTitle &&
-        matchesLocation &&
-        matchesCategory &&
-        matchesExperience &&
-        matchesBudget &&
-        matchesEventDate
-      );
-    });
-
-    result = result.sort((a, b) => {
-      if (sortBy === "budget") {
-        const aRange = parseBudgetRange(a.budget);
-        const bRange = parseBudgetRange(b.budget);
-        const aValue = aRange ? aRange[1] : 0;
-        const bValue = bRange ? bRange[1] : 0;
-        return bValue - aValue;
-      }
-
-      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-    });
-
-    return result;
+    return () => {
+      active = false;
+      clearTimeout(timeoutId);
+    };
   }, [
-    jobs,
     titleSearch,
     locationSearch,
     selectedCategory,
@@ -203,9 +265,12 @@ const FindJobBoard = ({ initialTitle = "" }: Props) => {
     budgetMax,
     eventDateFilter,
     sortBy,
+    page,
   ]);
 
-  const visibleJobs = filteredJobs.slice(0, visibleCount);
+  const visibleJobs = jobs;
+
+  const totalJobsCount = totalJobs > 0 || jobs.length === 0 ? totalJobs : jobs.length;
 
   const resetFilters = () => {
     setSelectedCategory("All Categories");
@@ -216,10 +281,11 @@ const FindJobBoard = ({ initialTitle = "" }: Props) => {
     setLocationSearch("");
     setTitleSearch("");
     setSortBy("newest");
-    setVisibleCount(6);
+    setPage(1);
   };
 
   const toggleExperienceFilter = (experience: string) => {
+    setPage(1);
     setExperienceFilters((current) =>
       current.includes(experience)
         ? current.filter((entry) => entry !== experience)
@@ -246,14 +312,17 @@ const FindJobBoard = ({ initialTitle = "" }: Props) => {
             className="mt-6 grid grid-cols-1 gap-3 md:grid-cols-[1fr_1fr_auto]"
             onSubmit={(event) => {
               event.preventDefault();
-              setVisibleCount(6);
+              setPage(1);
             }}
           >
             <div className="relative">
               <MagnifyingGlassIcon className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-[#2f5f4a]/60" />
               <input
                 value={titleSearch}
-                onChange={(event) => setTitleSearch(event.target.value)}
+                onChange={(event) => {
+                  setTitleSearch(event.target.value);
+                  resetPageToFirst();
+                }}
                 placeholder="Job title, keyword, or skill"
                 className="h-12 w-full rounded-lg border border-[#c8d8cf] bg-white pl-12 pr-4 text-sm text-[#1f2f27] shadow-[0_8px_24px_rgba(34,58,45,0.06)] focus:border-[#2f5f4a] focus:ring-[#2f5f4a]"
               />
@@ -262,7 +331,10 @@ const FindJobBoard = ({ initialTitle = "" }: Props) => {
               <MapPinIcon className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-[#2f5f4a]/60" />
               <input
                 value={locationSearch}
-                onChange={(event) => setLocationSearch(event.target.value)}
+                onChange={(event) => {
+                  setLocationSearch(event.target.value);
+                  resetPageToFirst();
+                }}
                 placeholder="City, state, or venue area"
                 className="h-12 w-full rounded-lg border border-[#c8d8cf] bg-white pl-12 pr-4 text-sm text-[#1f2f27] shadow-[0_8px_24px_rgba(34,58,45,0.06)] focus:border-[#2f5f4a] focus:ring-[#2f5f4a]"
               />
@@ -301,7 +373,10 @@ const FindJobBoard = ({ initialTitle = "" }: Props) => {
                     name="job-category"
                     value={category}
                     checked={selectedCategory === category}
-                    onChange={(event) => setSelectedCategory(event.target.value)}
+                    onChange={(event) => {
+                      setSelectedCategory(event.target.value);
+                      resetPageToFirst();
+                    }}
                     className="h-4 w-4 border-[#b8cbbf] text-[#2f5f4a] focus:ring-[#2f5f4a]"
                   />
                   <span>{category}</span>
@@ -339,7 +414,10 @@ const FindJobBoard = ({ initialTitle = "" }: Props) => {
                   placeholder="Min"
                   type="number"
                   value={budgetMin}
-                  onChange={(event) => setBudgetMin(event.target.value)}
+                  onChange={(event) => {
+                    setBudgetMin(event.target.value);
+                    resetPageToFirst();
+                  }}
                   className="h-10 w-1/2 rounded-md border border-[#d2dfd8] text-sm text-[#1f2f27] placeholder:text-[#6c8478] focus:border-[#2f5f4a] focus:ring-[#2f5f4a]"
                 />
 
@@ -350,7 +428,10 @@ const FindJobBoard = ({ initialTitle = "" }: Props) => {
                   placeholder="Max"
                   type="number"
                   value={budgetMax}
-                  onChange={(event) => setBudgetMax(event.target.value)}
+                  onChange={(event) => {
+                    setBudgetMax(event.target.value);
+                    resetPageToFirst();
+                  }}
                   className="h-10 w-1/2 rounded-md border border-[#d2dfd8] text-sm text-[#1f2f27] placeholder:text-[#6c8478] focus:border-[#2f5f4a] focus:ring-[#2f5f4a]"
                 />
                 </div>
@@ -365,7 +446,10 @@ const FindJobBoard = ({ initialTitle = "" }: Props) => {
               <input
                 type="date"
                 value={eventDateFilter}
-                onChange={(event) => setEventDateFilter(event.target.value)}
+                onChange={(event) => {
+                  setEventDateFilter(event.target.value);
+                  resetPageToFirst();
+                }}
                 className="h-10 w-full rounded-md border border-[#d2dfd8] pl-10 text-sm text-[#1f2f27] focus:border-[#2f5f4a] focus:ring-[#2f5f4a]"
               />
             </div>
@@ -375,13 +459,16 @@ const FindJobBoard = ({ initialTitle = "" }: Props) => {
         <section>
           <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
             <h2 className="text-2xl font-semibold text-[#20382d]">
-              {filteredJobs.length} Jobs found
+              {totalJobsCount} Jobs found
             </h2>
             <div className="flex items-center gap-2 text-sm">
               <span className="text-[#5c786b]">Sort by:</span>
               <select
                 value={sortBy}
-                onChange={(event) => setSortBy(event.target.value as "newest" | "budget")}
+                onChange={(event) => {
+                  setSortBy(event.target.value as "newest" | "budget");
+                  resetPageToFirst();
+                }}
                 className="rounded-md border border-[#d2dfd8] bg-white py-2 pl-3 pr-8 text-sm font-medium text-[#2f5f4a] focus:border-[#2f5f4a] focus:ring-[#2f5f4a]"
               >
                 <option value="newest">Newest</option>
@@ -405,6 +492,11 @@ const FindJobBoard = ({ initialTitle = "" }: Props) => {
             <div className="space-y-4">
               {visibleJobs.map((job) => {
                 const budgetLabel = `${job.budget ?? "N/A"}`;
+                const applyAction = getApplyAction({
+                  jobStatus: job.status,
+                  hasApplied: job.hasApplied,
+                  jobId: job.jobId,
+                });
 
                 return (
                   <article
@@ -437,7 +529,7 @@ const FindJobBoard = ({ initialTitle = "" }: Props) => {
                       {job.eventDate && (
                         <p className="mt-1 inline-flex items-center gap-1 text-xs text-[#5e7b6f]">
                           <CalendarDaysIcon className="h-4 w-4" />
-                          Event Date: {new Date(job.eventDate).toLocaleDateString()}
+                          Event Date: {new Date(job.eventDate).toLocaleDateString(undefined, { timeZone: "UTC" })}
                         </p>
                       )}
 
@@ -470,22 +562,29 @@ const FindJobBoard = ({ initialTitle = "" }: Props) => {
                           </span>
                         </div>
 
-                        {job.status === "active" ? (
+                        {!applyAction.disabled ? (
                           <Link
-                            href={`/user/proposal/${job.jobId}`}
+                            href={applyAction.href}
                             className="inline-flex items-center justify-center rounded-lg px-5 py-2.5 text-sm font-semibold text-white shadow-[0_8px_24px_rgba(47,95,74,0.28)] transition hover:brightness-110"
                             style={{ backgroundColor: BRAND }}
                           >
-                            Apply
+                            {applyAction.label}
                           </Link>
                         ) : (
-                          <button
-                            type="button"
-                            disabled
-                            className="inline-flex items-center justify-center rounded-lg border border-[#d2dfd8] px-5 py-2.5 text-sm font-semibold text-[#81968c]"
-                          >
-                            Unavailable
-                          </button>
+                          <div className="flex flex-col items-end gap-1">
+                            <button
+                              type="button"
+                              disabled
+                              className="inline-flex items-center justify-center rounded-lg border border-[#d2dfd8] px-5 py-2.5 text-sm font-semibold text-[#81968c]"
+                            >
+                              {applyAction.label}
+                            </button>
+                            {job.hasApplied && job.myProposalStatus && (
+                              <span className="text-xs text-[#607a6f] capitalize">
+                                Status: {job.myProposalStatus.replace("-", " ")}
+                              </span>
+                            )}
+                          </div>
                         )}
                       </div>
                     </div>
@@ -493,14 +592,15 @@ const FindJobBoard = ({ initialTitle = "" }: Props) => {
                 );
               })}
 
-              {visibleCount < filteredJobs.length && (
+              {hasMore && (
                 <div className="pt-2 text-center">
                   <button
                     type="button"
-                    onClick={() => setVisibleCount((current) => current + 6)}
+                    onClick={() => setPage((current) => current + 1)}
+                    disabled={loadingMore}
                     className="rounded-lg border border-[#cddad3] bg-white px-6 py-3 text-sm font-semibold text-[#2f5f4a] shadow-[0_10px_24px_rgba(34,58,45,0.08)] transition hover:bg-[#f2f7f4]"
                   >
-                    Load More Jobs
+                    {loadingMore ? "Loading..." : "Load More Jobs"}
                   </button>
                 </div>
               )}

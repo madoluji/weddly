@@ -31,11 +31,8 @@ const SpecialistWelcome = () => {
   return (
     <>
       <style jsx>{`
-        @import url("https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap");
-
         .sw-page {
-          font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI",
-            sans-serif;
+          font-family: var(--font-montserrat), sans-serif;
           min-height: 100vh;
           display: flex;
           align-items: center;
@@ -64,7 +61,7 @@ const SpecialistWelcome = () => {
         }
 
         .sw-heading {
-          font-family: "Playfair Display", Georgia, serif;
+          font-family: var(--font-playfair-display), serif;
           font-size: 2.6rem;
           font-weight: 700;
           color: #1a1a1a;
