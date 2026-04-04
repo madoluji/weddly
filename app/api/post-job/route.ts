@@ -23,6 +23,7 @@ interface RequestBody {
   type: string;
   experience: string;
   budget: string;
+  eventDate?: string;
   description: string;
   tags: string[];
   location: JobLocationInput | null;
@@ -54,6 +55,7 @@ export async function POST(req: NextRequest) {
       type,
       experience,
       budget,
+      eventDate,
       description,
       tags,
       location,
@@ -76,6 +78,18 @@ export async function POST(req: NextRequest) {
       coordinates: [location.lng, location.lat] as [number, number],
     };
 
+    let normalizedEventDate: Date | undefined;
+    if (eventDate) {
+      const parsedEventDate = new Date(eventDate);
+      if (Number.isNaN(parsedEventDate.getTime())) {
+        return NextResponse.json(
+          { message: "Invalid eventDate format." },
+          { status: 400 }
+        );
+      }
+      normalizedEventDate = parsedEventDate;
+    }
+
     await connectMongoDB();
     // Save the data in the database
     await Jobs.create({
@@ -85,6 +99,7 @@ export async function POST(req: NextRequest) {
       type,
       experience,
       budget,
+      eventDate: normalizedEventDate,
       description,
       tags,
       location: normalizedLocation,
@@ -103,6 +118,7 @@ export async function POST(req: NextRequest) {
       type,
       experience,
       budget,
+      eventDate: normalizedEventDate,
       description,
       tags,
       location: normalizedLocation,

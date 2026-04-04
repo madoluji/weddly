@@ -45,12 +45,12 @@ const SaveButton = ({ itemId, saved, itemType }: SaveButtonProps) => {
       {isSaved ? (
         <Liked
           onClick={toggleSave}
-          className={`w-6 h-6 text-red-600 absolute top-5 right-0 ${loading ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
+          className={`w-6 h-6 text-red-600 absolute top-5 right-7 ${loading ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
         />
       ) : (
         <Unliked
           onClick={toggleSave}
-          className={`w-6 h-6 absolute top-5 right-0 ${loading ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
+          className={`w-6 h-6 absolute top-5 right-7 ${loading ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
         />
       )}
     </>

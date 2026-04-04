@@ -4,14 +4,64 @@ import { ChevronDownIcon } from "@heroicons/react/24/outline";
 import clsx from "clsx";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import LinksDropdown from "./linksDropdown";
 import { useAuth } from "@/app/providers";
+import { fetchWithAuth } from "@/app/lib/fetchWIthAuth";
+
+type UserRoles = {
+  freelancer?: boolean;
+  client?: boolean;
+  venue?: boolean;
+};
 
 const Links = () => {
   const { session, status } = useAuth();
   const currentPath = usePathname();
   const [isDropdownVisible, setDropdownVisible] = useState(0);
+  const [roles, setRoles] = useState<UserRoles | null>(null);
+
+  const isFreelancerContext =
+    currentPath.startsWith("/user") || currentPath.startsWith("/search/jobs");
+  const isClientContext =
+    currentPath.startsWith("/client") || currentPath.startsWith("/search/talent");
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadRoles = async () => {
+      if (status !== "authenticated") {
+        if (isMounted) {
+          setRoles(null);
+        }
+        return;
+      }
+
+      try {
+        const response = await fetchWithAuth("/api/user?fields=roles", {
+          method: "GET",
+        });
+
+        if (!response.ok) {
+          return;
+        }
+
+        const data = await response.json();
+        if (isMounted) {
+          setRoles(data?.roles ?? null);
+        }
+      } catch (error) {
+        console.error("Failed to fetch user roles:", error);
+      }
+    };
+
+    loadRoles();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [status]);
+
   return (
     <>
       <ul className="xl:flex mx-5 p-2 hidden font-medium text-sm gap-5 content-center items-center">
@@ -21,8 +71,7 @@ const Links = () => {
             onMouseEnter={() => setDropdownVisible(1)}
             onMouseLeave={() => setDropdownVisible(0)}
           >
-            {(currentPath.startsWith("/user") ||
-              currentPath.startsWith("/search/jobs")) && (
+            {isFreelancerContext && (
               <Link
                 href="/user/best-matches"
                 className={clsx("hover:text-primary-600", {
@@ -35,8 +84,7 @@ const Links = () => {
                 Dashboard
               </Link>
             )}
-            {(currentPath.startsWith("/client") ||
-              currentPath.startsWith("/search/talent")) && (
+            {isClientContext && (
               <Link
                 href="/client/best-matches"
                 className={clsx("hover:text-primary-600", {
@@ -64,8 +112,7 @@ const Links = () => {
             onMouseEnter={() => setDropdownVisible(2)}
             onMouseLeave={() => setDropdownVisible(0)}
           >
-            {(currentPath.startsWith("/user") ||
-              currentPath.startsWith("/search/jobs")) && (
+            {isFreelancerContext && (
               <Link
                 href="/user/your-proposals"
                 className={clsx("hover:text-primary-600", {
@@ -76,8 +123,7 @@ const Links = () => {
               </Link>
             )}
 
-            {(currentPath.startsWith("/client") ||
-              currentPath.startsWith("/search/talent")) && (
+            {isClientContext && (
               <Link
                 href="/client/best-matches"
                 className={clsx("hover:text-primary-600", {
@@ -97,8 +143,7 @@ const Links = () => {
           </div>
         </li>
         <li className="flex align-items-center justify-center">
-          {(currentPath.startsWith("/user") ||
-            currentPath.startsWith("/search/jobs")) && (
+          {isFreelancerContext && (
             <Link
               href={`/user/chatroom/${session?.user?.id}`}
               className={clsx("hover:text-primary-600", {
@@ -108,8 +153,7 @@ const Links = () => {
               Messages
             </Link>
           )}
-          {(currentPath.startsWith("/client") ||
-            currentPath.startsWith("/search/talent")) && (
+          {isClientContext && (
             <Link
               href={`/client/chatroom/${session?.user?.id}`}
               className={clsx("hover:text-primary-600", {
@@ -121,8 +165,7 @@ const Links = () => {
           )}
         </li>
         <li className=" flex align-items-center justify-center">
-            {(currentPath.startsWith("/user") ||
-            currentPath.startsWith("/search/jobs")) && (
+            {isFreelancerContext && (
             <Link
               href="/user/analytics"
               className={clsx("hover:text-primary-600", {
@@ -132,8 +175,7 @@ const Links = () => {
               Analytics
             </Link>
             )}
-            {(currentPath.startsWith("/client") ||
-            currentPath.startsWith("/search/talent")) && (
+            {isClientContext && (
             <Link
               href="/client/analytics"
               className={clsx("hover:text-primary-600", {
@@ -144,8 +186,17 @@ const Links = () => {
             </Link>
             )}
         </li>
-        {(currentPath.startsWith("/client") ||
-          currentPath.startsWith("/search/talent")) && (
+        {isFreelancerContext && roles?.freelancer && (
+          <li>
+            <Link
+              href="/search/jobs"
+              className="border-2 border-emerald-600 text-emerald-700 px-6 py-2 rounded-full font-bold hover:bg-emerald-50 transition-all shadow-sm whitespace-nowrap"
+            >
+              Find Job
+            </Link>
+          </li>
+        )}
+        {isClientContext && (
           <li>
             <Link
               href="/client/post-job/job-details"

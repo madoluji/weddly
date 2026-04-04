@@ -13,7 +13,7 @@ export default async function RootLayout({
         <NavBar />
       </div>
       <KYCStatus />
-      <div className="max-w-[1980px] body-container pt-[75px] m-auto w-full">
+      <div className=" body-container pt-[75px] m-auto w-full">
         {children}
       </div>
     </div>

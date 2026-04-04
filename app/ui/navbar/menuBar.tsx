@@ -5,11 +5,60 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/app/providers";
+import { fetchWithAuth } from "@/app/lib/fetchWIthAuth";
+
+type UserRoles = {
+  freelancer?: boolean;
+  client?: boolean;
+  venue?: boolean;
+};
 
 const MenuBar = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const [roles, setRoles] = useState<UserRoles | null>(null);
   const currentPath = usePathname();
-  const { session } = useAuth();
+  const { session, status } = useAuth();
+
+  const isFreelancerContext =
+    currentPath.startsWith("/user") || currentPath.startsWith("/search/jobs");
+  const isClientContext =
+    currentPath.startsWith("/client") || currentPath.startsWith("/search/talent");
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadRoles = async () => {
+      if (status !== "authenticated") {
+        if (isMounted) {
+          setRoles(null);
+        }
+        return;
+      }
+
+      try {
+        const response = await fetchWithAuth("/api/user?fields=roles", {
+          method: "GET",
+        });
+
+        if (!response.ok) {
+          return;
+        }
+
+        const data = await response.json();
+        if (isMounted) {
+          setRoles(data?.roles ?? null);
+        }
+      } catch (error) {
+        console.error("Failed to fetch user roles:", error);
+      }
+    };
+
+    loadRoles();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [status]);
 
   return (
     <div className="flex-col ">
@@ -80,8 +129,18 @@ const MenuBar = () => {
               Analytics
             </Link>
           </li>
-          {(currentPath.startsWith("/client") ||
-            currentPath.startsWith("/search/talent")) && (
+          {isFreelancerContext && roles?.freelancer && (
+            <li className="flex align-items-center justify-center mt-4">
+              <Link
+                href="/search/jobs"
+                className="border-2 border-emerald-600 text-emerald-700 px-8 py-3 rounded-full font-bold hover:bg-emerald-50 transition-all text-center w-full"
+                onClick={() => setIsOpen(!isOpen)}
+              >
+                Find Job
+              </Link>
+            </li>
+          )}
+          {isClientContext && (
             <li className="flex align-items-center justify-center mt-4">
               <Link
                 href="/client/post-job/job-details"

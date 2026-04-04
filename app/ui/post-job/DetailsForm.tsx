@@ -34,6 +34,7 @@ const DetailsForm = () => {
     title: string;
     type: string;
     experience: string;
+    eventDate: string;
     budget: string;
     description: string;
     tags: string[];
@@ -51,6 +52,7 @@ const DetailsForm = () => {
     title: "",
     type: "",
     experience: "",
+    eventDate: "",
     budget: "",
     description: "",
     tags: [],
@@ -204,6 +206,23 @@ const DetailsForm = () => {
             </select>
           </div>
 
+          <div>
+            <label
+              htmlFor="eventDate"
+              className="block text-sm font-medium text-gray-700"
+            >
+              Event Date <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="date"
+              name="eventDate"
+              id="eventDate"
+              value={formData.eventDate}
+              onChange={handleChange}
+              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm"
+            />
+          </div>
+
           <div className="flex justify-between">
             <Button
               className="text-white disabled cursor-not-allowed opacity-50"
@@ -215,9 +234,9 @@ const DetailsForm = () => {
                type="button"
                onClick={nextStep} 
                className={clsx("text-white", {
-                 "opacity-50 cursor-not-allowed": !formData.title.trim() || !formData.type || !formData.experience
+                 "opacity-50 cursor-not-allowed": !formData.title.trim() || !formData.type || !formData.experience || !formData.eventDate
                })}
-               disabled={!formData.title.trim() || !formData.type || !formData.experience}
+               disabled={!formData.title.trim() || !formData.type || !formData.experience || !formData.eventDate}
             >
               Next
             </Button>

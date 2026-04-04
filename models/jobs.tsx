@@ -21,6 +21,7 @@ interface IJobs extends Document {
   type: string;
   experience: string;
   budget: string;
+  eventDate?: Date;
   description: string;
   tags: string[];
   location: JobLocation;
@@ -85,6 +86,10 @@ const jobsSchema = new Schema<IJobs>(
     budget: {
       type: String,
       required: true,
+    },
+    eventDate: {
+      type: Date,
+      required: false,
     },
     description: {
       type: String,

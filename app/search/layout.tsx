@@ -11,7 +11,7 @@ export default function RootLayout({
       <div className="fixed left-0 right-0 z-10 bg-white w-full">
         <NavBar />
       </div>
-      <div className="max-w-[1980px] body-container pt-[75px] m-auto w-full">
+      <div className=" body-container pt-[75px] m-auto w-full">
         {children}
       </div>
     </div>
