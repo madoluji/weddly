@@ -8,6 +8,20 @@ import { authOptions } from "@/app/lib/auth";
 import proposal from "@/models/proposal";
 import FreelancerInfo from "@/models/freelancerInfo";
 import { applyServerFilters, paginateItems } from "@/app/lib/jobFilters";
+import { getCacheValue, setCacheValue } from "@/app/lib/serverCache";
+
+const BEST_MATCHES_TTL_MS = 60 * 1000;
+
+const buildJobsResponse = (
+  body: Record<string, unknown>,
+  cacheState?: "HIT" | "MISS"
+) =>
+  NextResponse.json(body, {
+    headers: {
+      "Cache-Control": "private, max-age=30, stale-while-revalidate=60",
+      ...(cacheState ? { "X-Cache": cacheState } : {}),
+    },
+  });
 
 const parseJobLocation = (location: unknown) => {
   if (!location || typeof location !== "object") {
@@ -79,6 +93,12 @@ export async function GET(req: NextRequest) {
   const jobId = searchParams.get('jobId');
   const clientId = searchParams.get('userId'); // Get userId from query parameters
   const isSaved = searchParams.get('s');
+  const normalizedTitleSearch = title
+    ? title
+        .trim()
+        .replace(/["\\]/g, " ")
+        .replace(/\s+/g, " ")
+    : "";
 
   const shouldPaginate = pageParam !== null || limitParam !== null;
   const pageValue = Number.parseInt(pageParam || "1", 10);
@@ -112,45 +132,46 @@ export async function GET(req: NextRequest) {
 
     if (jobId) {
       // Fetch individual job with proposal count
-      const job = await Jobs.findById(jobId);
+      const job = await Jobs.findById(jobId).lean();
       if (!job) {
         return NextResponse.json({ message: "Job not found" }, { status: 404 });
       }
-      const proposalCount = await proposal.countDocuments({ jobId });
+
+      const isOwner = job.userId?.toString() === userId;
+      const isPublic = job.status === "active";
+      if (!isOwner && !isPublic) {
+        return NextResponse.json({ message: "Forbidden" }, { status: 403 });
+      }
+
+      const [proposalCount, saved] = await Promise.all([
+        proposal.countDocuments({ jobId }),
+        isSaved ? SavedJobs.exists({ userId, jobId: jobId }) : Promise.resolve(false),
+      ]);
 
       if (isSaved) {
-        const Saved = await SavedJobs.exists({ userId, jobId: jobId }); // Check if the job is saved by the user
-        if (Saved) {
-          return NextResponse.json({
-            ...withLocationFields(job.toObject()),
-            proposalCount,
-            isSaved: true,
-          }); // Add the isSaved flag
-        } else {
-          return NextResponse.json({
-            ...withLocationFields(job.toObject()),
-            proposalCount,
-            isSaved: false,
-          }); // Add the isSaved flag
-        }
+        return NextResponse.json({
+          ...withLocationFields(job),
+          proposalCount,
+          isSaved: Boolean(saved),
+        });
       }
 
       return NextResponse.json({
-        ...withLocationFields(job.toObject()),
+        ...withLocationFields(job),
         proposalCount,
       });
     }
 
     if (clientId) {
       // Fetch all jobs posted by the client
-      const jobs = await Jobs.find({ userId: session?.user.id });
+      const jobs = await Jobs.find({ userId: session?.user.id }).lean();
 
       // Enrich jobs with proposal count
       const jobsWithProposalCounts = await Promise.all(
         jobs.map(async (job) => {
           const proposalCount = await proposal.countDocuments({ jobId: job._id });
           return {
-            ...withLocationFields(job.toObject()),
+            ...withLocationFields(job),
             proposalCount,
           };
         })
@@ -163,56 +184,92 @@ export async function GET(req: NextRequest) {
     // Fetch jobs based on query parameters
     if (!title) {
       if (bestMatches) {
+        const bestMatchesCacheKey = `fetchJobs:bestMatches:${userId}:${searchParams.toString()}`;
+        const cached = getCacheValue<{ jobs: any[] }>(bestMatchesCacheKey);
+
+        if (cached) {
+          return buildJobsResponse(cached, "HIT");
+        }
+
         // Step 1: Retrieve freelancer's skills
-        const freelancerInfo = await FreelancerInfo.
-          findOne({ userId: userId }).select("skills");
+        const freelancerInfo = await FreelancerInfo.findOne({ userId: userId })
+          .select("skills")
+          .lean();
 
         if (!freelancerInfo) {
-          return NextResponse.json({ jobs: [] });
+          const emptyPayload = { jobs: [] };
+          setCacheValue(bestMatchesCacheKey, emptyPayload, BEST_MATCHES_TTL_MS);
+          return buildJobsResponse(emptyPayload, "MISS");
         }
 
         // Step 2: Query jobs where requiredSkills match freelancer's skills
         const matchingJobs = await Jobs.find({
           tags: { $in: freelancerInfo.skills },
-
           userId: { $ne: userId },
-          status: 'active'
-        });
+          status: "active",
+        }).lean();
 
         // Step 4: Fetch other jobs excluding the matching jobs
         const otherJobs = await Jobs.find({
-          _id: { $nin: matchingJobs.map(job => job._id) },
+          _id: { $nin: matchingJobs.map((job) => job._id) },
           userId: { $ne: userId },
-          status: 'active'
-        });
+          status: "active",
+        }).lean();
 
         // Combine matching jobs and other jobs
         jobs = [...matchingJobs, ...otherJobs];
-
-
       } else if (mostRecent) {
         jobs = await Jobs.find({
           userId: { $ne: userId },
-          status: 'active'
-        }).sort({ createdAt: -1 }); // Sort by most recent
+          status: "active",
+        })
+          .sort({ createdAt: -1 })
+          .lean(); // Sort by most recent
       } else if (savedJobs) {
         // Fetch jobs saved by the user from SavedJobs collection
-        const savedJobsData = await SavedJobs.find({ userId }).populate('jobId');
-        jobs = savedJobsData ? savedJobsData.map((savedJob) => savedJob.jobId) : [];
+        const savedJobsData = await SavedJobs.find({ userId })
+          .populate({
+            path: "jobId",
+            options: { lean: true },
+          })
+          .lean();
+        jobs = savedJobsData
+          ? savedJobsData
+              .map((savedJob) => savedJob.jobId)
+              .filter((savedJob): savedJob is NonNullable<typeof savedJob> => !!savedJob)
+          : [];
       }
     } else if (!experience) {
-      // Fetch jobs where 'title' matches the search parameter
-      jobs = await Jobs.find({
-        userId: { $ne: userId },
-        title: { $regex: title, $options: "i" },
-      });
+      // Use text index search instead of regex to avoid regex-based DoS risk.
+      if (!normalizedTitleSearch) {
+        jobs = [];
+      } else {
+        jobs = await Jobs.find(
+          {
+            userId: { $ne: userId },
+            $text: { $search: `"${normalizedTitleSearch}"` },
+          },
+          { score: { $meta: "textScore" } }
+        )
+          .sort({ score: { $meta: "textScore" }, createdAt: -1 })
+          .lean();
+      }
     } else {
-      // Fetch jobs where 'title' and 'experience' match the search parameters
-      jobs = await Jobs.find({
-        userId: { $ne: userId },
-        title: { $regex: title, $options: "i" },
-      })
-        .where('experience').in(experience.split(','));
+      // Combine text-index search with experience filter.
+      if (!normalizedTitleSearch) {
+        jobs = [];
+      } else {
+        jobs = await Jobs.find(
+          {
+            userId: { $ne: userId },
+            experience: { $in: experience.split(",") },
+            $text: { $search: `"${normalizedTitleSearch}"` },
+          },
+          { score: { $meta: "textScore" } }
+        )
+          .sort({ score: { $meta: "textScore" }, createdAt: -1 })
+          .lean();
+      }
     }
 
     const normalizedJobs = jobs.map((job) =>
@@ -220,22 +277,28 @@ export async function GET(req: NextRequest) {
     );
 
     const jobObjectIds = normalizedJobs.map((job) => job._id);
+    const clientUserIds = Array.from(
+      new Set(normalizedJobs.map((job) => job.userId.toString()))
+    );
 
-    // Fetch saved job ids for the current user
-    const savedJobRecords = await SavedJobs.find({ userId }).select("jobId").lean();
+    const [savedJobRecords, proposalCountRows, userProposalRows, clientUsers] =
+      await Promise.all([
+        SavedJobs.find({ userId }).select("jobId").lean(),
+        proposal.aggregate([
+          { $match: { jobId: { $in: jobObjectIds } } },
+          { $group: { _id: "$jobId", count: { $sum: 1 } } },
+        ]),
+        proposal
+          .find({ userId, jobId: { $in: jobObjectIds } })
+          .sort({ createdAt: -1 })
+          .select("jobId status")
+          .lean(),
+        User.find({ _id: { $in: clientUserIds } })
+          .select("_id profilePicture")
+          .lean(),
+      ]);
+
     const savedJobIds = new Set(savedJobRecords.map((record) => record.jobId.toString()));
-
-    const [proposalCountRows, userProposalRows] = await Promise.all([
-      proposal.aggregate([
-        { $match: { jobId: { $in: jobObjectIds } } },
-        { $group: { _id: "$jobId", count: { $sum: 1 } } },
-      ]),
-      proposal
-        .find({ userId, jobId: { $in: jobObjectIds } })
-        .sort({ createdAt: -1 })
-        .select("jobId status")
-        .lean(),
-    ]);
 
     const proposalCountsByJobId = new Map<string, number>();
     for (const row of proposalCountRows) {
@@ -250,12 +313,6 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    const clientUserIds = Array.from(
-      new Set(normalizedJobs.map((job) => job.userId.toString()))
-    );
-    const clientUsers = await User.find({ _id: { $in: clientUserIds } })
-      .select("_id profilePicture")
-      .lean();
     const profilePictureByUserId = new Map<string, string | null>();
     for (const user of clientUsers) {
       profilePictureByUserId.set(user._id.toString(), user.profilePicture || null);
@@ -289,13 +346,29 @@ export async function GET(req: NextRequest) {
 
     if (shouldPaginate) {
       const paginated = paginateItems(filteredJobs, pageValue, limitValue);
-      return NextResponse.json({
+      const payload = {
         jobs: paginated.items,
         pagination: paginated.pagination,
-      });
+      };
+
+      if (bestMatches) {
+        const bestMatchesCacheKey = `fetchJobs:bestMatches:${userId}:${searchParams.toString()}`;
+        setCacheValue(bestMatchesCacheKey, payload, BEST_MATCHES_TTL_MS);
+        return buildJobsResponse(payload, "MISS");
+      }
+
+      return NextResponse.json(payload);
     }
 
-    return NextResponse.json({ jobs: filteredJobs });
+    const payload = { jobs: filteredJobs };
+
+    if (bestMatches) {
+      const bestMatchesCacheKey = `fetchJobs:bestMatches:${userId}:${searchParams.toString()}`;
+      setCacheValue(bestMatchesCacheKey, payload, BEST_MATCHES_TTL_MS);
+      return buildJobsResponse(payload, "MISS");
+    }
+
+    return NextResponse.json(payload);
   } catch (error) {
     console.error("Error fetching Jobs:", error);
     return NextResponse.json(

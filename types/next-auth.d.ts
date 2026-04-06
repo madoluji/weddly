@@ -12,6 +12,14 @@ declare module "next-auth" {
       lastName: string;
       email: string;
       id: string;
+      role?: string;
+      profilePicture?: string;
+      accessToken?: string;
+      roles?: {
+        client?: boolean;
+        freelancer?: boolean;
+        venue?: boolean;
+      };
     };
   }
 }

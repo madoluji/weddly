@@ -1,9 +1,10 @@
 "use client";
 
 import { BellIcon } from "@heroicons/react/24/outline";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { fetchWithAuth } from "@/app/lib/fetchWIthAuth";
 import { usePathname, useRouter } from "next/navigation";
+import { useAuth } from "@/app/providers";
 
 type NotificationItem = {
   _id: string;
@@ -22,10 +23,12 @@ type NotificationDisplayItem = {
 };
 
 const NOTIFICATION_POLL_INTERVAL_MS = 8000;
+const NOTIFICATION_RETRY_BACKOFF_MS = 30000;
 
 const NotificationBell = () => {
   const router = useRouter();
   const pathname = usePathname();
+  const { status } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
@@ -35,7 +38,26 @@ const NotificationBell = () => {
   const originalFaviconHrefRef = useRef<string | null>(null);
   const isFetchingUnreadRef = useRef(false);
   const isFetchingListRef = useRef(false);
+  const notificationFailuresRef = useRef(0);
+  const pausePollingUntilRef = useRef(0);
+  const outageLoggedRef = useRef(false);
   const panelRef = useRef<HTMLDivElement | null>(null);
+
+  const resetPollingState = useCallback(() => {
+    notificationFailuresRef.current = 0;
+    pausePollingUntilRef.current = 0;
+    outageLoggedRef.current = false;
+  }, []);
+
+  const handlePollingFailure = useCallback((error: unknown, context: string) => {
+    notificationFailuresRef.current += 1;
+    pausePollingUntilRef.current = Date.now() + NOTIFICATION_RETRY_BACKOFF_MS;
+
+    if (!outageLoggedRef.current) {
+      console.warn(`Notification polling temporarily unavailable during ${context}.`, error);
+      outageLoggedRef.current = true;
+    }
+  }, []);
 
   const getIconLink = () => {
     if (typeof document === "undefined") {
@@ -131,7 +153,12 @@ const NotificationBell = () => {
     return grouped;
   }, [notifications]);
 
-  const fetchUnreadCount = async () => {
+  const fetchUnreadCount = useCallback(async () => {
+    if (status !== "authenticated") {
+      setUnreadCount(0);
+      return;
+    }
+
     if (isFetchingUnreadRef.current) {
       return;
     }
@@ -148,14 +175,21 @@ const NotificationBell = () => {
 
       const data = await response.json();
       setUnreadCount(Number(data.unreadCount ?? 0));
+      resetPollingState();
     } catch (error) {
-      console.error("Failed to load unread notifications count:", error);
+      setUnreadCount(0);
+      handlePollingFailure(error, "unread-count fetch");
     } finally {
       isFetchingUnreadRef.current = false;
     }
-  };
+  }, [handlePollingFailure, resetPollingState, status]);
 
-  const fetchNotifications = async () => {
+  const fetchNotifications = useCallback(async () => {
+    if (status !== "authenticated") {
+      setNotifications([]);
+      return;
+    }
+
     if (isFetchingListRef.current) {
       return;
     }
@@ -175,14 +209,15 @@ const NotificationBell = () => {
       const data = await response.json();
       const list = Array.isArray(data) ? data : [];
       setNotifications(list);
+      resetPollingState();
     } catch (error) {
-      console.error("Failed to load notifications:", error);
+      handlePollingFailure(error, "notifications fetch");
       setNotifications([]);
     } finally {
       setIsLoading(false);
       isFetchingListRef.current = false;
     }
-  };
+  }, [handlePollingFailure, resetPollingState, status]);
 
   const markAsRead = async (id: string) => {
     try {
@@ -280,7 +315,22 @@ const NotificationBell = () => {
   };
 
   useEffect(() => {
+    if (status !== "authenticated") {
+      setNotifications([]);
+      setUnreadCount(0);
+      resetPollingState();
+      return;
+    }
+
     const runRefresh = () => {
+      if (document.hidden) {
+        return;
+      }
+
+      if (pausePollingUntilRef.current > Date.now()) {
+        return;
+      }
+
       void fetchUnreadCount();
       if (isOpen) {
         void fetchNotifications();
@@ -311,15 +361,15 @@ const NotificationBell = () => {
       window.removeEventListener("focus", onFocus);
       document.removeEventListener("visibilitychange", onVisibilityChange);
     };
-  }, [isOpen]);
+  }, [fetchNotifications, fetchUnreadCount, isOpen, resetPollingState, status]);
 
   useEffect(() => {
-    if (!isOpen) {
+    if (!isOpen || status !== "authenticated") {
       return;
     }
 
     void fetchNotifications();
-  }, [isOpen]);
+  }, [fetchNotifications, isOpen, status]);
 
   useEffect(() => {
     if (!isOpen) {

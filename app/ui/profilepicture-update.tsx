@@ -1,17 +1,15 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { storage } from "../lib/firebase";
 import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
 import { PaintBrushIcon } from "@heroicons/react/24/outline";
 import { fetchWithAuth } from "../lib/fetchWIthAuth";
 import { useAuth } from "@/app/providers";
 import SafeImage from "@/app/ui/shared/SafeImage";
-import { useSession } from "next-auth/react";
 
 const ProfilePictureUploader: React.FC = () => {
-  const { session: authSession, status } = useAuth();
-  const { update: updateSession } = useSession();
+  const { session: authSession, update: updateSession } = useAuth();
   const [currentProfilePic, setCurrentProfilePic] = useState<string | null>(
     authSession?.user?.profilePicture || null
   );

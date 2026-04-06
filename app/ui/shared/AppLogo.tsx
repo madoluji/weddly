@@ -23,22 +23,28 @@ const AppLogo = ({
   priority = false,
 }: AppLogoProps) => {
   const mergedStyle: CSSProperties = {
-    width: "auto",
+    width: "100%",
     height: "auto",
+    maxWidth: `${width}px`,
     backgroundColor: "transparent",
     backgroundImage: "none",
     ...style,
   };
 
   return (
-    <Link href={href} className="bg-transparent inline-block p-0">
+    <Link
+      href={href}
+      className="inline-block w-full bg-transparent p-0"
+      style={{ maxWidth: `${width}px` }}
+    >
       <Image
         src={weddlyLogo}
         alt={alt}
         width={width}
         height={height}
-        className={`bg-transparent block ${className || ""}`}
+        className={`block h-auto w-full bg-transparent ${className || ""}`}
         style={mergedStyle}
+        sizes={`(max-width: 768px) min(100vw, ${width}px), ${width}px`}
         priority={priority}
       />
     </Link>

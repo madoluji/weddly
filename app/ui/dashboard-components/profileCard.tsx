@@ -21,18 +21,20 @@ const ProfileCard = ({ mode }: Props) => {
 
   // Render the profile card with user data
   return (
-    <div className="flex min-w-[280px] w-[15%] flex-col relative rounded-3xl h-[250px] overflow-hidden shadow-[0_10px_20px_rgba(228,228,228,_0.7)]">
+    <div className="flex w-full max-w-[280px] flex-col relative rounded-3xl h-[250px] overflow-hidden shadow-[0_10px_20px_rgba(228,228,228,_0.7)]">
       {/* Cover image section */}
       <div className="h-[40%] bg-gray-500 overflow-hidden"></div>
 
       {/* Profile image section */}
-      <div className="bg-400 rounded-full bg-white absolute translate-y-[50%] overflow-hidden translate-x-1/2 right-[50%] h-24 w-24">
+      <div className="bg-400 rounded-full bg-white absolute translate-y-[50%] overflow-hidden left-1/2 -translate-x-1/2 h-20 w-20">
         <SafeImage
           src={session?.user?.profilePicture || "/images/image.png"}
           alt="profile"
-          width={150}
-          height={150}
-          className=""
+          width={80}
+          height={80}
+          loading="eager"
+          className="object-cover w-full h-full"
+          style={{ width: "100%", height: "100%" }}
         />
       </div>
 

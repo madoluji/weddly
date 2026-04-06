@@ -44,38 +44,42 @@ export async function GET(
         }
 
 
-        const totalActiveJobs = await Jobs.countDocuments({ "statusHistory.status": "active" });
-        const totalInProgressJobs = await Jobs.countDocuments({ "statusHistory.status": "in-progress" });
-        const totalCompletedJobs = await Jobs.countDocuments({ "statusHistory.status": "completed" });
-        const totalPendingProposals = await Proposal.countDocuments({ "statusHistory.status": "pending" });
-
-
-        // ✅ Track job status transitions
-        const jobsTransitions = await Jobs.aggregate([
-            { $unwind: "$statusHistory" },
-            {
-                $group: {
-                    _id: groupBy,
-                    activeJobs: { $sum: { $cond: [{ $eq: ["$statusHistory.status", "active"] }, 1, 0] } },
-                    inProgressJobs: { $sum: { $cond: [{ $eq: ["$statusHistory.status", "in-progress"] }, 1, 0] } },
-                    completedJobs: { $sum: { $cond: [{ $eq: ["$statusHistory.status", "completed"] }, 1, 0] } },
-                    canceledJobs: { $sum: { $cond: [{ $eq: ["$statusHistory.status", "canceled"] }, 1, 0] } }
-                }
-            },
-            { $sort: { "_id": 1 } }
-        ]);
-
-        // ✅ Track proposal status transitions
-        const proposalsTransitions = await Proposal.aggregate([
-            { $unwind: "$statusHistory" },
-            {
-                $group: {
-                    _id: groupBy,
-                    submitedProposals: { $sum: { $cond: [{ $eq: ["$statusHistory.status", "pending"] }, 1, 0] } },
-                    acceptedProposals: { $sum: { $cond: [{ $eq: ["$statusHistory.status", "accepted"] }, 1, 0] } }
-                }
-            },
-            { $sort: { "_id": 1 } }
+        const [
+            totalActiveJobs,
+            totalInProgressJobs,
+            totalCompletedJobs,
+            totalPendingProposals,
+            jobsTransitions,
+            proposalsTransitions,
+        ] = await Promise.all([
+            Jobs.countDocuments({ "statusHistory.status": "active" }),
+            Jobs.countDocuments({ "statusHistory.status": "in-progress" }),
+            Jobs.countDocuments({ "statusHistory.status": "completed" }),
+            Proposal.countDocuments({ "statusHistory.status": "pending" }),
+            Jobs.aggregate([
+                { $unwind: "$statusHistory" },
+                {
+                    $group: {
+                        _id: groupBy,
+                        activeJobs: { $sum: { $cond: [{ $eq: ["$statusHistory.status", "active"] }, 1, 0] } },
+                        inProgressJobs: { $sum: { $cond: [{ $eq: ["$statusHistory.status", "in-progress"] }, 1, 0] } },
+                        completedJobs: { $sum: { $cond: [{ $eq: ["$statusHistory.status", "completed"] }, 1, 0] } },
+                        canceledJobs: { $sum: { $cond: [{ $eq: ["$statusHistory.status", "canceled"] }, 1, 0] } }
+                    }
+                },
+                { $sort: { "_id": 1 } }
+            ]),
+            Proposal.aggregate([
+                { $unwind: "$statusHistory" },
+                {
+                    $group: {
+                        _id: groupBy,
+                        submitedProposals: { $sum: { $cond: [{ $eq: ["$statusHistory.status", "pending"] }, 1, 0] } },
+                        acceptedProposals: { $sum: { $cond: [{ $eq: ["$statusHistory.status", "accepted"] }, 1, 0] } }
+                    }
+                },
+                { $sort: { "_id": 1 } }
+            ]),
         ]);
 
         // ✅ Merge status transition data

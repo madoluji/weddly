@@ -2,10 +2,10 @@
 
 import React, { useState, useEffect } from "react";
 import { fetchWithAuth } from "../lib/fetchWIthAuth";
-import { useSession } from "next-auth/react";
+import { useAuth } from "../providers";
 
 const EmailVerification = () => {
-  const { data: session } = useSession();
+  const { session } = useAuth();
   const [email, setEmail] = useState("");
   const [isSent, setIsSent] = useState(false);
   const [newEmail, setNewEmail] = useState("");
@@ -15,7 +15,7 @@ const EmailVerification = () => {
     if (session?.user?.email) {
       setEmail(session.user.email);
     }
-  }, [session]);
+  }, [session?.user?.email]);
 
   const sendVerificationLink = async () => {
     try {
@@ -28,7 +28,7 @@ const EmailVerification = () => {
       } else {
         alert("Failed to send verification link. Please try again.");
       }
-    } catch (error) {
+    } catch {
       alert("An error occurred while sending the verification link.");
     }
   };

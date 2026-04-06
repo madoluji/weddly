@@ -20,6 +20,11 @@ declare module "next-auth" {
       role: string;
       profilePicture?: string;
       accessToken?: string;
+      roles?: {
+        client?: boolean;
+        freelancer?: boolean;
+        venue?: boolean;
+      };
     };
   }
   interface User extends DefaultUser {
@@ -28,6 +33,11 @@ declare module "next-auth" {
     email: string;
     lastName: string;
     role: string;
+    roles?: {
+      client?: boolean;
+      freelancer?: boolean;
+      venue?: boolean;
+    };
     profilePicture?: string;
     emailVerified?: boolean;
     kycVerified?: boolean;
@@ -112,6 +122,7 @@ export const authOptions: NextAuthOptions = {
             emailVerified: user.emailVerified,
             kycVerified: user.kycVerified,
             id: user._id.toString(),
+            roles: user.roles,
             isFirstLogin: user.isFirstLogin || false,
           })
             .setProtectedHeader({ alg: "HS256" })
@@ -122,6 +133,7 @@ export const authOptions: NextAuthOptions = {
             email: user.email,
             profilePicture: user.profilePicture,
             role: "user",
+            roles: user.roles || { client: false, freelancer: false, venue: false },
             id: user._id.toString(),
             emailVerfied: user.emailVerified,
             kycVerified: user.kycVerified,
@@ -170,6 +182,7 @@ export const authOptions: NextAuthOptions = {
             name: user.name,
             lastname: user.lastName,
             id: newUser._id.toString(),
+            roles: newUser.roles,
             emailVerfied: user.emailVerified,
             kycVerified: user.kycVerified,
           })
@@ -180,6 +193,7 @@ export const authOptions: NextAuthOptions = {
           user.name = name;
           user.lastName = lastName;
           user.role = "user";
+          user.roles = newUser.roles;
           user.profilePicture = newUser.profilePicture;
           user.accessToken = accessToken;
           user.emailVerified = newUser.emailVerified;
@@ -194,6 +208,7 @@ export const authOptions: NextAuthOptions = {
             name: user.name,
             lastname: user.lastName,
             id: existingUser._id.toString(),
+            roles: existingUser.roles,
             emailVerified: existingUser.emailVerified,
             kycVerified: existingUser.kycVerified,
           })
@@ -205,6 +220,7 @@ export const authOptions: NextAuthOptions = {
           user.lastName = existingUser.lastName;
           user.email = existingUser.email;
           user.role = "user";
+          user.roles = existingUser.roles;
           user.profilePicture = existingUser.profilePicture;
           user.accessToken = accessToken;
           user.kycVerified = existingUser.kycVerified;
@@ -227,6 +243,11 @@ export const authOptions: NextAuthOptions = {
         role: token.role as string,
         profilePicture: token.profilePicture as string | undefined,
         accessToken: token.accessToken as string | undefined,
+        roles: token.roles as {
+          client?: boolean;
+          freelancer?: boolean;
+          venue?: boolean;
+        } | undefined,
       };
 
       return session;

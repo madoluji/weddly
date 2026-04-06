@@ -30,20 +30,31 @@ export async function PATCH(
     const { id } = await params;
     const { baseUrl, serviceToken } = getNotificationServiceConfig();
 
-    const response = await fetch(
-      `${baseUrl}/notifications/${encodeURIComponent(id)}/read?userId=${encodeURIComponent(userId)}`,
-      {
-        method: "PATCH",
-        headers: {
-          "x-service-token": serviceToken,
+    let response: Response;
+    try {
+      response = await fetch(
+        `${baseUrl}/notifications/${encodeURIComponent(id)}/read?userId=${encodeURIComponent(userId)}`,
+        {
+          method: "PATCH",
+          headers: {
+            "x-service-token": serviceToken,
+          },
         },
-      },
-    );
+      );
+    } catch (error) {
+      console.warn("Notification service unavailable while marking as read", error);
+      return NextResponse.json({ success: false, degraded: true }, { status: 200 });
+    }
 
     const data = await response.json();
+    if (!response.ok) {
+      // Avoid leaking existence of other users' notifications
+      return NextResponse.json({ message: "Forbidden" }, { status: 403 });
+    }
+
     return NextResponse.json(data, { status: response.status });
   } catch (error) {
     console.error("Failed to mark notification as read:", error);
-    return NextResponse.json({ message: "Failed to mark notification as read" }, { status: 500 });
+    return NextResponse.json({ success: false, degraded: true }, { status: 200 });
   }
 }

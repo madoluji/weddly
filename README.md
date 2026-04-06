@@ -72,3 +72,7 @@ To run plain Next build directly:
 ```bash
 npm run build:raw
 ```
+
+## Project Report
+
+A detailed project report is available in `PROJECT_REPORT.md`. It includes architecture diagrams, development methodology, a test plan, and appendices with sample code and analysis.

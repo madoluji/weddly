@@ -1,10 +1,10 @@
-import { getSession } from "next-auth/react";
+import { getAuthSessionSnapshot } from "@/app/providers";
 
 export const fetchWithAuth = async (
     url: string,
     options: RequestInit & { next?: { revalidate?: number } } = {}
 ) => {
-    const session = await getSession();
+    const session = getAuthSessionSnapshot();
     const accessToken = session?.user?.accessToken;
 
     const headers: HeadersInit = {

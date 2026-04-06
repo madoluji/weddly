@@ -7,12 +7,12 @@ let firebaseAuthInFlight: Promise<void> | null = null;
 let lastAuthedUserId: string | null = null;
 
 const useFirebaseAuth = () => {
-    const { session } = useAuth();
+    const { session, status } = useAuth();
 
     useEffect(() => {
         const fetchFirebaseToken = async () => {
             const sessionUserId = session?.user?.id;
-            if (!sessionUserId) {
+            if (status !== "authenticated" || !sessionUserId) {
                 return;
             }
 
@@ -42,7 +42,7 @@ const useFirebaseAuth = () => {
         };
 
         fetchFirebaseToken();
-    }, [session]);
+    }, [session, status]);
 };
 
 export default useFirebaseAuth;

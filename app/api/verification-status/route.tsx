@@ -1,10 +1,13 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { connectMongoDB } from "@/app/lib/mongodb";
 import User from "@/models/user";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/lib/auth";
+import { getCacheValue, setCacheValue } from "@/app/lib/serverCache";
 
-export async function GET(req: NextRequest) {
+const VERIFICATION_STATUS_TTL_MS = 60 * 1000;
+
+export async function GET() {
   const session = await getServerSession(authOptions);
   const id = session?.user.id;
   try {
@@ -17,15 +20,40 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    const user = await User.findById(id).select("emailVerified kycVerified");
+    const cacheKey = `verification-status:${id}`;
+    const cached = getCacheValue<{ emailVerified: boolean; kycVerified: boolean }>(
+      cacheKey
+    );
+
+    if (cached) {
+      return NextResponse.json(cached, {
+        headers: {
+          "Cache-Control": "private, max-age=30, stale-while-revalidate=60",
+          "X-Cache": "HIT",
+        },
+      });
+    }
+
+    const user = await User.findById(id)
+      .select("emailVerified kycVerified")
+      .lean();
 
     if (!user) {
       return NextResponse.json({ message: "User not found" }, { status: 404 });
     }
 
-    return NextResponse.json({
+    const payload = {
       emailVerified: user.emailVerified,
       kycVerified: user.kycVerified,
+    };
+
+    setCacheValue(cacheKey, payload, VERIFICATION_STATUS_TTL_MS);
+
+    return NextResponse.json(payload, {
+      headers: {
+        "Cache-Control": "private, max-age=30, stale-while-revalidate=60",
+        "X-Cache": "MISS",
+      },
     });
   } catch (error) {
     console.error("Error fetching verification status:", error);

@@ -1,39 +1,75 @@
 "use client";
 
-import { Session } from "next-auth";
+import { type ReactNode, createContext, useContext, useEffect, useMemo } from "react";
+import { useLayoutEffect } from "react";
+import type { Session } from "next-auth";
 import { SessionProvider, useSession } from "next-auth/react";
-import { createContext, useContext, ReactNode } from "react";
+
+type AuthStatus = "loading" | "authenticated" | "unauthenticated";
+type SessionUpdate = ReturnType<typeof useSession>["update"];
 
 interface AuthContextType {
   session: Session | null;
-  status: "loading" | "authenticated" | "unauthenticated";
+  status: AuthStatus;
+  update: SessionUpdate;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
-const AuthProvider = ({ children }: { children: ReactNode }) => {
+let sessionSnapshot: Session | null = null;
+
+export const getAuthSessionSnapshot = () => sessionSnapshot;
+
+const AuthBridge = ({ children }: { children: ReactNode }) => {
+  const { data: session, status, update } = useSession();
+
+  useLayoutEffect(() => {
+    sessionSnapshot = session ?? null;
+  }, [session]);
+
+  useEffect(() => {
+    return () => {
+      sessionSnapshot = null;
+    };
+  }, []);
+
+  const value = useMemo(
+    () => ({
+      session: session ?? null,
+      status,
+      update,
+    }),
+    [session, status, update]
+  );
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+};
+
+const AuthProvider = ({
+  children,
+  session,
+}: {
+  children: ReactNode;
+  session: Session | null;
+}) => {
   return (
-    <SessionProvider>
-      <AuthWrapper>{children}</AuthWrapper>
+    <SessionProvider
+      session={session}
+      refetchOnWindowFocus={false}
+      refetchWhenOffline={false}
+    >
+      <AuthBridge>{children}</AuthBridge>
     </SessionProvider>
   );
 };
 
-// Separate component that fetches session inside <SessionProvider>
-const AuthWrapper = ({ children }: { children: ReactNode }) => {
-  const { data: session, status } = useSession();
-
-  return (
-    <AuthContext.Provider value={{ session, status }}>
-      {children}
-    </AuthContext.Provider>
-  );
-};
-
-// Custom hook for accessing session data
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (!context) throw new Error("useAuth must be used within AuthProvider");
+
+  if (!context) {
+    throw new Error("useAuth must be used within AuthProvider");
+  }
+
   return context;
 };
 

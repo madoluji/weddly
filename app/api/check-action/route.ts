@@ -28,15 +28,22 @@ export async function GET(req: NextRequest) {
         let isEligible = true;
         let mismatchReason = "";
 
+        let freelancer = null;
+        let job = null;
+
         if (jobId && freelancerId) {
-            const freelancer = await FreelancerInfo.findOne({ userId: freelancerId });
-            const job = await Jobs.findById(jobId);
+            [freelancer, job] = await Promise.all([
+                FreelancerInfo.findOne({ userId: freelancerId }),
+                Jobs.findById(jobId),
+            ]);
 
             if (freelancer && job) {
                 const freelancerSkills = freelancer.skills || [];
                 const jobTags = job.tags || [];
 
-                const hasMatchingSkill = jobTags.length === 0 || jobTags.some((tag: string) => freelancerSkills.includes(tag));
+                const hasMatchingSkill =
+                    jobTags.length === 0 ||
+                    jobTags.some((tag: string) => freelancerSkills.includes(tag));
 
                 if (!hasMatchingSkill) {
                     isEligible = false;
@@ -47,12 +54,12 @@ export async function GET(req: NextRequest) {
 
         // Check if the freelancer has sent a proposal
         if (freelancerId) {
-            const proposalExists = await Proposal.findOne({ jobId, userId: freelancerId });
+            const [proposalExists, contractAccepted] = await Promise.all([
+                Proposal.findOne({ jobId, userId: freelancerId }),
+                Contract.findOne({ jobId, freelancerId, status: "accepted" }),
+            ]);
+
             if (proposalExists) actions.push("proposal_submitted");
-
-
-            // Check if the freelancer has accepted a contract
-            const contractAccepted = await Contract.findOne({ jobId, freelancerId, status: "accepted" });
             if (contractAccepted) actions.push("contract_accepted");
         }
 

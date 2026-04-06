@@ -102,6 +102,8 @@ const freelancerInfoSchema = new Schema<IFreelancerInfo>(
   { timestamps: true }
 );
 
+freelancerInfoSchema.index({ skills: 1 });
+
 // Create the model for FreelancerInfo
 const FreelancerInfo: Model<IFreelancerInfo> =
   mongoose.models.FreelancerInfo ||

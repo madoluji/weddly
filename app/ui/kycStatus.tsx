@@ -19,7 +19,8 @@ const KYCStatus: React.FC = () => {
   const pathname = usePathname();
   const id = session?.user.id;
   const { data: verificationData, error } = useFetch<KYCStatusResponse>(
-    "/verification-status"
+    "/verification-status",
+    { enabled: status === "authenticated" }
   );
 
   interface UserRoles {
@@ -97,7 +98,7 @@ const KYCStatus: React.FC = () => {
     }
   }, [userData, loading, verificationData, pathname, id, router]);
 
-  if (error) {
+  if (status === "authenticated" && error) {
     console.error("Error fetching KYC status:", error);
     return null;
   }

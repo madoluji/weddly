@@ -11,13 +11,11 @@ import { doc, setDoc } from "firebase/firestore";
 import { useAuth } from "@/app/providers";
 import useFirebaseAuth from "@/app/hooks/useFirebaseAuth";
 import { fetchWithAuth } from "@/app/lib/fetchWIthAuth";
-import { useSession } from "next-auth/react";
 
 const PHONE_PREFIX = "+977";
 
 const ProfileUploadForm = () => {
-  const { session, status } = useAuth();
-  const { update: updateSession } = useSession();
+  const { session, update: updateSession } = useAuth();
   const [uploading, setUploading] = useState(false);
   const [mounted, setMounted] = useState(false);
   useFirebaseAuth();

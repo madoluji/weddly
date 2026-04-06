@@ -6,17 +6,31 @@ interface FetchState<T> {
     loading: boolean;
     error: string | null;
 }
+
+interface UseFetchOptions {
+    enabled?: boolean;
+}
+
 const API_BASE_URL = '/api';
 
 
-const useFetch = <T>(endpoint: string) => {
+const useFetch = <T>(endpoint: string, options: UseFetchOptions = {}) => {
+    const { enabled = true } = options;
     const [state, setState] = useState<FetchState<T>>({
         data: null,
-        loading: true,
+        loading: enabled,
         error: null,
     });
 
     useEffect(() => {
+        if (!enabled) {
+            setState((current) => ({
+                ...current,
+                loading: false,
+            }));
+            return;
+        }
+
         const fetchData = async () => {
             setState({ data: null, loading: true, error: null }); // Reset state
             try {
@@ -33,7 +47,7 @@ const useFetch = <T>(endpoint: string) => {
         };
 
         fetchData();
-    }, [endpoint]);
+    }, [endpoint, enabled]);
 
     return state;
 };

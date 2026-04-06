@@ -128,6 +128,8 @@ const jobsSchema = new Schema<IJobs>(
 // ✅ Indexing for optimized queries
 jobsSchema.index({ createdAt: 1 });
 jobsSchema.index({ status: 1, createdAt: -1 });
+jobsSchema.index({ userId: 1, status: 1, createdAt: -1 });
+jobsSchema.index({ status: 1, tags: 1, createdAt: -1 });
 jobsSchema.index({ type: 1, experience: 1, status: 1, createdAt: -1 });
 jobsSchema.index({ eventDate: 1, status: 1 });
 jobsSchema.index({ title: "text", description: "text", tags: "text", locationText: "text" });

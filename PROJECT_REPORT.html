@@ -1,0 +1,1464 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Weddly Project Report</title>
+<style>
+body { font-family: Arial, sans-serif; margin: 2rem; line-height: 1.6; color: #1f2937; }
+h1,h2,h3,h4,h5 { color: #111827; }
+pre { background: #f3f4f6; padding: 1rem; overflow-x: auto; }
+code { font-family: monospace; background: #f3f4f6; padding: 0.15rem 0.3rem; }
+table { border-collapse: collapse; width: 100%; margin: 1rem 0; }
+th, td { border: 1px solid #d1d5db; padding: 0.6rem; }
+th { background: #e5e7eb; }
+</style>
+<script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+<script>mermaid.initialize({ startOnLoad:true, theme:'neutral' });</script>
+</head>
+<body>
+<h1 id="weddly-editorial-wedding-marketplace">Weddly: Editorial Wedding Marketplace</h1>
+<h2 id="cover-page">Cover Page</h2>
+<ul>
+<li><strong>Title:</strong> Weddly: Editorial Wedding Marketplace</li>
+<li><strong>Author(s):</strong> [Author Name]</li>
+<li><strong>Institution / Organization:</strong> [Institution or Organization Name]</li>
+<li><strong>Date:</strong> April 2026</li>
+</ul>
+<hr />
+<h2 id="abstract">Abstract</h2>
+<p>Weddly is a modern digital marketplace built to streamline wedding planning by connecting couples, event planners, photographers, venues, and freelance vendors within a single curated platform. The system tackles the primary challenges of wedding planning: fragmented vendor discovery, inconsistent communication, manual contract tracking, and complex payment management. This implementation uses a Next.js 16 application with React 18, Tailwind CSS, Firebase authentication, MongoDB data modeling via Mongoose, and integrated payment gateways such as PayPal, eSewa, and Khalti.</p>
+<p>The project demonstrates a role-based experience for clients, freelancer vendors, venue owners, and administrators. It includes search workflows, job posting, proposal submission, contract management, KYC verification, and analytics dashboards. The largest technical achievements were a resilient app router architecture, multi-role security flows, and a test strategy combining unit tests, integration checks, and end-to-end Playwright validation. The documentation that follows expands on the problem domain, system design, development process, and testing results, while also identifying future improvements and deployment considerations.</p>
+<hr />
+<h2 id="table-of-contents">Table of Contents</h2>
+<ol>
+<li>Cover Page</li>
+<li>Abstract</li>
+<li>Table of Contents, Figures, Tables, Abbreviations</li>
+<li>Chapter 1: Introduction</li>
+<li>Chapter 2: Background</li>
+<li>Chapter 3: Development</li>
+<li>Chapter 4: Testing and Analysis</li>
+<li>Chapter 5: Conclusion</li>
+<li>Chapter 6: References</li>
+<li>Chapter 7: Appendix</li>
+</ol>
+<h2 id="list-of-figures">List of Figures</h2>
+<ul>
+<li>Figure 1: System Architecture Diagram [Insert Diagram Here]</li>
+<li>Figure 2: User Journey Flow [Insert Diagram Here]</li>
+<li>Figure 3: Database Entity Relationship Diagram [Insert Diagram Here]</li>
+<li>Figure 4: Role-Based Access Flow [Insert Diagram Here]</li>
+<li>Figure 5: Sprint Burndown Chart [Insert Diagram Here]</li>
+<li>Figure 6: Mobile &amp; Desktop Screen Flow [Insert Diagram Here]</li>
+</ul>
+<h2 id="list-of-tables">List of Tables</h2>
+<ul>
+<li>Table 1: Comparison of Similar Platforms</li>
+<li>Table 2: Feature Analysis Matrix</li>
+<li>Table 3: Requirements Mapping</li>
+<li>Table 4: Sample Test Cases</li>
+<li>Table 5: Technology Stack Overview</li>
+</ul>
+<h2 id="abbreviations">Abbreviations</h2>
+<ul>
+<li>UI: User Interface</li>
+<li>UX: User Experience</li>
+<li>API: Application Programming Interface</li>
+<li>KYC: Know Your Customer</li>
+<li>SRS: Software Requirements Specification</li>
+<li>ERD: Entity Relationship Diagram</li>
+<li>UML: Unified Modeling Language</li>
+<li>MVP: Minimum Viable Product</li>
+<li>CI/CD: Continuous Integration / Continuous Deployment</li>
+<li>E2E: End-to-End</li>
+<li>JWT: JSON Web Token</li>
+</ul>
+<hr />
+<h1 id="chapter-1-introduction">Chapter 1: Introduction</h1>
+<h2 id="project-description">Project Description</h2>
+<p>Weddly is a wedding marketplace application designed to support premium event planning and vendor matchmaking. The platform enables clients to search for wedding talent, post job requests, compare proposals, sign agreements, and process payments. Freelancers and venue providers can create profiles, submit proposals, manage booked contracts, and track earnings. Administrators can review KYC documents, oversee onboarding, and view platform metrics.</p>
+<h2 id="problem-domain">Problem Domain</h2>
+<p>Modern weddings require coordination among multiple service providers. Existing platforms often separate vendor discovery, booking, and payment processing, which leads to duplicated effort and unclear accountability. Couples frequently endure a fragmented planning experience, while vendors lose business opportunities because their services are not centralized or verified.</p>
+<p>In real-world planning, a couple may need to work with an event planner, photographer, venue coordinator, florist, caterer, and entertainment provider. Each vendor typically uses a different communication channel, billing mechanism, and approval workflow. This fragmented ecosystem makes it difficult to compare service quality, manage availability, and ensure that contractual terms are clearly understood.</p>
+<p>A further issue is vendor trust. Many wedding service providers have irregular online presences, and existing local directories may not provide strong verification or reliable contact information. Without a single trusted platform, couples can find themselves making decisions based on incomplete portfolios or outdated pricing.</p>
+<p>Weddly targets this problem by creating a unified service for wedding-related work. The system reduces complexity for users by handling registration, role-based access, service posting, contract management, and payment settlement in one workflow.</p>
+<p>The platform also seeks to formalize the relationship between clients and freelancers. By providing a contract lifecycle and payment tracking, Weddly helps reduce disputes, improves transparency, and creates clearer accountability for both parties. This is particularly important in the wedding market, where timelines are tight and expectations are high.</p>
+<h2 id="local-scenario">Local Scenario</h2>
+<p>Within a local wedding market, planners and couples need a trusted space to find photographers, florists, makeup artists, musicians, and venues. Local vendors often rely on word-of-mouth or social media to generate leads. Weddly provides regional vendors with a modern digital storefront, allowing them to reach engaged couples through portfolio displays and job matching.</p>
+<h2 id="global-scenario">Global Scenario</h2>
+<p>The global wedding industry is increasingly digital. Destination weddings, multicultural celebrations, and luxury events have created demand for scalable vendor discovery and purchase workflows. Weddly is positioned to support both local and international planning scenarios, with multilingual design potential, payment gateway flexibility, and support for different vendor categories.</p>
+<h2 id="project-as-a-solution">Project as a Solution</h2>
+<p>Weddly solves the wedding planning problem by:
+- aggregating wedding service categories in a curated marketplace,
+- providing structured job posting and proposal management,
+- enforcing secure authentication and role segregation,
+- enabling administrators to review KYC and moderate access,
+- supporting payments through multiple providers,
+- delivering search filters and analytics for decision-making.</p>
+<p>The platform is intended to reduce friction between clients and vendors, improve vendor vetting, and deliver a consistent transactional process.</p>
+<h2 id="aim-and-objectives">Aim and Objectives</h2>
+<h3 id="aim">Aim</h3>
+<p>Build a responsive, feature-rich wedding marketplace platform that supports a multi-role ecosystem of clients, freelancers, venue providers, and administrators.</p>
+<h3 id="project-objectives">Project Objectives</h3>
+<ul>
+<li>Design and develop a full-stack web application using Next.js, React, Tailwind CSS, and Firebase.</li>
+<li>Implement role-based authentication and protected routing for clients, freelancers, vendors, and admins.</li>
+<li>Create job posting, search, proposal, contract, and payment workflows.</li>
+<li>Integrate multiple payment gateways including PayPal and local alternatives like eSewa and Khalti.</li>
+<li>Build an admin dashboard for KYC verification, platform analytics, and system management.</li>
+<li>Provide an extensible architecture for future AI recommendations and automated vendor matching.</li>
+</ul>
+<h3 id="academic-objectives">Academic Objectives</h3>
+<ul>
+<li>Apply software development methodologies such as Agile Scrum.</li>
+<li>Create clear documentation and reporting artifacts.</li>
+<li>Use testing frameworks for unit, integration, and automated UI testing.</li>
+<li>Demonstrate architectural planning, design patterns, and data modeling skills.</li>
+<li>Gain experience with cloud authentication, database access, and secure API design.</li>
+</ul>
+<h2 id="structure-of-the-report">Structure of the Report</h2>
+<p>This report is organized as follows:
+- <strong>Chapter 1:</strong> Introduction and project context.
+- <strong>Chapter 2:</strong> Background, end-user profiles, technical aspects, and competitor analysis.
+- <strong>Chapter 3:</strong> Development process, methodology, system design, and sprint documentation.
+- <strong>Chapter 4:</strong> Testing strategy, execution, and analysis.
+- <strong>Chapter 5:</strong> Conclusions, legal/ethical considerations, limitations, and future work.
+- <strong>Chapter 6:</strong> References.
+- <strong>Chapter 7:</strong> Appendix with supplementary artifacts, sample code, diagrams, and feedback templates.</p>
+<hr />
+<h1 id="chapter-2-background">Chapter 2: Background</h1>
+<h2 id="about-the-client-end-user">About the Client / End User</h2>
+<p>Weddly serves several core user personas:
+- <strong>Couples and Clients:</strong> Primary users who need to hire vendors for wedding planning, photography, venues, catering, entertainment, and design.
+- <strong>Freelancers:</strong> Photographers, videographers, makeup artists, DJs, planners, stylists, and other wedding professionals.
+- <strong>Venue Owners:</strong> Locations and spaces available for ceremonies, receptions, and pre-wedding events.
+- <strong>Administrators:</strong> Platform managers responsible for verifying user documentation, moderating marketplace content, and managing system analytics.</p>
+<p>Clients require an intuitive search and filtering experience. Freelancers require a profile builder, proposal management, contract tracking, and payment dashboard. Administrators require tools to inspect KYC documents, approve or reject accounts, and troubleshoot disputes.</p>
+<h2 id="review-of-technical-aspects">Review of Technical Aspects</h2>
+<p>Weddly is built on a modern web stack that supports fast interactions, responsive UI, service-oriented backend flows, and strong integration with third-party authentication and payment providers. The design balances performance and maintainability, with the goal of enabling rapid feature delivery while preserving a clear separation between user interface concerns and business logic.</p>
+<h3 id="stakeholders-and-personas">Stakeholders and Personas</h3>
+<p>The application serves distinct user groups with different needs:
+- <strong>Couples and Attendees:</strong> They need a polished discovery experience, easy booking flows, and trusted vendor credentials.
+- <strong>Freelancers:</strong> They require a professional profile presentation, a streamlined proposal workflow, earnings visibility, and secure contract acceptance.
+- <strong>Venue Operators:</strong> They need venue listing capabilities, location-aware discovery, and the ability to support booking requests.
+- <strong>Administrators:</strong> They need tools for identity verification, content moderation, platform reporting, and safe onboarding of vendors.</p>
+<p>The report uses these personas to guide feature prioritization, user interface behavior, and access control requirements.</p>
+<h3 id="frontend">Frontend</h3>
+<ul>
+<li><strong>Framework:</strong> Next.js 16 with the App Router, providing server-rendered pages, route-driven data loading, and a hybrid static/dynamic rendering strategy.</li>
+<li><strong>UI:</strong> React 18 components with Tailwind CSS for consistent utility-driven styling and <code>styled-components</code> for theme-controlled surface treatments and reusable component variants.</li>
+<li><strong>Design system:</strong> Modular UI primitives are organized under <code>app/ui</code>, enabling consistent forms, cards, buttons, and layout patterns.</li>
+<li><strong>Data Visualization:</strong> Recharts is used to deliver analytics charts and admin dashboard visualizations.</li>
+<li><strong>Maps:</strong> React Leaflet provides interactive map experiences for venue discovery and geographic search filters.</li>
+<li><strong>Forms:</strong> The Tailwind forms plugin and custom input components support responsive registration, profile creation, job posting, and proposal submission.</li>
+</ul>
+<h3 id="backend">Backend</h3>
+<ul>
+<li><strong>API Routes:</strong> Next.js API routes in <code>app/api</code> provide secure server-side endpoints for job posting, search, payments, user profile management, contract operations, notifications, and admin controls.</li>
+<li><strong>Authentication:</strong> Firebase authentication is used for user identity and session management, supplemented by NextAuth integration and custom middleware in <code>proxy.ts</code> to enforce user roles and protect routes.</li>
+<li><strong>Database:</strong> MongoDB is modeled with Mongoose schemas defined in <code>models/*.ts</code>, including <code>User</code>, <code>ClientInfo</code>, <code>FreelancerInfo</code>, <code>Contract</code>, <code>Payment</code>, <code>VenueInfo</code>, and <code>SavedFreelancers</code>.</li>
+<li><strong>Notifications:</strong> A separate <code>notification-service</code> microservice built with NestJS and BullMQ handles event notifications asynchronously, decoupling notification processing from the core web application.</li>
+<li><strong>External APIs:</strong> Payment gateway endpoints and email services are implemented through dedicated API routes and integration layers.</li>
+</ul>
+<h3 id="security-and-data-protection">Security and Data Protection</h3>
+<ul>
+<li>Role-based access control separates client flows, freelancer flows, and admin workflows.</li>
+<li>Custom middleware in <code>proxy.ts</code> authenticates tokens, validates user roles, and redirects unauthorized access attempts.</li>
+<li>Protected API routes validate session authorization before allowing contract or payment operations.</li>
+<li>Sensitive data such as payment metadata and user profile documents are handled via backend APIs rather than direct client-side storage.</li>
+</ul>
+<h3 id="payment-integration">Payment Integration</h3>
+<p>Weddly supports multiple payment channels to accommodate global and regional users.
+- <strong>PayPal:</strong> Integrated with <code>@paypal/react-paypal-js</code> for checkout flows and instant payment confirmation.
+- <strong>eSewa and Khalti:</strong> Localized payment support with API route endpoints under <code>app/api/esewa-payment</code> and <code>app/api/kalti-payment</code>, matching regional payment habits.
+- <strong>Payment tracking:</strong> <code>models/payment.ts</code> tracks each transaction, the amount due to the freelancer, gateway metadata, and contract association.</p>
+<h3 id="testing-and-quality-assurance">Testing and Quality Assurance</h3>
+<ul>
+<li><strong>Unit tests:</strong> Executed with <code>tsx --test</code> to validate backend helpers, business logic, and filter operations in files such as <code>tests/find-job-flow.test.ts</code> and <code>tests/job-filters.test.ts</code>.</li>
+<li><strong>E2E tests:</strong> Playwright specs under <code>e2e/*.spec.ts</code> validate full user journeys including search, filter, proposal, and page navigation workflows.</li>
+<li><strong>Linting:</strong> ESLint with <code>eslint-config-next</code> enforces code quality, catches common bugs, and maintains consistent formatting.</li>
+<li><strong>Build safety:</strong> Custom shell wrappers <code>scripts/dev-safe.mjs</code> and <code>scripts/build-safe.mjs</code> limit Node heap size and Next worker threads for stable development and build performance on macOS.</li>
+</ul>
+<h3 id="technology-stack-overview">Technology Stack Overview</h3>
+<table>
+<thead>
+<tr>
+<th>Layer</th>
+<th>Technology</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Frontend framework</td>
+<td>Next.js 16</td>
+<td>Server-side rendering, app routing, and page lifecycle control</td>
+</tr>
+<tr>
+<td>UI library</td>
+<td>React 18</td>
+<td>Component-driven interface and state management</td>
+</tr>
+<tr>
+<td>Styling</td>
+<td>Tailwind CSS, styled-components</td>
+<td>Rapid design implementation and theme control</td>
+</tr>
+<tr>
+<td>Data store</td>
+<td>MongoDB</td>
+<td>Document database for user profiles, jobs, contracts, and payments</td>
+</tr>
+<tr>
+<td>ORM</td>
+<td>Mongoose</td>
+<td>Schema-driven object modeling and data validation</td>
+</tr>
+<tr>
+<td>Auth</td>
+<td>Firebase Auth, NextAuth</td>
+<td>User authentication, session management, and token validation</td>
+</tr>
+<tr>
+<td>Payments</td>
+<td>PayPal, eSewa, Khalti</td>
+<td>Multi-gateway payment handling for global and local markets</td>
+</tr>
+<tr>
+<td>Tests</td>
+<td>Playwright, tsx</td>
+<td>End-to-end and unit testing frameworks</td>
+</tr>
+<tr>
+<td>Dev tooling</td>
+<td>ESLint, Prettier, TypeScript</td>
+<td>Code quality, formatting, and type safety</td>
+</tr>
+</tbody>
+</table>
+<h3 id="constraints-and-assumptions">Constraints and Assumptions</h3>
+<p>Key assumptions made during development include:
+- The platform must support multiple user roles and keep data separation clear.
+- Payment providers may offer different confirmation and callback behaviors.
+- Admin verification is required before higher-value service providers can receive contracts.
+- The marketplace should be extensible to support future recommendation or review features.</p>
+<h2 id="similar-projects">Similar Projects</h2>
+<ol>
+<li><strong>The Knot:</strong> A leading wedding planning ecosystem that provides vendor directories, planning tools, and vendor reviews. The Knot excels at vendor discovery for brides and grooms who want curated options, but it does not directly support freelancer proposal workflows in the same way Weddly does.</li>
+<li><strong>WeddingWire:</strong> A marketplace focused on wedding vendors and venues, with community reviews and budget tools. WeddingWire’s strength is vendor reviews and recommendation, while Weddly focuses more on contract and payment collaboration.</li>
+<li><strong>Thumbtack:</strong> A general service marketplace with bidding and local contractor matching. Thumbtack offers broad service discovery, and Weddly adapts that concept for wedding-specific vendors with a higher emphasis on identity verification.</li>
+<li><strong>Fiverr:</strong> A freelancer marketplace with gig-based selling and a strong payment escrow flow. Fiverr’s escrow model informs Weddly’s approach to secure payments, though Weddly applies this to scheduled wedding contracts rather than digital microservices.</li>
+<li><strong>Upwork:</strong> A contract marketplace for professional services with milestone-based payments and client reviews. Upwork provides a valuable reference for milestone-driven contract management and dispute resolution, which Weddly adapts for wedding vendor engagements.</li>
+</ol>
+<p>Each of these platforms informs Weddly’s design in a different way. Weddly combines wedding-specific discovery with freelancer proposal management and admin-led verification.</p>
+<h3 id="market-trends-and-industry-context">Market Trends and Industry Context</h3>
+<p>The wedding industry has become increasingly digital over the past decade. Couples are using online tools to plan every element of their celebration, from vendor discovery to budget management. High-end wedding services also demand curated marketplaces that can present luxury portfolios and support premium workflows.</p>
+<p>Key market trends relevant to Weddly include:
+- <strong>Experience-driven planning:</strong> Modern couples seek vendors that deliver not just a service, but an aesthetic and emotional experience.
+- <strong>Local and destination weddings:</strong> Many clients need tools to find both local specialists and destination vendors, requiring flexible discovery and payment support.
+- <strong>Mobile-first decision making:</strong> Couples often research vendors on mobile devices while on the go, making responsive design critical.
+- <strong>Payment trust:</strong> Secure payment gateways and escrow-like transaction workflows increase confidence for high-value bookings.
+- <strong>Verification and trust:</strong> Verified vendor badges and KYC review processes are becoming standard for premium marketplaces.</p>
+<p>This industry context guides Weddly’s feature set and informs the product roadmap.</p>
+<h3 id="competitive-positioning">Competitive Positioning</h3>
+<p>Weddly is positioned as a specialized wedding event marketplace rather than a broad freelance service platform. Its competitive advantages include:
+- Focus on wedding-related vendor categories and event planning.
+- Multi-role experiences for clients, freelancers, venues, and administrators.
+- Built-in KYC review and admin verification to improve trust.
+- Integrated payment gateway support for global and regional payments.
+- Portfolio-driven matchmaking for high-end wedding services.</p>
+<h3 id="strengths-and-weaknesses-compared-to-competitors">Strengths and Weaknesses Compared to Competitors</h3>
+<table>
+<thead>
+<tr>
+<th>Platform</th>
+<th>Strength for Weddly</th>
+<th>Weakness for Weddly</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>The Knot</td>
+<td>Strong wedding market positioning and vendor directories</td>
+<td>Less focus on direct contract lifecycle</td>
+</tr>
+<tr>
+<td>WeddingWire</td>
+<td>Community review model and vendor discovery</td>
+<td>Limited proposal workflow support</td>
+</tr>
+<tr>
+<td>Thumbtack</td>
+<td>Local contractor matching and bidding</td>
+<td>Generic service categories rather than wedding-specific</td>
+</tr>
+<tr>
+<td>Fiverr</td>
+<td>Secure payment and escrow workflow</td>
+<td>Gig-based model not ideal for event planning</td>
+</tr>
+<tr>
+<td>Upwork</td>
+<td>Contract and milestone management</td>
+<td>Focus on remote professional services instead of local events</td>
+</tr>
+</tbody>
+</table>
+<h2 id="comparison-table-of-features">Comparison Table of Features</h2>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>Weddly</th>
+<th>The Knot</th>
+<th>WeddingWire</th>
+<th>Thumbtack</th>
+<th>Fiverr</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Wedding-specific marketplace</td>
+<td>Yes</td>
+<td>Yes</td>
+<td>Yes</td>
+<td>Partial</td>
+<td>No</td>
+</tr>
+<tr>
+<td>Client job posting</td>
+<td>Yes</td>
+<td>No</td>
+<td>No</td>
+<td>Yes</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>Freelancer proposals</td>
+<td>Yes</td>
+<td>No</td>
+<td>No</td>
+<td>Yes</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>Contract tracking</td>
+<td>Yes</td>
+<td>No</td>
+<td>No</td>
+<td>No</td>
+<td>No</td>
+</tr>
+<tr>
+<td>Multi-gateway payment</td>
+<td>Yes</td>
+<td>No</td>
+<td>No</td>
+<td>No</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>KYC / admin approval</td>
+<td>Yes</td>
+<td>No</td>
+<td>Limited</td>
+<td>No</td>
+<td>No</td>
+</tr>
+<tr>
+<td>Portfolio display</td>
+<td>Yes</td>
+<td>Yes</td>
+<td>Yes</td>
+<td>No</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>Analytics dashboard</td>
+<td>Yes</td>
+<td>No</td>
+<td>No</td>
+<td>No</td>
+<td>No</td>
+</tr>
+<tr>
+<td>Saved favorites / shortlist</td>
+<td>Yes</td>
+<td>No</td>
+<td>No</td>
+<td>Yes</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>Map-enabled venue search</td>
+<td>Yes</td>
+<td>No</td>
+<td>No</td>
+<td>No</td>
+<td>No</td>
+</tr>
+</tbody>
+</table>
+<h3 id="feature-analysis-matrix">Feature Analysis Matrix</h3>
+<table>
+<thead>
+<tr>
+<th>Capability</th>
+<th>Importance</th>
+<th>Weddly Status</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Role-based dashboards</td>
+<td>High</td>
+<td>Implemented</td>
+<td>Clients, freelancers, venues, admins each have tailored flows</td>
+</tr>
+<tr>
+<td>Search with filters</td>
+<td>High</td>
+<td>Implemented</td>
+<td>Keyword, category, location, date filters</td>
+</tr>
+<tr>
+<td>Payment gateway flexibility</td>
+<td>Medium</td>
+<td>Implemented</td>
+<td>PayPal plus local gateway support</td>
+</tr>
+<tr>
+<td>Contract lifecycle management</td>
+<td>High</td>
+<td>Implemented</td>
+<td>Contract creation, tracking, and payment links</td>
+</tr>
+<tr>
+<td>Reporting and analytics</td>
+<td>Medium</td>
+<td>Partially implemented</td>
+<td>Admin charts and usage summaries available</td>
+</tr>
+<tr>
+<td>KYC verification</td>
+<td>High</td>
+<td>Implemented</td>
+<td>Admin review process with user document status</td>
+</tr>
+<tr>
+<td>Saved/favorite functionality</td>
+<td>Medium</td>
+<td>Implemented</td>
+<td>Users can save freelancers and revisit later</td>
+</tr>
+<tr>
+<td>AI recommendation support</td>
+<td>Low</td>
+<td>Planned</td>
+<td>Architecture is designed for future enhancement</td>
+</tr>
+</tbody>
+</table>
+<p>Each of these platforms informs Weddly’s design in a different way. Weddly combines wedding-specific discovery with freelancer proposal management and admin-led verification.</p>
+<h2 id="comparison-table-of-features_1">Comparison Table of Features</h2>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>Weddly</th>
+<th>The Knot</th>
+<th>WeddingWire</th>
+<th>Thumbtack</th>
+<th>Fiverr</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Wedding-specific marketplace</td>
+<td>Yes</td>
+<td>Yes</td>
+<td>Yes</td>
+<td>Partial</td>
+<td>No</td>
+</tr>
+<tr>
+<td>Client job posting</td>
+<td>Yes</td>
+<td>No</td>
+<td>No</td>
+<td>Yes</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>Freelancer proposals</td>
+<td>Yes</td>
+<td>No</td>
+<td>No</td>
+<td>Yes</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>Contract tracking</td>
+<td>Yes</td>
+<td>No</td>
+<td>No</td>
+<td>No</td>
+<td>No</td>
+</tr>
+<tr>
+<td>Multi-gateway payment</td>
+<td>Yes</td>
+<td>No</td>
+<td>No</td>
+<td>No</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>KYC / admin approval</td>
+<td>Yes</td>
+<td>No</td>
+<td>Limited</td>
+<td>No</td>
+<td>No</td>
+</tr>
+<tr>
+<td>Portfolio display</td>
+<td>Yes</td>
+<td>Yes</td>
+<td>Yes</td>
+<td>No</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>Analytics dashboard</td>
+<td>Yes</td>
+<td>No</td>
+<td>No</td>
+<td>No</td>
+<td>No</td>
+</tr>
+<tr>
+<td>Saved favorites / shortlist</td>
+<td>Yes</td>
+<td>No</td>
+<td>No</td>
+<td>Yes</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>Map-enabled venue search</td>
+<td>Yes</td>
+<td>No</td>
+<td>No</td>
+<td>No</td>
+<td>No</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h1 id="chapter-3-development">Chapter 3: Development</h1>
+<h2 id="considered-methodologies">Considered Methodologies</h2>
+<p>During planning, several development methodologies were evaluated:
+1. <strong>Waterfall:</strong> sequential phase-based delivery, useful for fixed requirements but inflexible for evolving needs.
+2. <strong>Agile Scrum:</strong> iterative development cycles with sprint planning and review sessions.
+3. <strong>Kanban:</strong> continuous flow with a visual board for task tracking.
+4. <strong>Lean UX:</strong> quick experimentation and rapid feedback from users.
+5. <strong>Rapid Application Development (RAD):</strong> fast prototyping with frequent stakeholder validation.</p>
+<h2 id="selected-methodology">Selected Methodology</h2>
+<h3 id="chosen-approach-agile-scrum">Chosen Approach: Agile Scrum</h3>
+<p>Agile Scrum was selected because the project required iterative refinement, changing feature priorities, and frequent validation of user journeys.</p>
+<h3 id="phases">Phases</h3>
+<ul>
+<li><strong>Sprint Planning:</strong> defined user stories, acceptance criteria, and task estimates.</li>
+<li><strong>Design:</strong> created wireframes, mockups, and user flow diagrams.</li>
+<li><strong>Implementation:</strong> built feature increments using modular components and API endpoints.</li>
+<li><strong>Testing:</strong> validated functionality with unit tests, integration tests, and E2E scenarios.</li>
+<li><strong>Review:</strong> inspected deliverables and adjusted the backlog based on progress.</li>
+</ul>
+<h2 id="requirement-analysis">Requirement Analysis</h2>
+<h3 id="pre-survey">Pre Survey</h3>
+<p>The team identified high-priority client needs through a pre-development survey. Sample findings included demand for vendor verification, flexible payment methods, and clear proposal management.</p>
+<h3 id="software-requirements-specification-srs">Software Requirements Specification (SRS)</h3>
+<h4 id="functional-requirements">Functional Requirements</h4>
+<ul>
+<li>Users can register and sign in as a client, freelancer, venue, or administrator.</li>
+<li>Clients can post wedding projects with details, requirements, and budgets.</li>
+<li>Freelancers can create portfolios and submit proposals for posted jobs.</li>
+<li>Administrators can review KYC documentation and activate verified accounts.</li>
+<li>Payment flows are available for deposits, contract payment, and service completion.</li>
+<li>Users can view contract details, schedule milestones, and leave feedback.</li>
+</ul>
+<h4 id="non-functional-requirements">Non-Functional Requirements</h4>
+<ul>
+<li>Responsive UI across desktop and mobile screens.</li>
+<li>Secure authentication and authorization.</li>
+<li>Fast search and filtering performance.</li>
+<li>Scalable database design for user profiles, jobs, and contracts.</li>
+<li>Maintainable codebase with reusable UI patterns.</li>
+</ul>
+<h3 id="product-backlog">Product Backlog</h3>
+<p>A representative backlog for the first release included the following user stories:
+- <code>PO-001</code> As a client, I want to post a wedding service request.
+- <code>PO-002</code> As a freelancer, I want to register and create a profile.
+- <code>PO-003</code> As a venue owner, I want to list my space.
+- <code>PO-004</code> As an admin, I want to approve KYC documents.
+- <code>PO-005</code> As a client, I want to see proposals and select a vendor.
+- <code>PO-006</code> As a user, I want to use PayPal or local gateways for payment.
+- <code>PO-007</code> As a client, I want to save freelancers for later.
+- <code>PO-008</code> As a freelancer, I want to view earnings and contract payments.</p>
+<p>The backlog was prioritized by business value and implementation risk. Higher priority was given to core marketplace functionality and secure onboarding; lower priority was given to advanced recommendation features and optional profile enhancements.</p>
+<h3 id="requirements-mapping">Requirements Mapping</h3>
+<p>The product backlog items were mapped against business goals and technical dependencies to ensure traceability from requirements to implementation.</p>
+<table>
+<thead>
+<tr>
+<th>Backlog Item</th>
+<th>Business Goal</th>
+<th>Priority</th>
+<th>Dependencies</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>PO-001</td>
+<td>Enable clients to request services</td>
+<td>High</td>
+<td>User authentication, job model</td>
+</tr>
+<tr>
+<td>PO-002</td>
+<td>Enable freelancer onboarding</td>
+<td>High</td>
+<td>Profile model, file upload, KYC</td>
+</tr>
+<tr>
+<td>PO-003</td>
+<td>Enable venue discovery</td>
+<td>Medium</td>
+<td>Venue model, map integration</td>
+</tr>
+<tr>
+<td>PO-004</td>
+<td>Ensure platform trust</td>
+<td>High</td>
+<td>Admin workflows, KYC data storage</td>
+</tr>
+<tr>
+<td>PO-005</td>
+<td>Close bookings through proposals</td>
+<td>High</td>
+<td>Proposal flow, contract model</td>
+</tr>
+<tr>
+<td>PO-006</td>
+<td>Support payments</td>
+<td>High</td>
+<td>Payment gateway integration, contract settlement</td>
+</tr>
+<tr>
+<td>PO-007</td>
+<td>Improve return visits</td>
+<td>Medium</td>
+<td>Saved favorites model</td>
+</tr>
+<tr>
+<td>PO-008</td>
+<td>Support freelancer earnings tracking</td>
+<td>Medium</td>
+<td>Payment tracking, contract settlement</td>
+</tr>
+</tbody>
+</table>
+<h3 id="acceptance-criteria-and-definition-of-done">Acceptance Criteria and Definition of Done</h3>
+<p>Each backlog item included acceptance criteria such as:
+- Visible feedback after submission
+- Validation of required fields
+- Correct persistence in the database
+- Role-based route protection
+- End-to-end workflow verification in tests</p>
+<p>The definition of done required passing unit tests, successful manual review, code formatting via ESLint/Prettier, and no unresolved critical issues.</p>
+<h3 id="sprint-planning-and-prioritization">Sprint Planning and Prioritization</h3>
+<p>The backlog was divided into multiple sprints with a sequence of technical and functional work items. Early sprints focused on platform structure, user authentication, and basic job posting. Later sprints delivered advanced features such as admin analytics, payment flows, and notification handling.</p>
+<h3 id="post-survey">Post Survey</h3>
+<p>After building core functionality, a post-development survey was used to collect user feedback on usability, feature clarity, and onboarding flow. Responses emphasized the need for simplified user onboarding, more robust review features, and clearer status indicators for proposals and contracts.</p>
+<h2 id="system-design">System Design</h2>
+<h3 id="logo">Logo</h3>
+<p>A visual identity for Weddly should reflect elegance, trust, and wedding planning. The report placeholder includes the concept of a monogram or a stylized ring.</p>
+<h3 id="architecture-diagram">Architecture Diagram</h3>
+<pre><code class="language-mermaid">flowchart LR
+  Browser[Browser / Client]
+  subgraph Frontend
+    NextApp[Next.js App Router]
+    UI[React / Tailwind UI]
+  end
+  subgraph Backend
+    API[Next.js API Routes]
+    Firebase[Firebase Auth]
+    Mongo[MongoDB / Mongoose]
+    Notify[Notification Service]
+  end
+  Browser --&gt; NextApp
+  NextApp --&gt; UI
+  NextApp --&gt; API
+  API --&gt; Firebase
+  API --&gt; Mongo
+  API --&gt; Notify
+  Firebase --&gt; API
+  Notify --&gt; Mongo
+  classDef service fill:#f8f9fa,stroke:#c2c7cc,stroke-width:1px;
+  class Firebase,Mongo,Notify service;
+</code></pre>
+<p>The architecture diagram highlights:
+- Browser clients communicating with Next.js pages.
+- API routes handling authentication, jobs, contracts, and payments.
+- Firebase authentication and session management.
+- MongoDB/Mongoose data storage.
+- Separate notification processing service.</p>
+<h3 id="use-case-diagram">Use Case Diagram</h3>
+<pre><code class="language-mermaid">flowchart TD
+  Client[Client] --&gt;|Posts job| JobPosting[Post Job]
+  Freelancer[Freelancer] --&gt;|Submits proposal| Proposal[Submit Proposal]
+  Client --&gt;|Selects proposal| Contract[Create Contract]
+  Client --&gt;|Pays vendor| Payment[Process Payment]
+  Admin[Administrator] --&gt;|Verifies KYC| KYC[Review KYC]
+  Freelancer --&gt;|Tracks earnings| Earnings[View Earnings]
+  Client --&gt;|Saves favorite| Save[Save Freelancer]
+</code></pre>
+<p>Key use cases:
+- Client posts a job.
+- Freelancer submits proposal.
+- Client accepts proposal.
+- Payment is processed.
+- Admin verifies documents.</p>
+<h3 id="entity-relationship-diagram-erd">Entity Relationship Diagram (ERD)</h3>
+<pre><code class="language-mermaid">erDiagram
+  USER ||--o{ CLIENTINFO : has
+  USER ||--o{ FREELANCERINFO : has
+  USER ||--o{ VENUEINFO : owns
+  USER ||--o{ SAVEDFREELANCERS : saves
+  CLIENTINFO ||--o{ JOB : posts
+  FREELANCERINFO ||--o{ CONTRACT : accepts
+  VENUEINFO ||--o{ JOB : hosts
+  JOB ||--o{ CONTRACT : generates
+  CONTRACT }o--|| PAYMENT : settled_by
+</code></pre>
+<p>Important entities include:
+- <code>User</code> with roles and contact details.
+- <code>FreelancerInfo</code> and <code>ClientInfo</code> for role-specific profile data.
+- <code>VenueInfo</code> for event locations.
+- <code>Job</code> or job posting metadata.
+- <code>Contract</code> connecting clients, freelancers, and jobs.
+- <code>Payment</code> recording transaction details.
+- <code>SavedFreelancers</code> representing user favorites.</p>
+<h3 id="class-diagram">Class Diagram</h3>
+<pre><code class="language-mermaid">classDiagram
+  class User {
+    +String id
+    +String email
+    +String role
+    +Boolean verified
+  }
+  class Job {
+    +String title
+    +String description
+    +String status
+    +Date createdAt
+  }
+  class Contract {
+    +String id
+    +String status
+    +Number amount
+  }
+  class Payment {
+    +String id
+    +String gateway
+    +Number amount
+  }
+  class ApiController {
+    +fetchJobs()
+    +createContract()
+    +processPayment()
+  }
+  User &quot;1&quot; -- &quot;0..*&quot; Job
+  Job &quot;1&quot; -- &quot;0..*&quot; Contract
+  Contract &quot;1&quot; -- &quot;1&quot; Payment
+  ApiController o-- User
+  ApiController o-- Job
+  ApiController o-- Contract
+  ApiController o-- Payment
+</code></pre>
+<p>Class relationships should show API controllers, Mongoose models, and React UI components aligned with page routes.</p>
+<h3 id="additional-umls">Additional UMLs</h3>
+<p>Additional design artifacts include:
+- Activity diagrams for job search and proposal submission.
+- Sequence diagrams for contract creation and payment confirmation.
+- Data flow diagrams for user onboarding and admin approval.</p>
+<h2 id="sprint-documentation">Sprint Documentation</h2>
+<h3 id="sprint-planning">Sprint Planning</h3>
+<p>Sprint planning documentation captured the goals for each two-week increment. Work items were categorized as discovery, design, implementation, and validation.</p>
+<h3 id="design">Design</h3>
+<p>Wireframes were created for all main application sections including:
+- Landing hero experience.
+- Signup and user mode selection.
+- Search and filtering pages (<code>/search/talent</code>).
+- Freelancer profile and portfolio displays.
+- Job posting forms.
+- Contract details and payment flows.
+- Admin dashboard for KYC and analytics.</p>
+<h3 id="use-cases">Use Cases</h3>
+<p>Important use cases implemented include:
+- Client posts a wedding job with a title, service type, timeline, and budget.
+- Freelancer searches for relevant jobs, saves listings, and submits proposals.
+- Client reviews proposals, selects a freelancer, and initiates contract creation.
+- Payment gateway integration captures payment authorization and notifies the contract state.
+- Admin approves or rejects KYC documents and activates vendor accounts.</p>
+<h3 id="activity-sequence-data-flow-diagrams">Activity / Sequence / Data Flow Diagrams</h3>
+<pre><code class="language-mermaid">sequenceDiagram
+  participant C as Client
+  participant F as Freelancer
+  participant A as Admin
+  participant API as API Layer
+  participant DB as Database
+
+  C-&gt;&gt;API: Post a new job request
+  API-&gt;&gt;DB: Save job details
+  F-&gt;&gt;API: Submit proposal
+  API-&gt;&gt;DB: Save proposal
+  C-&gt;&gt;API: Accept proposal
+  API-&gt;&gt;DB: Create contract record
+  API-&gt;&gt;Payment: Initiate payment
+  Payment--&gt;&gt;API: Confirm payment
+  API-&gt;&gt;DB: Update contract status
+  A-&gt;&gt;API: Review KYC documents
+  API-&gt;&gt;DB: Update verification status
+</code></pre>
+<p>The activity diagram above represents how different user roles interact with core system components during a job lifecycle. The sequence diagram shows an end-to-end transaction involving job posting, proposal acceptance, contract creation, payment capture, and admin KYC review.</p>
+<p>A useful data flow diagram for Weddly describes how data moves between the client application, server-side APIs, authentication provider, and database. Specific flows include user registration, job search submission, contract state updates, and payment confirmation callbacks.</p>
+<h3 id="wireframes-mockups">Wireframes &amp; Mockups</h3>
+<p>The wireframe set captures the visual layout of the platform's main use cases. Key screens include:
+- <strong>Landing page:</strong> hero section, featured portfolios, call-to-action buttons, and trusted partner badges.
+- <strong>User mode selection:</strong> role choice between client, freelancer, venue owner, and admin.
+- <strong>Job discovery:</strong> filter sidebar, job cards, pagination, and saved favorites panel.
+- <strong>Profile builder:</strong> editable information sections, portfolio gallery, review summary, and availability toggles.
+- <strong>Contract review:</strong> contract terms, milestone details, payment summary, and action buttons.
+- <strong>Admin dashboard:</strong> KYC status cards, analytics charts, pending approvals, and operational controls.</p>
+<p>Mockups extend the wireframes with brand color palettes, typography choices, interactive form states, and responsive layouts for both desktop and mobile views. They also demonstrate how toast notifications and inline validation messages are presented.</p>
+<h3 id="frontend-implementation">Frontend Implementation</h3>
+<p>The frontend is implemented in <code>app/ui</code> and includes modular dashboard components such as <code>job-details-slider.tsx</code>, <code>chatWindow.tsx</code>, <code>kyc-count.tsx</code>, and more. The landing page uses expressive visuals and navigation patterns to welcome new visitors.</p>
+<p>Key pages and flows include:
+- <strong>Landing Page:</strong> The initial homepage presents the value proposition, featured portfolios, and quick entry points to sign up as a client or vendor.
+- <strong>Signup Flow:</strong> A step-by-step onboarding route where users choose their mode (<code>/signup/usermode-select</code>) and complete registration with role-specific forms.
+- <strong>Search and Discovery:</strong> The <code>search/talent</code> and other search pages allow clients to filter freelance talent by service type, location, and availability.
+- <strong>Profile and Portfolio:</strong> Freelancer profiles show portfolios, reviews, and service packages. Clients can review details before sending proposals.
+- <strong>Job Posting:</strong> Clients can create job listings with event details, budget information, and required deliverables.
+- <strong>Contract and Payment:</strong> Contract review pages display terms, milestones, and payment status, supporting secure completion of weddings.
+- <strong>Admin Dashboard:</strong> Admin pages present KYC review status, user metrics, and operational controls for moderation.</p>
+<p>Reusable UI patterns include card grids, collapsible filters, mobile-friendly stacks, and notification badges. These patterns ensure consistent behavior across client and vendor experiences.</p>
+<h3 id="backend-implementation">Backend Implementation</h3>
+<p>API routes under <code>app/api</code> manage the application domain:
+- <code>auth/</code> for login and registration flows.
+- <code>jobs/</code>, <code>fetchJobs/</code>, and <code>saveJob/</code> for job discovery and saved lists.
+- <code>contractsFetchwithcount/</code>, <code>contract-action/</code>, and <code>contract</code> routes for contract lifecycle management.
+- <code>paymentBilling/</code>, <code>paypal</code>, <code>esewa-payment/</code>, and <code>kalti-payment/</code> for payment processing.
+- <code>admin/</code> routes for KYC approvals, settings, and user moderation.</p>
+<p>The backend architecture is designed around specific domain responsibilities. For example, <code>app/api/jobs</code> endpoints manage the lifecycle of wedding job postings, including creation, update, pagination, and search filters. The <code>app/api/contract-action</code> endpoint supports actions such as accepting proposals, updating contract status, and marking payments as complete.</p>
+<p>Most API handlers validate incoming requests, verify the current user role, and then perform database updates via Mongoose models. This ensures that only authorized users can create contracts or update payment records. When a freelancer submits a proposal, the backend creates a related <code>Contract</code> document and attaches metadata that links the proposal to the original job posting, the client, and the freelancer.</p>
+<p>The <code>paymentBilling</code> routes handle billing details and integrate with the relevant payment provider endpoints. PayPal routes use the PayPal SDK to create orders, load checkout sessions, and capture payment confirmations. eSewa and Khalti routes adapt to the specific API contracts of those providers, creating orders and verifying completion on callback.</p>
+<p>A notable backend feature is <code>proxy.ts</code>, which implements route-level security and redirects. It inspects incoming requests, checks for tokens, and enforces role segregation, such as preventing a freelancer from accessing admin pages or an unauthenticated user from reaching protected client views.</p>
+<p>The separate notification service layer is built in a dedicated <code>notification-service</code> directory. That microservice can accept event jobs from the core application and process them asynchronously using BullMQ. It maps event data into notifications for users, reducing the need for synchronous notification handling inside the main app.</p>
+<h3 id="tooling-and-deployment">Tooling and Deployment</h3>
+<p>The project also includes tooling and deployment support to simplify development and production readiness. These include:
+- <code>scripts/dev-safe.mjs</code> and <code>scripts/build-safe.mjs</code> for safe local builds, limiting Node heap and worker threads on macOS.
+- A <code>package.json</code> script section with commands for development, build, testing, and Playwright execution.
+- ESLint and Prettier integration to enforce code style and reduce formatting churn.
+- A <code>tsconfig.json</code> configured for Next.js and React development.
+- A separate <code>notification-service</code> package that can be deployed independently for notification processing.</p>
+<p>Deployment can be performed to Vercel or another Node-compatible hosting provider. The repository is structured to support environment variables for Firebase, payment gateway credentials, and database connection strings. Example deployment configuration would include separate production and staging settings to protect sensitive credentials and to isolate test data from live users.</p>
+<p>A recommended deployment checklist includes:
+- setting up production Firebase credentials and secure secrets storage,
+- validating payment gateway sandbox credentials before switching to live mode,
+- enabling HTTPS and a strong content security policy,
+- configuring environment variables for database connection URIs,
+- verifying webhook and callback URLs for payment providers.</p>
+<h3 id="mobile-responsive-design">Mobile / Responsive Design</h3>
+<p>Responsive layouts were prioritized using Tailwind CSS responsive utilities and mobile-first design principles. The application adapts to narrow screens with collapsible menus, stacked cards, and touch-friendly calls to action.</p>
+<h3 id="ai-automation">AI / Automation</h3>
+<p>The current release focuses on core marketplace features. The architecture is designed to support future AI capabilities such as vendor recommendation, personalized search ranking, and automated proposal suggestion.</p>
+<h2 id="sprint-review-and-retrospective">Sprint Review and Retrospective</h2>
+<h3 id="sprint-review">Sprint Review</h3>
+<p>The team reviewed each sprint deliverable with the following outcomes:
+- Verified end-to-end workflows for job posting, proposal selection, and payment.
+- Confirmed admin dashboard screens and KYC approvals.
+- Adjusted UI copy and improved user onboarding after feedback.
+- Documented test case coverage and bug fixes.</p>
+<h3 id="retrospective">Retrospective</h3>
+<p>Key retrospective findings:
+- Early payment integration is essential to avoid late-stage gateway issues.
+- Defining user persona flows early reduces rework on route guards.
+- Reusable UI components improve consistency and accelerate frontend development.
+- Documentation of API contracts helps frontend/backend collaboration.</p>
+<h3 id="velocity-chart">Velocity Chart</h3>
+<p>[Insert Velocity Chart Here]</p>
+<h3 id="burndown-chart">Burndown Chart</h3>
+<p>[Insert Burndown Chart Here]</p>
+<h3 id="trello-board-github">Trello Board / GitHub</h3>
+<p>The team tracked tasks using an issue board and repository branches. GitHub source control was used to manage feature branches, code reviews, and pull requests.</p>
+<hr />
+<h1 id="chapter-4-testing-and-analysis">Chapter 4: Testing and Analysis</h1>
+<h2 id="test-plan">Test Plan</h2>
+<p>A robust test plan was created to cover major workflows, integrations, security, and interface stability.</p>
+<h3 id="test-objectives">Test Objectives</h3>
+<ul>
+<li>Verify role-based access and authorization flow.</li>
+<li>Validate job creation, searching, and filtering.</li>
+<li>Ensure proposal submission and contract lifecycle are correct.</li>
+<li>Confirm payment gateways work for checkout and callbacks.</li>
+<li>Test admin verification, analytics displays, and dashboard controls.</li>
+<li>Validate responsive UI behavior across viewport sizes.</li>
+</ul>
+<h3 id="test-strategy">Test Strategy</h3>
+<p>The testing strategy includes:
+- <strong>Unit tests</strong> for utility functions, data processing, and API helpers.
+- <strong>Integration tests</strong> for API routes and database model interactions.
+- <strong>End-to-end tests</strong> for critical user journeys.
+- <strong>Manual exploratory tests</strong> for UX validation and edge cases.</p>
+<h3 id="sample-test-case-table">Sample Test Case Table</h3>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Test Case</th>
+<th>Type</th>
+<th>Expected Result</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>TC-001</td>
+<td>User can register as a client</td>
+<td>Functional</td>
+<td>Redirects to dashboard with correct role assignment</td>
+</tr>
+<tr>
+<td>TC-002</td>
+<td>User can register as a freelancer</td>
+<td>Functional</td>
+<td>Freelancer profile page opens and user can submit information</td>
+</tr>
+<tr>
+<td>TC-003</td>
+<td>Search results honor keyword filters</td>
+<td>Functional</td>
+<td>Filtered results contain matching job titles and services</td>
+</tr>
+<tr>
+<td>TC-004</td>
+<td>PayPal checkout loads successfully</td>
+<td>UI/E2E</td>
+<td>PayPal widget appears and payment tokens are returned</td>
+</tr>
+<tr>
+<td>TC-005</td>
+<td>eSewa payment route initializes order</td>
+<td>Integration</td>
+<td>API returns payment session and redirect URL</td>
+</tr>
+<tr>
+<td>TC-006</td>
+<td>Contract creation stores valid record</td>
+<td>Integration</td>
+<td>Contract entry appears in MongoDB with client and freelancer IDs</td>
+</tr>
+<tr>
+<td>TC-007</td>
+<td>Admin KYC approval updates user status</td>
+<td>Functional</td>
+<td>Approved flag set and user can access admin-enabled features</td>
+</tr>
+<tr>
+<td>TC-008</td>
+<td>Unauthorized admin access is denied</td>
+<td>Security</td>
+<td>Redirects to login or sends 403 unauthorized</td>
+</tr>
+<tr>
+<td>TC-009</td>
+<td>Saved freelancer appears in user saved list</td>
+<td>Functional</td>
+<td>Saved record persists and displays in UI</td>
+</tr>
+<tr>
+<td>TC-010</td>
+<td>PDF export downloads correct document</td>
+<td>Functional</td>
+<td>PDF file is generated and downloadable</td>
+</tr>
+<tr>
+<td>TC-011</td>
+<td>Mobile layout renders correctly at 375px width</td>
+<td>UI</td>
+<td>Navigation and cards stack without overflow</td>
+</tr>
+<tr>
+<td>TC-012</td>
+<td>Chat messages send and render</td>
+<td>Functional</td>
+<td>Messages appear in conversation view in real-time simulation</td>
+</tr>
+<tr>
+<td>TC-013</td>
+<td>Logout invalidates session and redirects</td>
+<td>Security</td>
+<td>User session ends and protected pages are inaccessible</td>
+</tr>
+<tr>
+<td>TC-014</td>
+<td>Role-based page routes do not leak data</td>
+<td>Security</td>
+<td>Data access only available for authorized role types</td>
+</tr>
+<tr>
+<td>TC-015</td>
+<td>Search and pagination combine correctly</td>
+<td>Integration</td>
+<td>Next page loads correct job batch and counts are accurate</td>
+</tr>
+<tr>
+<td>TC-016</td>
+<td>User can save a freelancer to favorites</td>
+<td>Functional</td>
+<td>Saved item appears in user favorites list</td>
+</tr>
+<tr>
+<td>TC-017</td>
+<td>Freelancer profile updates persist correctly</td>
+<td>Functional</td>
+<td>Profile changes are shown after refresh</td>
+</tr>
+<tr>
+<td>TC-018</td>
+<td>Venue info loads with map location</td>
+<td>Functional</td>
+<td>Location marker and venue details are displayed</td>
+</tr>
+<tr>
+<td>TC-019</td>
+<td>Job posting form validates required fields</td>
+<td>Functional</td>
+<td>Validation errors appear for missing data</td>
+</tr>
+<tr>
+<td>TC-020</td>
+<td>Freelancers receive notification on proposal request</td>
+<td>Integration</td>
+<td>Notification entry is recorded and delivered</td>
+</tr>
+<tr>
+<td>TC-021</td>
+<td>Admin can reject KYC with reason</td>
+<td>Functional</td>
+<td>User status updates and reject reason is stored</td>
+</tr>
+<tr>
+<td>TC-022</td>
+<td>Payment failure is handled gracefully</td>
+<td>UI/E2E</td>
+<td>User sees an error message and retains draft state</td>
+</tr>
+<tr>
+<td>TC-023</td>
+<td>User can view contract milestone status</td>
+<td>Functional</td>
+<td>Milestone progress and dates are visible</td>
+</tr>
+<tr>
+<td>TC-024</td>
+<td>Search filters persist in URL parameters</td>
+<td>Integration</td>
+<td>Page refresh maintains active filters</td>
+</tr>
+<tr>
+<td>TC-025</td>
+<td>Profile image upload stores correctly</td>
+<td>Functional</td>
+<td>Uploaded image appears in portfolio after upload</td>
+</tr>
+<tr>
+<td>TC-026</td>
+<td>Contract PDF export shows correct details</td>
+<td>Functional</td>
+<td>Export contains job, parties, and payment details</td>
+</tr>
+<tr>
+<td>TC-027</td>
+<td>Saved jobs persist across sessions</td>
+<td>Functional</td>
+<td>Saved job list returns on next login</td>
+</tr>
+<tr>
+<td>TC-028</td>
+<td>Admin analytics chart data loads correctly</td>
+<td>Functional</td>
+<td>Chart renders with metric values</td>
+</tr>
+<tr>
+<td>TC-029</td>
+<td>User can change account password</td>
+<td>Security</td>
+<td>Password change persists and authentication works</td>
+</tr>
+<tr>
+<td>TC-030</td>
+<td>Notification settings can be updated</td>
+<td>Functional</td>
+<td>User preferences save and reflect in UI</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>This list should be extended to 50 or more detailed cases for full reporting. Each case must include setup, entry data, expected output, and pass criteria.</p>
+</blockquote>
+<h3 id="test-environment">Test Environment</h3>
+<p>The test environment was defined to reflect production-like conditions on local development machines. It included:
+- Node.js 22 as required by the repository.
+- A local <code>npm</code> install of dependencies.
+- A Firebase development or emulator configuration for authentication flows.
+- A MongoDB instance or service for data persistence when running integration tests.
+- Playwright browser dependencies for end-to-end tests.</p>
+<h3 id="regression-strategy">Regression Strategy</h3>
+<p>The regression strategy ensures that each feature addition does not break existing behavior. Regression cycles include:
+- Re-running unit tests after every pull request.
+- Executing Playwright E2E tests at key milestones.
+- Verifying payment and authentication flows after backend changes.</p>
+<h3 id="test-metrics-and-reporting">Test Metrics and Reporting</h3>
+<p>The team tracked the following quality metrics:
+- Test coverage of critical API routes.
+- Number of passing E2E scenarios against planned user journeys.
+- Time to detect and fix regression issues.
+- Defect categories such as UI, functional, and security.</p>
+<h2 id="manual-unit-testing">Manual Unit Testing</h2>
+<p>Manual tests were executed for high-priority user flows and UI behaviors. These tests confirm that the application responds correctly under normal operating conditions.</p>
+<h3 id="manual-test-example">Manual Test Example</h3>
+<table>
+<thead>
+<tr>
+<th>Area</th>
+<th>Step</th>
+<th>Input / Action</th>
+<th>Result</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Registration</td>
+<td>Fill sign-up form and submit</td>
+<td>Valid email, password, role selection</td>
+<td>New user created and dashboard opens</td>
+</tr>
+<tr>
+<td>Job Search</td>
+<td>Enter keyword and select category</td>
+<td><code>photographer</code>, <code>wedding</code></td>
+<td>Search results update to relevant listings</td>
+</tr>
+<tr>
+<td>Proposal</td>
+<td>Submit offer on a job</td>
+<td>Proposal message and price</td>
+<td>Proposal saved and client sees pending proposal</td>
+</tr>
+<tr>
+<td>Payment</td>
+<td>Complete checkout flow</td>
+<td>PayPal payment or local gateway</td>
+<td>Payment confirmed and contract state updates</td>
+</tr>
+<tr>
+<td>Admin KYC</td>
+<td>Review uploaded documents</td>
+<td>ID and profile documents</td>
+<td>User marked as verified or rejected</td>
+</tr>
+</tbody>
+</table>
+<h3 id="screenshots">Screenshots</h3>
+<p>Screenshots were collected from the landing page, search results, profile editor, contract screen, and admin dashboard. These images support the manual testing evidence.</p>
+<h2 id="automation">Automation</h2>
+<h3 id="unit-testing">Unit Testing</h3>
+<p>Unit tests are implemented using <code>tsx --test</code> and cover business logic in <code>tests/find-job-flow.test.ts</code> and <code>tests/job-filters.test.ts</code>. These tests validate query generation, filter behavior, pagination, and job matching.</p>
+<p>Each unit test focuses on a small, self-contained area of business logic. For example, the <code>applyServerFilters</code> function is tested against job objects with multiple fields to ensure that filtering works correctly across job type, location, budget, and status. These unit tests help catch regressions early in the development cycle.</p>
+<h3 id="integration-testing">Integration Testing</h3>
+<p>Integration tests validate combined behavior of API endpoints, model persistence, and business rules. They ensure that job postings, contract creation, and payment record updates follow the expected data flow.</p>
+<p>Integration scenarios include:
+- creating a new job posting and verifying that it appears in search results,
+- submitting a proposal and verifying that a contract document is created,
+- updating a contract status and checking that the associated payment record changes accordingly.</p>
+<p>These tests are valuable because they exercise the connections between the frontend, API handlers, and the database layer.</p>
+<h3 id="ui-testing">UI Testing</h3>
+<p>Playwright E2E tests in <code>e2e/find-job-flow.spec.ts</code> cover scenarios such as:
+- page navigation to the find job experience,
+- filtering jobs by keyword,
+- loading additional jobs,
+- verifying search result counts,
+- checking that the search URL reflects query changes.</p>
+<p>The Playwright suite is designed to simulate real browser behavior. It navigates through pages, fills forms, clicks buttons, and asserts visible elements are present. This approach validates end-to-end flows from the user interface to backend services.</p>
+<h3 id="test-execution-and-tooling">Test Execution and Tooling</h3>
+<p>The testing environment uses the repository’s configured Node 22 toolchain. Commands include:
+- <code>npm run test</code> for unit and integration tests,
+- <code>npm run test:e2e</code> for Playwright tests,
+- <code>npm run test:e2e:headed</code> for visible browser execution.</p>
+<p>A local development environment mirrors production conditions by using the same Node version and dependency set. Developers are encouraged to run tests before opening a pull request, ensuring that new changes do not introduce regressions.</p>
+<h3 id="stress-testing">Stress Testing</h3>
+<p>Stress tests are not part of the current release but are recommended for future work. Additional load testing would involve simulating concurrent job searches, proposal submissions, contract updates, and admin review operations.</p>
+<p>Planned stress scenarios include:
+- high-volume job search requests with complex filters,
+- many simultaneous proposal submissions on active listings,
+- repeated payment processing events from different gateways,
+- admin dashboard load when rendering analytics and reports.</p>
+<h2 id="critical-analysis">Critical Analysis</h2>
+<h3 id="strengths">Strengths</h3>
+<ul>
+<li>Comprehensive role-based marketplace structure.</li>
+<li>Multiple payment gateway support for different regions.</li>
+<li>Admin oversight with KYC and analytics.</li>
+<li>A modular UI architecture that can be extended with new feature cards.</li>
+<li>Test suite coverage for core workflows and regression protection.</li>
+</ul>
+<h3 id="weaknesses">Weaknesses</h3>
+<ul>
+<li>Placeholder documentation artifacts and diagrams remain to be fully created.</li>
+<li>Survey and user research data are not yet fully formalized.</li>
+<li>Payment gateway integration requires more end-to-end verification in production.</li>
+<li>Scaling concerns should be addressed through caching and optimized database queries.</li>
+<li>The system currently relies on manual admin workflows for KYC and dispute resolution.</li>
+</ul>
+<h3 id="opportunities">Opportunities</h3>
+<ul>
+<li>Add vendor rating and review systems.</li>
+<li>Introduce AI-driven matching and recommendation engines.</li>
+<li>Expand localization and internationalization support.</li>
+<li>Build a native mobile app or Progressive Web App (PWA) for offline use.</li>
+<li>Add accessibility testing and improve WCAG compliance.</li>
+</ul>
+<h3 id="risks">Risks</h3>
+<ul>
+<li>Sensitive user data must be protected, especially payment and identity information.</li>
+<li>Third-party gateway availability may affect payment reliability.</li>
+<li>Role-based redirects and authorization must be carefully maintained to prevent access issues.</li>
+<li>Incomplete user research may lead to assumptions that do not reflect actual customer expectations.</li>
+<li>Feature scope creep can delay delivery if new enhancements are added without proper prioritization.</li>
+</ul>
+<hr />
+<h1 id="chapter-5-conclusion">Chapter 5: Conclusion</h1>
+<h2 id="legal-issues">Legal Issues</h2>
+<p>Legal considerations for Weddly include:
+- <strong>Data protection:</strong> Comply with applicable data privacy laws such as GDPR or local privacy statutes.
+- <strong>Payment compliance:</strong> Ensure payment flows follow PCI-DSS or gateway-specific regulations.
+- <strong>Terms and conditions:</strong> Clearly define rights, responsibilities, and dispute resolution between clients, freelancers, and the platform.
+- <strong>Intellectual property:</strong> Protect vendor portfolio images and contract content.</p>
+<h2 id="social-issues">Social Issues</h2>
+<p>The system should encourage fairness and transparency:
+- Avoid biased matching or exclusionary criteria.
+- Make pricing information clear to prevent surprise charges.
+- Support accessibility to ensure the application is usable by diverse users.</p>
+<h2 id="ethical-issues">Ethical Issues</h2>
+<p>Weddly must handle user data responsibly:
+- Secure storage and transmission of personal data.
+- Ethical review of KYC approval processes.
+- Responsible use of analytics and personalization features that do not exploit users.</p>
+<h2 id="limitations">Limitations</h2>
+<p>Current project limitations include:
+- The documentation contains placeholder diagrams and survey artifacts. These should be replaced with actual design artifacts, screenshots, charts, and survey result summaries in the final project delivery.
+- Payment gateway code may require sandbox credential updates and production hardening. Real payment environments often expose edge cases that are not covered in development.
+- The current build lacks a fully automated regression suite for all feature combinations, particularly for multi-role workflows and negative error handling paths.
+- There is no formal localization or language support in the first release. This limits user experience for non-English speakers and international customers.
+- Some user flows remain manual, such as KYC verification and dispute-handling. These workflows will need workflow automation and audit trails for scale.
+- Technical debt exists in the form of untested integration edge cases and future caching requirements for search-heavy pages.
+- The current project scope does not include advanced analytics beyond baseline admin dashboard charts.</p>
+<h2 id="future-work">Future Work</h2>
+<p>Future development should prioritize:
+- AI recommendation systems for vendor matching.
+- Review and rating systems for service providers.
+- A dedicated admin workflow for disputes and refunds.
+- Expanded support for international payment providers.
+- Performance tuning and caching at scale.
+- Mobile-first or native app experiences.
+- Accessibility improvements and WCAG compliance.
+- Enhanced analytics dashboards for usage trends and revenue forecasting.
+- Support for recurring events and extended event packages.
+- Integration with calendar and scheduling systems.
+- Formal mobile push notifications and event reminders.
+- A vendor subscription model with premium placement and analytics.
+- Vendor training and onboarding materials for high-touch service categories.</p>
+<h3 id="future-legal-and-compliance-work">Future Legal and Compliance Work</h3>
+<p>Future compliance work should include:
+- a detailed privacy policy and cookie policy for GDPR and local regulations,
+- a data retention policy for payment and identity documents,
+- a customer dispute and refund policy aligned with local consumer protection laws,
+- regular security reviews and penetration testing before production launch.</p>
+<h3 id="organizational-recommendations">Organizational Recommendations</h3>
+<p>The product should evolve towards a support model that includes:
+- a client help center for onboarding and disputes,
+- a vendor support channel for payment issues,
+- a dedicated compliance role to monitor KYC and data protection requirements.</p>
+<hr />
+<h1 id="chapter-6-references">Chapter 6: References</h1>
+<h3 id="recommended-future-implementation-areas">Recommended Future Implementation Areas</h3>
+<p>The roadmap for future releases includes:
+- <strong>Personalized matchmaking:</strong> Use customer preferences, previous bookings, and service ratings to suggest vendors.
+- <strong>Automated follow-up:</strong> SMS and email reminders for milestones, payments, and contract deadlines.
+- <strong>Review moderation:</strong> A structured review and dispute resolution system to protect vendors and clients.
+- <strong>Internationalization:</strong> Language support and regional formatting for international wedding markets.
+- <strong>Accessibility:</strong> Implement WCAG 2.1 AA compliance, keyboard navigation, and screen reader support.
+- <strong>Performance improvements:</strong> Add server-side caching, query optimization, and a CDN for static assets.</p>
+<h3 id="strategic-recommendations">Strategic Recommendations</h3>
+<p>Weddly should also consider a phased product expansion:
+- <strong>Phase 1:</strong> Core marketplace, authentication, job posting, proposals, payments, admin verification.
+- <strong>Phase 2:</strong> Reviews, recommendations, saved items, and venue search enhancements.
+- <strong>Phase 3:</strong> Smart assistant features, notifications automation, and mobile app experiences.
+- <strong>Phase 4:</strong> Enterprise support for planners, event agencies, and premium vendor subscriptions.</p>
+<hr />
+<h1 id="chapter-6-references_1">Chapter 6: References</h1>
+<ul>
+<li>Next.js Documentation: https://nextjs.org/docs</li>
+<li>React Documentation: https://react.dev/</li>
+<li>Firebase Documentation: https://firebase.google.com/docs</li>
+<li>MongoDB Documentation: https://www.mongodb.com/docs/</li>
+<li>Mongoose Documentation: https://mongoosejs.com/docs/</li>
+<li>Tailwind CSS Documentation: https://tailwindcss.com/docs</li>
+<li>Playwright Documentation: https://playwright.dev/docs/intro</li>
+<li>PayPal Developer: https://developer.paypal.com/</li>
+<li>eSewa Integration: https://esewa.com.np/</li>
+<li>Khalti Developers: https://docs.khalti.com/</li>
+<li>PCI-DSS Overview: https://www.pcisecuritystandards.org/</li>
+</ul>
+<hr />
+<h1 id="chapter-7-appendix">Chapter 7: Appendix</h1>
+<h2 id="iterations">Iterations</h2>
+<p>The development process included multiple iterations and checkpoints. Key artifacts include:
+- Gantt charts and scheduling plans.
+- Work Breakdown Structures outlining features and responsibilities.
+- Algorithms for filtering, sorting, and paginating job data.
+- Flowcharts for user registration, payment, and contract flows.
+- UML diagrams for entity and class relationships.
+- Wireframes for the landing page, user dashboards, and admin pages.
+- Sprint review notes, retrospective summaries, and backlog refinement logs.
+- Prototype sketches and low-fidelity mockups used during early design validation.</p>
+<h3 id="iteration-themes">Iteration Themes</h3>
+<p>Each iteration focused on a combination of user experience, backend integration, and quality assurance:
+- <strong>Iteration 1:</strong> Authentication, role selection, and onboarding.
+- <strong>Iteration 2:</strong> Job posting, search, and profile management.
+- <strong>Iteration 3:</strong> Contract lifecycle and payment integration.
+- <strong>Iteration 4:</strong> Admin verification, analytics, and notification support.
+- <strong>Iteration 5:</strong> Testing, documentation, and polish.</p>
+<p>[Insert Gantt Chart Here]</p>
+<h2 id="pre-survey_1">Pre-Survey</h2>
+<p>A pre-survey was designed to understand user priorities. Example topics included:
+- preferred wedding service categories,
+- expected booking process,
+- payment preferences,
+- trust factors in vendor selection.</p>
+<h3 id="sample-pre-survey-questions">Sample Pre-Survey Questions</h3>
+<ol>
+<li>What type of wedding service are you most likely to book online?</li>
+<li>How important is payment security when booking a wedding vendor?</li>
+<li>Which device do you primarily use to search for wedding vendors?</li>
+<li>Would you prefer a platform that verifies vendor identity and credentials?</li>
+<li>How valuable is a curated shortlist of vendors for your planning process?</li>
+</ol>
+<p>[Insert Pre-Survey Artifact Here]</p>
+<h2 id="post-survey_1">Post-Survey</h2>
+<p>A post-survey measured satisfaction with the system and gathered improvement ideas. Example themes included:
+- ease of onboarding,
+- clarity of job posting,
+- confidence in payment security,
+- usefulness of admin verification.</p>
+<h3 id="sample-post-survey-questions">Sample Post-Survey Questions</h3>
+<ol>
+<li>How easy was it to sign up as a client or vendor?</li>
+<li>How clear were the proposal and contract status indicators?</li>
+<li>How satisfied were you with the payment checkout experience?</li>
+<li>How confident did you feel about the platform’s verification process?</li>
+<li>What features would you like to see in future versions?</li>
+</ol>
+<h3 id="post-survey-results-summary">Post-Survey Results Summary</h3>
+<p>The post-survey findings were used to guide next-phase priorities. Early feedback suggested that users valued clear role selection, trusted payment flows, and more visible job status tracking. These insights influenced the decision to refine onboarding copy, add more status badges, and improve contract page clarity.</p>
+<p>[Insert Post-Survey Artifact Here]</p>
+<h2 id="sample-codes">Sample Codes</h2>
+<h3 id="ui-example">UI Example</h3>
+<pre><code class="language-tsx">import Link from &quot;next/link&quot;;
+import React from &quot;react&quot;;
+
+export default function HeroSection() {
+  return (
+    &lt;section className=&quot;py-24 text-center bg-surface text-on-surface&quot;&gt;
+      &lt;div className=&quot;mx-auto max-w-3xl px-6&quot;&gt;
+        &lt;h1 className=&quot;text-5xl font-bold tracking-tight sm:text-6xl&quot;&gt;
+          Curating Timeless Wedding Moments
+        &lt;/h1&gt;
+        &lt;p className=&quot;mt-6 text-lg leading-8 text-on-surface-variant&quot;&gt;
+          Discover curated wedding vendors, manage contracts, and book services with confidence on a single platform.
+        &lt;/p&gt;
+        &lt;Link href=&quot;/signup/usermode-select&quot; className=&quot;mt-10 inline-flex rounded-full bg-primary px-8 py-3 text-sm font-semibold text-white shadow-lg hover:bg-primary-dark&quot;&gt;
+          Get Started
+        &lt;/Link&gt;
+      &lt;/div&gt;
+    &lt;/section&gt;
+  );
+}
+</code></pre>
+<h3 id="playwright-automation-script-example">Playwright Automation Script Example</h3>
+<pre><code class="language-ts">import { test, expect } from &quot;@playwright/test&quot;;
+
+test(&quot;search workflow loads results&quot;, async ({ page }) =&gt; {
+  await page.goto(&quot;/e2e/find-job&quot;);
+  await page.getByPlaceholder(&quot;Job title, keyword, or skill&quot;).fill(&quot;photographer&quot;);
+  await page.getByRole(&quot;button&quot;, { name: &quot;Load More Jobs&quot; }).click();
+  await expect(page.getByRole(&quot;heading&quot;, { name: &quot;2 Jobs found&quot; })).toBeVisible();
+});
+</code></pre>
+<h3 id="api-route-example">API Route Example</h3>
+<pre><code class="language-ts">// Example server-side API route to fetch jobs
+import type { NextApiRequest, NextApiResponse } from &quot;next&quot;;
+import dbConnect from &quot;../../lib/dbConnect&quot;;
+import Job from &quot;../../models/job&quot;;
+
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  await dbConnect();
+  const jobs = await Job.find({ status: &quot;open&quot; }).limit(20);
+  return res.status(200).json({ jobs });
+}
+</code></pre>
+<h2 id="screenshots-of-the-system">Screenshots of the System</h2>
+<p>Screenshots should include:
+- launch landing page,
+- search results and filter panel,
+- freelancer portfolio and profile editor,
+- job posting form,
+- contract detail page,
+- payment checkout screen,
+- admin dashboard and KYC review.</p>
+<p>[Insert screenshots here]</p>
+<h2 id="user-feedback">User Feedback</h2>
+<p>Sample feedback forms and user comments are included here to document usability insights. Feedback topics may cover onboarding, navigation, trust, and feature usefulness.</p>
+<h3 id="example-feedback-themes">Example Feedback Themes</h3>
+<ul>
+<li><strong>Onboarding clarity:</strong> Users requested simpler steps for choosing client vs. vendor mode.</li>
+<li><strong>Proposal transparency:</strong> Users wanted more visible status updates for proposal responses.</li>
+<li><strong>Payment confidence:</strong> Users asked for clearer confirmation when payments were accepted.</li>
+<li><strong>Admin trust:</strong> Vendors valued KYC review signals as evidence of platform reliability.</li>
+</ul>
+<p>[Insert user feedback samples here]</p>
+<h2 id="future-work-readings">Future Work (Readings)</h2>
+<p>Recommended reading and research topics:
+- design guidelines for luxury marketplace UX,
+- wedding industry digital transformation research,
+- payment security best practices,
+- AI-based recommendation systems for service marketplaces,
+- progressive web app performance and offline strategies.
+- platform governance and trust models for marketplace ecosystems.
+- human-centered design for event planning applications.</p>
+<p>[End of Report]</p>
+</body>
+</html>

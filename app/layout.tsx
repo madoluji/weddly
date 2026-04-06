@@ -2,12 +2,16 @@ import "./ui/globals.css";
 import { montserrat, playfairDisplay, inter, notoSerif } from "./ui/fonts";
 import AuthProvider from "./providers";
 import Appcontextprovider from "./context/appContext";
+import { getServerSession } from "next-auth";
+import { authOptions } from "./lib/auth";
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const session = await getServerSession(authOptions);
+
   return (
     <html
       lang="en"
@@ -29,10 +33,9 @@ export default function RootLayout({
       </head>
       <body>
         <div className="min-h-screen">
-          <AuthProvider>
+          <AuthProvider session={session}>
             <Appcontextprovider>{children}</Appcontextprovider>
           </AuthProvider>
-
         </div>
       </body>
     </html>

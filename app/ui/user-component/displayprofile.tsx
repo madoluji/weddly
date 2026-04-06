@@ -1,12 +1,12 @@
 "use client";
 
 import { fetchWithAuth } from "@/app/lib/fetchWIthAuth";
-import { useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
 import SafeImage from "@/app/ui/shared/SafeImage";
+import { useAuth } from "@/app/providers";
 
 export default function DisplayProfile() {
-  const { data: session } = useSession();
+  const { session } = useAuth();
   const [userData, setUserData] = useState<any>(null);
   const [freelancerData, setFreelancerData] = useState<any>(null);
   const [activeTab, setActiveTab] = useState("personal");
@@ -30,7 +30,7 @@ export default function DisplayProfile() {
       };
       fetchUserData();
     }
-  }, [session]);
+  }, [session?.user?.id]);
 
   // Fetch freelancer data
   useEffect(() => {
@@ -48,7 +48,7 @@ export default function DisplayProfile() {
       };
       fetchFreelancerData();
     }
-  }, [session]);
+  }, [session?.user?.id]);
 
   // Get user initials for avatar fallback
   const getInitials = () => {

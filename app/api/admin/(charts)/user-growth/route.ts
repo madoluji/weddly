@@ -42,27 +42,30 @@ export async function GET(
             dateFormatter = (d: any) => monthNames[d._id - 1]; // Convert month index
         }
 
-        // Aggregate user growth from Users collection
-        const userGrowth = await User.aggregate([
-            { $group: { _id: groupBy, totalUsers: { $sum: 1 } } },
-            { $sort: { "_id": 1 } }
+        const [
+            userGrowth,
+            freelancerGrowth,
+            clientGrowth,
+            totalUsers,
+            totalFreelancers,
+            totalClients,
+        ] = await Promise.all([
+            User.aggregate([
+                { $group: { _id: groupBy, totalUsers: { $sum: 1 } } },
+                { $sort: { "_id": 1 } }
+            ]),
+            FreelancerInfo.aggregate([
+                { $group: { _id: groupBy, freelancers: { $sum: 1 } } },
+                { $sort: { "_id": 1 } }
+            ]),
+            ClientInfo.aggregate([
+                { $group: { _id: groupBy, clients: { $sum: 1 } } },
+                { $sort: { "_id": 1 } }
+            ]),
+            User.countDocuments(),
+            FreelancerInfo.countDocuments(),
+            ClientInfo.countDocuments(),
         ]);
-
-        // Aggregate freelancer growth
-        const freelancerGrowth = await FreelancerInfo.aggregate([
-            { $group: { _id: groupBy, freelancers: { $sum: 1 } } },
-            { $sort: { "_id": 1 } }
-        ]);
-
-        // Aggregate client growth
-        const clientGrowth = await ClientInfo.aggregate([
-            { $group: { _id: groupBy, clients: { $sum: 1 } } },
-            { $sort: { "_id": 1 } }
-        ]);
-
-        const totalUsers = await User.countDocuments();
-        const totalFreelancers = await FreelancerInfo.countDocuments();
-        const totalClients = await ClientInfo.countDocuments();
 
         // Merge user, freelancer, and client growth data
         const mergedData = userGrowth.map(userData => {

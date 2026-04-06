@@ -46,5 +46,7 @@ const ContractSchema: Schema = new Schema(
 );
 
 ContractSchema.index({ jobId: 1, freelancerId: 1 }, { unique: true });
+ContractSchema.index({ clientId: 1, status: 1, createdAt: -1 });
+ContractSchema.index({ freelancerId: 1, status: 1, createdAt: -1 });
 
 export default mongoose.models.Contract || mongoose.model<IContract>("Contract", ContractSchema);

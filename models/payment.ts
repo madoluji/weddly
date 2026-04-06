@@ -1,4 +1,3 @@
-import { Transaction } from "firebase/firestore";
 import mongoose, { Schema, Document, Model } from "mongoose";
 
 export interface IPayment extends Document {
@@ -38,12 +37,13 @@ const PaymentSchema: Schema = new Schema(
     { timestamps: { createdAt: true, updatedAt: false } }
 );
 
-// Create indexes to optimize queries
+// Create indexes to optimize query patterns for billing dashboards and payment history.
 PaymentSchema.index({ jobId: 1, contractId: 1 });
-PaymentSchema.index({ clientId: 1 });
-PaymentSchema.index({ freelancerId: 1 });
+PaymentSchema.index({ clientId: 1, createdAt: -1 });
+PaymentSchema.index({ freelancerId: 1, createdAt: -1 });
+PaymentSchema.index({ clientId: 1, status: 1, createdAt: -1 });
+PaymentSchema.index({ freelancerId: 1, status: 1, createdAt: -1 });
 PaymentSchema.index({ transactionId: 1 }, { unique: true });
-PaymentSchema.index({ createdAt: 1 })
 
 const Payment: Model<IPayment> = mongoose.models.Payment || mongoose.model<IPayment>("Payment", PaymentSchema);
 export default Payment;

@@ -44,36 +44,33 @@ export async function GET(
             dateFormatter = (d: any) => monthNames[d._id - 1]; // Convert month index
         }
 
-        // Aggregate total KYC submissions (grouped by createdAt)
-        const submittedKYC = await KYC.aggregate([
-            { $group: { _id: groupByCreatedAt, submittedKYC: { $sum: 1 } } },
-            { $sort: { "_id": 1 } }
+        const [
+            submittedKYC,
+            rejectedKYC,
+            approvedKYC,
+            count,
+            rejectedCount,
+            approvedCount,
+        ] = await Promise.all([
+            KYC.aggregate([
+                { $group: { _id: groupByCreatedAt, submittedKYC: { $sum: 1 } } },
+                { $sort: { "_id": 1 } }
+            ]),
+            KYC.aggregate([
+                { $match: { status: "rejected" } },
+                { $group: { _id: groupByUpdatedAt, totalRejected: { $sum: 1 } } },
+                { $sort: { "_id": 1 } }
+            ]),
+            KYC.aggregate([
+                { $match: { status: "approved" } },
+                { $group: { _id: groupByUpdatedAt, totalApproved: { $sum: 1 } } },
+                { $sort: { "_id": 1 } }
+            ]),
+            KYC.countDocuments(),
+            KYC.countDocuments({ status: "rejected" }),
+            KYC.countDocuments({ status: "approved" }),
         ]);
 
-        // Aggregate rejected KYC (grouped by updatedAt)
-        const rejectedKYC = await KYC.aggregate([
-            { $match: { status: "rejected" } },
-            { $group: { _id: groupByUpdatedAt, totalRejected: { $sum: 1 } } },
-            { $sort: { "_id": 1 } }
-        ]);
-
-        // Aggregate approved KYC (grouped by updatedAt)
-        const approvedKYC = await KYC.aggregate([
-            { $match: { status: "approved" } },
-            { $group: { _id: groupByUpdatedAt, totalApproved: { $sum: 1 } } },
-            { $sort: { "_id": 1 } }
-        ]);
-
-        // Merge all data based on date
-        const allDates = new Set([
-            ...submittedKYC.map(d => d._id),
-            ...rejectedKYC.map(d => d._id),
-            ...approvedKYC.map(d => d._id)
-        ]);
-
-        const count = await KYC.countDocuments();
-        const rejectedCount = await KYC.countDocuments({ status: "rejected" });
-        const approvedCount = await KYC.countDocuments({ status: "approved" });
         const pendingCount = count - (rejectedCount + approvedCount);
 
         const mergedData = Array.from(allDates).sort().map(date => {

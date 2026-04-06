@@ -11,16 +11,25 @@ export async function GET() {
   try {
     await connectMongoDB();
 
-    const totalUsers = await User.countDocuments();
-    const freelancers = await User.countDocuments({ "roles.freelancer": true });
-    const clients = await User.countDocuments({ "roles.client": true });
-    const venues = await User.countDocuments({ "roles.venue": true });
-    const totalKyc = await KYC.countDocuments();
-    const approvedKyc = await KYC.countDocuments({ status: 'approved' });
-    const pendingKyc = await KYC.countDocuments({ status: 'pending' });
-    const rejectedKyc = await KYC.countDocuments({ status: 'rejected' });
-
-
+    const [
+      totalUsers,
+      freelancers,
+      clients,
+      venues,
+      totalKyc,
+      approvedKyc,
+      pendingKyc,
+      rejectedKyc,
+    ] = await Promise.all([
+      User.countDocuments(),
+      User.countDocuments({ "roles.freelancer": true }),
+      User.countDocuments({ "roles.client": true }),
+      User.countDocuments({ "roles.venue": true }),
+      KYC.countDocuments(),
+      KYC.countDocuments({ status: 'approved' }),
+      KYC.countDocuments({ status: 'pending' }),
+      KYC.countDocuments({ status: 'rejected' }),
+    ]);
 
     return NextResponse.json({ totalUsers, freelancers, clients, venues, totalKyc, approvedKyc, pendingKyc, rejectedKyc });
   } catch (error) {

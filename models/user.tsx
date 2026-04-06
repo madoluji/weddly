@@ -4,6 +4,7 @@ import mongoose, { Document, Model, Schema } from "mongoose";
 interface IUser extends Document {
   name: string;
   lastName: string;
+  fullName?: string;
   email: string;
   password: string;
   roles: {
@@ -39,6 +40,9 @@ const userSchema = new Schema<IUser>(
     email: {
       type: String,
       required: true,
+      unique: true,
+      lowercase: true,
+      trim: true,
     },
     password: {
       type: String,
@@ -74,6 +78,21 @@ const userSchema = new Schema<IUser>(
     phone: {
       type: String,
       required: false,
+      validate: {
+        validator: function (value: string): boolean {
+          if (!value || value.trim().length === 0) {
+            return true;
+          }
+
+          // Nepal phone format:
+          // local mobile: 9XXXXXXXXX
+          // international: +9779XXXXXXXXX
+          const normalized = value.replace(/[\s-]/g, "");
+          return /^(?:\+977)?9\d{9}$/.test(normalized);
+        },
+        message:
+          "Phone number must be a valid Nepal number (9XXXXXXXXX or +9779XXXXXXXXX).",
+      },
     },
     dob: {
       type: String,
@@ -100,8 +119,18 @@ const userSchema = new Schema<IUser>(
     },
   },
 
-  { timestamps: true }
+  {
+    timestamps: true,
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true },
+  }
 );
+
+userSchema.virtual("fullName").get(function (this: IUser) {
+  const first = this.name?.trim() || "";
+  const last = this.lastName?.trim() || "";
+  return `${first} ${last}`.trim();
+});
 
 // Create the model type with generics.
 const User: Model<IUser> =

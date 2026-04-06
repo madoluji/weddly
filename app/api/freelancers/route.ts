@@ -30,16 +30,17 @@ export async function GET(req: NextRequest) {
       // Fetch individual freelancer data by userId
       const freelancer = await FreelancerInfo.findOne({ userId: individualUserId });
       if (freelancer) {
-        // Check if the freelancer profile is saved by the current user
-        const Saved = await SavedFreelancers.exists({ userId: userId, freelancerId: freelancer._id });
-
-        const user = await User.findOne({ _id: freelancer.userId });
+        // Check if the freelancer profile is saved by the current user and fetch the user profile in parallel.
+        const [Saved, user] = await Promise.all([
+          SavedFreelancers.exists({ userId: userId, freelancerId: freelancer._id }),
+          User.findOne({ _id: freelancer.userId }),
+        ]);
 
         if (isSaved) {
           const freelancerWithDetails = {
             freelancerId: freelancer._id, // Include freelancer ID
             ...freelancer.toObject(),    // Include freelancer details
-            saved: Saved ? true : false, // Set saved flag based on whether it's saved
+            saved: Boolean(Saved), // Set saved flag based on whether it's saved
             profilePicture: user?.profilePicture || "/images/image.png", // Include profile picture
           };
           return NextResponse.json({ freelancer: freelancerWithDetails });
@@ -104,22 +105,33 @@ export async function GET(req: NextRequest) {
       });
     }
 
-    // Fetch saved freelancer IDs for the current user
-    const savedFreelancerRecords = await SavedFreelancers.find({ userId });
-    const savedFreelancerIds = savedFreelancerRecords.map((record) => record.freelancerId.toString());
-
-    // Add 'saved' field and 'profilePicture' to each freelancer and include freelancerId
-    const freelancersWithSavedFlag = await Promise.all(
-      freelancers.map(async (freelancer) => {
-        const user = await User.findOne({ _id: freelancer.userId });
-        return {
-          freelancerId: freelancer._id, // Include freelancer ID
-          ...freelancer._doc,          // Include freelancer details
-          saved: savedFreelancerIds.includes(freelancer.userId.toString()), // Check if saved
-          profilePicture: user?.profilePicture || "/images/image.png", // Include profile picture
-        };
-      })
+    const freelancerUserIds = Array.from(
+      new Set(freelancers.map((freelancer) => freelancer.userId.toString()))
     );
+
+    const [savedFreelancerRecords, users] = await Promise.all([
+      SavedFreelancers.find({ userId }).select("freelancerId").lean(),
+      User.find({ _id: { $in: freelancerUserIds } })
+        .select("_id profilePicture")
+        .lean(),
+    ]);
+
+    const savedFreelancerIds = new Set(
+      savedFreelancerRecords.map((record) => record.freelancerId.toString())
+    );
+
+    const profilePictureByUserId = new Map<string, string | null>();
+    for (const user of users) {
+      profilePictureByUserId.set(user._id.toString(), user.profilePicture || null);
+    }
+
+    const freelancersWithSavedFlag = freelancers.map((freelancer) => ({
+      freelancerId: freelancer._id, // Include freelancer ID
+      ...freelancer._doc,          // Include freelancer details
+      saved: savedFreelancerIds.has(freelancer.userId.toString()), // Check if saved
+      profilePicture:
+        profilePictureByUserId.get(freelancer.userId.toString()) || "/images/image.png", // Include profile picture
+    }));
 
 
 

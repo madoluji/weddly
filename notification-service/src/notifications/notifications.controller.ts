@@ -3,23 +3,21 @@ import {
   Body,
   Controller,
   Get,
-  Headers,
   Param,
   Patch,
   Post,
   Query,
+  UseGuards,
 } from "@nestjs/common";
-import { ConfigService } from "@nestjs/config";
 import { CreateNotificationDto } from "./dto/create-notification.dto";
 import { NotificationEventDto } from "./dto/notification-event.dto";
 import { NotificationsService } from "./notifications.service";
+import { JwtAuthGuard } from "../common/guards/jwt-auth.guard";
 
+@UseGuards(JwtAuthGuard)
 @Controller("notifications")
 export class NotificationsController {
-  constructor(
-    private readonly notificationsService: NotificationsService,
-    private readonly configService: ConfigService,
-  ) {}
+  constructor(private readonly notificationsService: NotificationsService) {}
 
   @Post()
   async createNotification(@Body() dto: CreateNotificationDto) {
@@ -27,16 +25,7 @@ export class NotificationsController {
   }
 
   @Post("events")
-  async ingestEvent(
-    @Body() dto: NotificationEventDto,
-    @Headers("x-service-token") serviceToken: string,
-  ) {
-    const expectedToken = this.configService.get<string>("SERVICE_TOKEN");
-
-    if (!expectedToken || serviceToken !== expectedToken) {
-      throw new BadRequestException("Invalid service token");
-    }
-
+  async ingestEvent(@Body() dto: NotificationEventDto) {
     const job = await this.notificationsService.enqueueEvent({
       eventType: dto.eventType,
       userId: dto.userId,

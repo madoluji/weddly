@@ -2,6 +2,8 @@ import { Module } from "@nestjs/common";
 import { BullModule } from "@nestjs/bullmq";
 import { ConfigModule, ConfigService } from "@nestjs/config";
 import { MongooseModule } from "@nestjs/mongoose";
+import { APP_GUARD } from "@nestjs/core";
+import { ServiceTokenGuard } from "./common/guards/service-token.guard";
 import { HealthController } from "./health/health.controller";
 import { NotificationsModule } from "./notifications/notifications.module";
 
@@ -27,5 +29,11 @@ import { NotificationsModule } from "./notifications/notifications.module";
     NotificationsModule,
   ],
   controllers: [HealthController],
+  providers: [
+    {
+      provide: APP_GUARD,
+      useClass: ServiceTokenGuard,
+    },
+  ],
 })
 export class AppModule {}

@@ -39,7 +39,6 @@ import { db } from "@/app/lib/firebase";
 import UserProfileLoader from "@/app/lib/userProfileLoader";
 import { fetchWithAuth } from "@/app/lib/fetchWIthAuth";
 import { useAuth } from "@/app/providers";
-import { useSession } from "next-auth/react";
 import { set } from "mongoose";
 import Image from "next/image";
 
@@ -99,7 +98,7 @@ interface Props {
 }
 
 const PaymentSuccessContent = ({ contractId, freelancerId }: Props) => {
-  const { data: session } = useSession();
+  const { session } = useAuth();
   const [paymentDetails, setPaymentDetails] = useState<PaymentDetails | null>(
     null
   );

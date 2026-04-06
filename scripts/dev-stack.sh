@@ -33,7 +33,19 @@ cleanup() {
 }
 trap cleanup EXIT INT TERM
 
-sleep 2
+echo "Waiting for notification service health check..."
+for _ in {1..60}; do
+  if curl -fsS "http://localhost:3001/health" >/dev/null 2>&1; then
+    echo "Notification service is healthy."
+    break
+  fi
+  sleep 1
+done
+
+if ! curl -fsS "http://localhost:3001/health" >/dev/null 2>&1; then
+  echo "Notification service did not become healthy on http://localhost:3001/health"
+  exit 1
+fi
 
 echo "Starting Weddly app..."
 cd "$ROOT_DIR"
