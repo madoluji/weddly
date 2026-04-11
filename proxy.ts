@@ -151,11 +151,18 @@ export async function proxy(req: NextRequest) {
   const isAdminAuthPage =
     pathname === "/admin/login" || pathname === "/api/admin/register";
 
+  const isAdminPage = pathname.startsWith("/admin");
+  const isAdminProtectedPage = isAdminPage && pathname !== "/admin/login";
+
   const isUserPage =
     !pathname.startsWith("/admin") &&
     !pathname.startsWith("/api") &&
     !isAuthPage &&
     !isAdminAuthPage;
+
+  if (token && isAdminProtectedPage && role !== "admin") {
+    return NextResponse.redirect(new URL("/unauthorized", req.url));
+  }
 
   let rateLimitResult: { allowed: boolean; remaining: number; resetAt: number } | null = null;
   let rateLimitLimit = GENERAL_LIMIT;
@@ -191,6 +198,20 @@ export async function proxy(req: NextRequest) {
       );
     }
 
+    const isAdminApiRoute = pathname.startsWith("/api/admin/");
+    const isAdminPublicApiRoute = pathname === "/api/admin/register";
+    const adminAccessRoles = new Set(["useradmin", "superadmin"]);
+    const apiRole = typeof authTokenMiddleware.user.role === "string"
+      ? authTokenMiddleware.user.role.toLowerCase()
+      : undefined;
+
+    if (isAdminApiRoute && !isAdminPublicApiRoute && !adminAccessRoles.has(apiRole ?? "")) {
+      return NextResponse.json(
+        {error: "Unauthorized: Admin role required"},
+        {status: 403}
+      );
+    }
+
     const requestHeaders = new Headers(req.headers);
     requestHeaders.set("user", JSON.stringify(authTokenMiddleware.user));
 
@@ -213,6 +234,9 @@ export async function proxy(req: NextRequest) {
   }
 
   if ((isAuthPage || isAdminAuthPage) && token) {
+    if (role === "admin") {
+      return NextResponse.redirect(new URL("/admin", req.url));
+    }
     return NextResponse.redirect(new URL("/", req.url));
   }
 
@@ -223,6 +247,13 @@ export async function proxy(req: NextRequest) {
         headers: {"Content-Type": "application/json"},
       });
     }
+
+    if (isAdminProtectedPage) {
+      return NextResponse.redirect(
+        new URL(`/admin/login?callbackUrl=${encodeURIComponent(req.url)}`, req.url)
+      );
+    }
+
     return NextResponse.redirect(
       new URL(`/login?callbackUrl=${encodeURIComponent(req.url)}`, req.url)
     );
