@@ -24,7 +24,6 @@ const FinanceCard = () => {
         });
 
         const data = await response.json();
-        console.log(data);
 
         if (data) {
           setEarnings(data.totalFreelancerAmount);
@@ -45,18 +44,18 @@ const FinanceCard = () => {
   }
 
   return (
-    <div className="flex min-w-[250px] w-[16%] flex-col gap-5 justify-center items-center relative rounded-3xl h-[250px] p-5 overflow-hidden shadow-[0_10px_20px_rgba(228,228,228,_0.7)]">
-      <h1 className="text-2xl font-medium"> Earning & Expenses</h1>
-      <div className="w-full flex gap-1 divide-y-2 flex-col">
+    <div className="relative flex h-[250px] w-full flex-col items-center justify-center gap-5 overflow-hidden rounded-3xl border border-primary-100/70 bg-white p-5 shadow-[0_12px_30px_rgba(15,23,42,0.08)]">
+      <h1 className="font-headline text-2xl font-medium leading-tight text-slate-900 xl:text-[1.7rem]">
+        Earning & Expenses
+      </h1>
+      <div className="flex w-full flex-col gap-2 divide-y divide-slate-200">
         <div className="flex flex-col gap-1">
-          <p className="text--400 text-sm">Earning</p>
-          <h1 className="text-green-600 text-center text-2xl">Rs {earnings}</h1>
+          <p className="text-sm font-medium text-slate-500">Earning</p>
+          <h1 className="text-center text-2xl font-medium text-primary-700">Rs {earnings}</h1>
         </div>
-        <div className="flex flex-col gap-1">
-          <p className="text-gray-400 text-sm">Expenses</p>
-          <h1 className="text-danger-600 text-center text-2xl">
-            Rs {expenses}
-          </h1>
+        <div className="flex flex-col gap-1 pt-2">
+          <p className="text-sm font-medium text-slate-500">Expenses</p>
+          <h1 className="text-center text-2xl font-medium text-slate-700">Rs {expenses}</h1>
         </div>
       </div>
     </div>

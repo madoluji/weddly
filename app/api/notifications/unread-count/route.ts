@@ -1,5 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
 
+let lastServiceDownLogAt = 0;
+const SERVICE_DOWN_LOG_INTERVAL_MS = 60_000;
+
+function logNotificationServiceDown(error: unknown) {
+  const now = Date.now();
+  if (now - lastServiceDownLogAt < SERVICE_DOWN_LOG_INTERVAL_MS) {
+    return;
+  }
+
+  lastServiceDownLogAt = now;
+  const message = error instanceof Error ? error.message : "unknown error";
+  console.warn(`Notification service unavailable for unread count (${message}). Returning fallback unreadCount=0.`);
+}
+
 function getNotificationServiceConfig() {
   const baseUrl = process.env.NOTIFICATION_SERVICE_URL;
   const serviceToken = process.env.NOTIFICATION_SERVICE_TOKEN;
@@ -44,9 +58,10 @@ export async function GET(req: NextRequest) {
           "x-service-token": serviceToken,
         },
         cache: "no-store",
+        signal: AbortSignal.timeout(1500),
       });
     } catch (error) {
-      console.warn("Notification service unavailable for unread count", error);
+      logNotificationServiceDown(error);
       return NextResponse.json({ unreadCount: 0, degraded: true }, { status: 200 });
     }
 

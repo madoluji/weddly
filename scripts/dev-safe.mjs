@@ -7,13 +7,13 @@ const freshRestart = process.argv.includes("--fresh");
 const projectRoot = process.cwd();
 const lockPath = path.join(projectRoot, ".next", "dev", "lock");
 const devLogPath = path.join(projectRoot, ".next", "dev", "logs", "next-development.log");
-const devMaxOldSpaceMb = process.env.DEV_MAX_OLD_SPACE_MB ?? "2048";
+const devMaxOldSpaceMb = process.env.DEV_MAX_OLD_SPACE_MB ?? "4096";
 const existingNodeOptions = process.env.NODE_OPTIONS?.trim() ?? "";
 const maxOldSpaceFlag = `--max-old-space-size=${devMaxOldSpaceMb}`;
 const nodeOptions = existingNodeOptions.includes("--max-old-space-size=")
   ? existingNodeOptions
   : [existingNodeOptions, maxOldSpaceFlag].filter(Boolean).join(" ");
-const nextCpuBudget = process.env.NEXT_BUILD_CPUS ?? "3";
+const nextCpuBudget = process.env.NEXT_BUILD_CPUS ?? "2";
 
 function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));

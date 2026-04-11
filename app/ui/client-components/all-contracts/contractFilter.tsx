@@ -101,14 +101,14 @@ const ContractsFilter = () => {
   const hasActiveFilters = filters.status || filters.contractType;
 
   return (
-    <div className="w-full space-y-4">
+    <div className="w-full space-y-5">
       {/* Header with Search and Filter Button */}
       <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
         <div className="relative w-full sm:w-auto flex-1 max-w-md">
           <div className="relative">
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400"
+              className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -125,13 +125,13 @@ const ContractsFilter = () => {
               type="text"
               value={filters.search}
               onChange={(e) => updateURLParams("search", e.target.value)}
-              className="pl-10 w-full border rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+              className="pl-10 w-full rounded-xl border border-slate-300 bg-white py-2.5 px-3 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary-500/30 focus:border-primary-500"
               placeholder="Search contracts..."
             />
             {filters.search && (
               <button
                 onClick={() => updateURLParams("search", "")}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -154,11 +154,15 @@ const ContractsFilter = () => {
 
         <button
           onClick={() => setIsFilterOpen(!isFilterOpen)}
-          className={`flex items-center gap-2 px-4 py-2 rounded-md border ${isFilterOpen ? "bg-gray-100 border-gray-300" : "bg-white border-gray-300"} hover:bg-gray-50 transition-colors`}
+          className={`inline-flex items-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-semibold transition ${
+            isFilterOpen
+              ? "bg-primary-50 border-primary-200 text-primary-700"
+              : "bg-white border-slate-300 text-slate-700 hover:bg-slate-50"
+          }`}
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
-            className="h-4 w-4 text-gray-600"
+            className="h-4 w-4"
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
@@ -180,7 +184,7 @@ const ContractsFilter = () => {
           isFilterOpen ? "max-h-[400px] opacity-100" : "max-h-0 opacity-0"
         }`}
       >
-        <div className="bg-gray-50 rounded-lg p-6">
+        <div className="rounded-[1.5rem] border border-slate-200 bg-white p-6 shadow-sm">
           <form
             onSubmit={(e) => {
               e.preventDefault();
@@ -190,7 +194,7 @@ const ContractsFilter = () => {
           >
             {/* Contract Type */}
             <fieldset>
-              <legend className="font-medium text-sm mb-3">
+              <legend className="font-label text-xs uppercase tracking-[0.18em] text-slate-400 mb-3">
                 Contract Type
               </legend>
               <div className="space-y-3">
@@ -201,11 +205,11 @@ const ContractsFilter = () => {
                       id={`type-${type}`}
                       checked={filters.contractType.split(",").includes(type)}
                       onChange={() => handleFilterChange("contractType", type)}
-                      className="h-4 w-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
+                      className="h-4 w-4 rounded border-slate-300 text-primary-600 focus:ring-primary-500"
                     />
                     <label
                       htmlFor={`type-${type}`}
-                      className="text-sm font-medium text-gray-700 capitalize"
+                      className="text-sm font-medium text-slate-700 capitalize"
                     >
                       {type}
                     </label>
@@ -216,7 +220,7 @@ const ContractsFilter = () => {
 
             {/* Contract Status */}
             <fieldset>
-              <legend className="font-medium text-sm mb-3">
+              <legend className="font-label text-xs uppercase tracking-[0.18em] text-slate-400 mb-3">
                 Contract Status
               </legend>
               <div className="space-y-3">
@@ -228,11 +232,11 @@ const ContractsFilter = () => {
                         id={`status-${status}`}
                         checked={filters.status.split(",").includes(status)}
                         onChange={() => handleFilterChange("status", status)}
-                        className="h-4 w-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
+                        className="h-4 w-4 rounded border-slate-300 text-primary-600 focus:ring-primary-500"
                       />
                       <label
                         htmlFor={`status-${status}`}
-                        className="text-sm font-medium text-gray-700 capitalize"
+                        className="text-sm font-medium text-slate-700 capitalize"
                       >
                         {status}
                       </label>
@@ -246,14 +250,14 @@ const ContractsFilter = () => {
             <div className="flex items-end gap-2">
               <button
                 type="submit"
-                className="px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-colors"
+                className="rounded-xl bg-primary-700 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-primary-600 focus:outline-none focus:ring-2 focus:ring-primary-500/40"
               >
                 Apply Filters
               </button>
               <button
                 type="button"
                 onClick={handleClearAllFilters}
-                className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-colors"
+                className="rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-primary-500/30"
               >
                 Clear All
               </button>
@@ -264,14 +268,14 @@ const ContractsFilter = () => {
 
       {/* Applied Filters Section */}
       {hasActiveFilters && (
-        <div className="pt-3 border-t">
+        <div className="pt-3 border-t border-slate-200">
           <div className="flex items-center justify-between mb-2">
-            <h4 className="text-sm font-medium text-gray-700">
+            <h4 className="text-sm font-medium text-slate-700">
               Applied Filters:
             </h4>
             <button
               onClick={handleClearAllFilters}
-              className="text-xs text-gray-600 hover:text-gray-900 px-2 py-1 hover:bg-gray-100 rounded"
+              className="text-xs text-slate-600 hover:text-slate-900 px-2 py-1 hover:bg-slate-100 rounded"
             >
               Clear All
             </button>
@@ -283,12 +287,12 @@ const ContractsFilter = () => {
               .map((status) => (
                 <span
                   key={status}
-                  className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-800"
+                  className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-primary-50 text-primary-700 border border-primary-100"
                 >
                   Status: {status.charAt(0).toUpperCase() + status.slice(1)}
                   <button
                     onClick={() => handleRemoveFilter("status")}
-                    className="ml-1 text-gray-500 hover:text-gray-700"
+                    className="ml-1 text-primary-500 hover:text-primary-700"
                   >
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
@@ -313,12 +317,12 @@ const ContractsFilter = () => {
               .map((type) => (
                 <span
                   key={type}
-                  className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-800"
+                  className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-primary-50 text-primary-700 border border-primary-100"
                 >
                   Type: {type.charAt(0).toUpperCase() + type.slice(1)}
                   <button
                     onClick={() => handleRemoveFilter("contractType")}
-                    className="ml-1 text-gray-500 hover:text-gray-700"
+                    className="ml-1 text-primary-500 hover:text-primary-700"
                   >
                     <svg
                       xmlns="http://www.w3.org/2000/svg"

@@ -208,15 +208,15 @@ const AllProposalsList: React.FC<AllProposalsListProps> = ({ jobId }) => {
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
       {loading ? (
-        <div className="flex h-72 flex-col items-center justify-center rounded-[2rem] border border-[#e8dece] bg-white">
+        <div className="flex h-72 flex-col items-center justify-center rounded-[2rem] border border-slate-200 bg-white">
           <ArrowPathIcon className="mb-4 h-10 w-10 animate-spin text-primary-500" />
           <p className="text-gray-600">Loading proposals...</p>
         </div>
       ) : (
         <>
           {job && (
-            <section className="mb-8 overflow-hidden rounded-[2rem] border border-[#e8dece] bg-white editorial-shadow">
-              <div className="border-b border-[#efe5d6] bg-gradient-to-br from-[#fff7ee] via-white to-primary-50 px-6 py-8 sm:px-8">
+            <section className="mb-8 overflow-hidden rounded-[2rem] border border-slate-200 bg-white editorial-shadow">
+              <div className="border-b border-slate-200 bg-gradient-to-br from-slate-50 via-white to-primary-50/40 px-6 py-8 sm:px-8">
                 <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
                   <div className="max-w-3xl">
                     <div className="inline-flex items-center gap-2 rounded-full border border-primary-100 bg-white/90 px-4 py-2 text-xs font-semibold uppercase tracking-[0.22em] text-primary-700">
@@ -237,7 +237,7 @@ const AllProposalsList: React.FC<AllProposalsListProps> = ({ jobId }) => {
                       type="button"
                       onClick={handleDeleteGig}
                       disabled={isDeleting}
-                      className="inline-flex items-center justify-center rounded-xl bg-red-600 px-4 py-3 text-sm font-medium text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:bg-red-400"
+                      className="inline-flex items-center justify-center rounded-xl bg-slate-800 px-4 py-3 text-sm font-medium text-white transition hover:bg-slate-900 disabled:cursor-not-allowed disabled:bg-slate-500"
                     >
                       <TrashIcon className="mr-2 h-4 w-4" />
                       {isDeleting ? "Deleting..." : "Delete Gig"}
@@ -249,13 +249,13 @@ const AllProposalsList: React.FC<AllProposalsListProps> = ({ jobId }) => {
               <div className="grid gap-6 px-6 py-6 sm:px-8 lg:grid-cols-[minmax(0,1.1fr)_360px] lg:items-start">
                 <div className="space-y-6">
                   {deleteError && (
-                    <div className="rounded-2xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-600">
+                    <div className="rounded-2xl border border-slate-200 bg-slate-100 px-4 py-3 text-sm text-slate-700">
                       {deleteError}
                     </div>
                   )}
 
                   <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-                    <div className="rounded-[1.5rem] border border-[#eadfce] bg-[#fffdfa] p-5">
+                    <div className="rounded-[1.5rem] border border-slate-200 bg-slate-50 p-5">
                       <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
                         Event Date
                       </p>
@@ -264,7 +264,7 @@ const AllProposalsList: React.FC<AllProposalsListProps> = ({ jobId }) => {
                       </p>
                     </div>
 
-                    <div className="rounded-[1.5rem] border border-[#eadfce] bg-[#fffdfa] p-5">
+                    <div className="rounded-[1.5rem] border border-slate-200 bg-slate-50 p-5">
                       <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
                         Proposals
                       </p>
@@ -273,7 +273,7 @@ const AllProposalsList: React.FC<AllProposalsListProps> = ({ jobId }) => {
                       </p>
                     </div>
 
-                    <div className="rounded-[1.5rem] border border-[#eadfce] bg-[#fffdfa] p-5">
+                    <div className="rounded-[1.5rem] border border-slate-200 bg-slate-50 p-5">
                       <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
                         Lowest Bid
                       </p>
@@ -282,7 +282,7 @@ const AllProposalsList: React.FC<AllProposalsListProps> = ({ jobId }) => {
                       </p>
                     </div>
 
-                    <div className="rounded-[1.5rem] border border-[#eadfce] bg-[#fffdfa] p-5">
+                    <div className="rounded-[1.5rem] border border-slate-200 bg-slate-50 p-5">
                       <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
                         Highest Bid
                       </p>
@@ -292,7 +292,7 @@ const AllProposalsList: React.FC<AllProposalsListProps> = ({ jobId }) => {
                     </div>
                   </div>
 
-                  <div className="rounded-[1.5rem] border border-[#eadfce] bg-white p-5">
+                  <div className="rounded-[1.5rem] border border-slate-200 bg-white p-5">
                     <div className="grid gap-5 sm:grid-cols-2">
                       <div className="flex items-start gap-3">
                         <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-primary-50 text-primary-700">
@@ -352,7 +352,7 @@ const AllProposalsList: React.FC<AllProposalsListProps> = ({ jobId }) => {
                     </div>
 
                     {job.tags && job.tags.length > 0 && (
-                      <div className="mt-5 border-t border-[#efe5d6] pt-5">
+                      <div className="mt-5 border-t border-slate-200 pt-5">
                         <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
                           Required Skills
                         </p>
@@ -372,15 +372,15 @@ const AllProposalsList: React.FC<AllProposalsListProps> = ({ jobId }) => {
                   </div>
                 </div>
 
-                <div className="rounded-[1.75rem] border border-[#eadfce] bg-white p-4">
+                <div className="rounded-[1.75rem] border border-slate-200 bg-white p-4">
                   <JobLocationPreview location={job.locationMeta ?? job.location} className="rounded-[1.25rem]" />
                 </div>
               </div>
             </section>
           )}
 
-          <section className="overflow-hidden rounded-[2rem] border border-[#e8dece] bg-white editorial-shadow">
-            <div className="border-b border-[#efe5d6] px-6 py-5 sm:px-8">
+          <section className="overflow-hidden rounded-[2rem] border border-slate-200 bg-white editorial-shadow">
+            <div className="border-b border-slate-200 px-6 py-5 sm:px-8">
               <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
                 <div className="flex items-center">
                   <UserGroupIcon className="mr-3 h-6 w-6 text-primary-600" />
@@ -400,7 +400,7 @@ const AllProposalsList: React.FC<AllProposalsListProps> = ({ jobId }) => {
                     id="sortBy"
                     value={sortBy}
                     onChange={(e) => setSortBy(e.target.value)}
-                    className="rounded-xl border border-[#d8cdb9] bg-[#fffdfa] px-4 py-2.5 text-sm text-slate-700 outline-none transition focus:border-primary-300"
+                    className="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-700 outline-none transition focus:border-primary-300"
                   >
                     <option value="newest">Newest First</option>
                     <option value="oldest">Oldest First</option>
@@ -424,9 +424,9 @@ const AllProposalsList: React.FC<AllProposalsListProps> = ({ jobId }) => {
                     <div
                       key={`${proposal._id}-${proposal.userId}`}
                       onClick={() => handleProposalClick(proposal)}
-                      className="group cursor-pointer overflow-hidden rounded-[1.75rem] border border-[#e8dece] bg-white transition hover:-translate-y-0.5 hover:shadow-[0_18px_42px_rgba(27,28,26,0.08)]"
+                      className="group cursor-pointer overflow-hidden rounded-[1.75rem] border border-slate-200 bg-white transition hover:-translate-y-0.5 hover:shadow-[0_18px_42px_rgba(27,28,26,0.08)]"
                     >
-                      <div className="border-b border-[#efe5d6] bg-gradient-to-br from-[#fffaf2] to-white px-5 py-5">
+                      <div className="border-b border-slate-200 bg-gradient-to-br from-slate-50 to-white px-5 py-5">
                         <div className="flex items-start justify-between gap-4">
                           <div className="flex min-w-0 items-start gap-3">
                             <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary-100">
@@ -453,7 +453,7 @@ const AllProposalsList: React.FC<AllProposalsListProps> = ({ jobId }) => {
                             </div>
                           </div>
 
-                          <div className="rounded-full bg-green-50 px-3 py-1.5 text-sm font-semibold text-green-700">
+                          <div className="rounded-full bg-primary-50 px-3 py-1.5 text-sm font-semibold text-primary-700">
                             Rs {proposal.bidAmount.toLocaleString()}
                           </div>
                         </div>
@@ -472,10 +472,10 @@ const AllProposalsList: React.FC<AllProposalsListProps> = ({ jobId }) => {
                           </p>
                         </div>
 
-                        <div className="flex items-center justify-between border-t border-[#efe5d6] pt-4">
+                        <div className="flex items-center justify-between border-t border-slate-200 pt-4">
                           <div className="flex items-center gap-4 text-sm text-slate-500">
                             <div className="flex items-center gap-1.5">
-                              <CurrencyDollarIcon className="h-4 w-4 text-green-600" />
+                              <CurrencyDollarIcon className="h-4 w-4 text-primary-700" />
                               <span className="font-medium text-slate-800">Bid placed</span>
                             </div>
 

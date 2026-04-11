@@ -3,19 +3,17 @@ import React, { Suspense } from "react";
 import PageShell from "@/app/ui/layout/PageShell";
 import PageCard from "@/app/ui/layout/PageCard";
 
-const Page = () => {
+export default function ClientSettingsPage() {
   return (
     <PageShell
-      title="Settings"
-      description="Manage your account preferences and profile settings"
+      title="Client Settings"
+      description="Manage your client account preferences and wedding details"
     >
       <PageCard>
         <Suspense fallback={<div>Loading...</div>}>
-          <SettingsPage />
+          <SettingsPage mode="client" />
         </Suspense>
       </PageCard>
     </PageShell>
   );
-};
-
-export default Page;
+}

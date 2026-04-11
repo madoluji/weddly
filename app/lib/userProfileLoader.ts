@@ -11,7 +11,6 @@ const UserProfileLoader: React.FC = () => {
 
   useEffect(() => {
     if (session?.user?.id) {
-      console.log("Calling loadUserData with session.user.id:", session.user.id);
       loadUserData(session.user.id);
     }
 

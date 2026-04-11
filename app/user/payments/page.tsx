@@ -1,18 +1,22 @@
 import React, { Suspense } from "react";
 import { Payment } from "../../ui/payment";
+import PageShell from "@/app/ui/layout/PageShell";
+import PageCard from "@/app/ui/layout/PageCard";
 
 const PaymentsPage: React.FC = () => {
   return (
-    <div>
-      <h1 className="text-3xl font-semibold mt-5 text-center">
-        Payment Gateways
-      </h1>
-      <div className="flex justify-center mt-10">
-        <Suspense fallback={<div>Loading...</div>}>
-          <Payment contractId={"7777"} userId={"88"} />
-        </Suspense>
-      </div>
-    </div>
+    <PageShell
+      title="Payment Gateways"
+      description="Choose your preferred payment method and complete transactions securely"
+    >
+      <PageCard>
+        <div className="flex justify-center">
+          <Suspense fallback={<div>Loading...</div>}>
+            <Payment contractId={"7777"} userId={"88"} />
+          </Suspense>
+        </div>
+      </PageCard>
+    </PageShell>
   );
 };
 

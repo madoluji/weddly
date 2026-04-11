@@ -2,15 +2,18 @@
 
 import React, { Suspense } from "react";
 import DisplayProfile from "@/app/ui/user-component/displayprofile";
+import PageShell from "@/app/ui/layout/PageShell";
 
 const UserProfile: React.FC = () => {
   return (
-    <div>
-      <h1 className="font-black text-center text-5xl">User Profile</h1>
+    <PageShell
+      title="User Profile"
+      description="Review and update your personal account information"
+    >
       <Suspense fallback={<div>Loading...</div>}>
-      <DisplayProfile />
+        <DisplayProfile />
       </Suspense>
-    </div>
+    </PageShell>
   );
 };
 

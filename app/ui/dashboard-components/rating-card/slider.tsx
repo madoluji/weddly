@@ -1,6 +1,5 @@
 "use client";
 import { useEffect, useState } from "react";
-import clsx from "clsx";
 
 interface userRating {
   rating: number;
@@ -35,36 +34,16 @@ const SliderRating = ({ rating }: userRating) => {
       <p className="text-slate-500">0</p>
       <div className="rounded-xl m-auto max-w-[250px] w-full relative h-[12px] bg-slate-200">
         <div
-          className={clsx(
-            "relative w-0 h-[12px]  rounded-xl transition-all duration-300 ease-in-out ",
-            {
-              "bg-red-700": count <= 1,
-              "bg-red-500": count > 1 && count <= 2,
-              "bg-amber-500": count > 2 && count <= 3,
-              "bg-green-400": count > 3 && count <= 4,
-              "bg-green-600": count > 4,
-            }
-          )}
+          className="relative h-[12px] w-0 rounded-xl bg-primary-600 transition-all duration-300 ease-in-out"
           style={{ width: `${count * 20}%` }}
         >
           <div
-            className={clsx(
-              " absolute h-7 w-[8px]  top-0 right-[5px] -translate-y-[25%] bg-white "
-            )}
+            className="absolute right-[5px] top-0 h-7 w-[8px] -translate-y-[25%] bg-white"
           >
             {/* <Emoji rating={rating} /> */}
           </div>
           <div
-            className={clsx(
-              " absolute h-7 w-[2px] rounded-3xl top-0 right-2 -translate-y-[25%] ",
-              {
-                "bg-red-700": rating <= 1,
-                "bg-red-500": rating > 1 && rating <= 2,
-                "bg-amber-500": rating > 2 && rating <= 3,
-                "bg-green-400": rating > 3 && rating <= 4,
-                "bg-green-600": rating > 4,
-              }
-            )}
+            className="absolute right-2 top-0 h-7 w-[2px] -translate-y-[25%] rounded-3xl bg-primary-700"
           >
             {/* <Emoji rating={rating} /> */}
           </div>

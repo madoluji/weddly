@@ -24,6 +24,7 @@ interface IUser extends Document {
   kycVerified: boolean;
   oauth: boolean;
   isFirstLogin: boolean;
+  profileVisible: boolean;
 }
 
 // Define the schema corresponding to the document interface.
@@ -109,6 +110,10 @@ const userSchema = new Schema<IUser>(
     kycVerified: {
       type: Boolean,
       default: false,
+    },
+    profileVisible: {
+      type: Boolean,
+      default: true,
     },
     isFirstLogin: {
       type: Boolean,

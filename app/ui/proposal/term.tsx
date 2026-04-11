@@ -33,8 +33,8 @@ const Terms = ({ bidAmount, setBidAmount, isSubmitted }: TermsProps) => {
     : "0.00";
 
   return (
-    <div className="overflow-hidden rounded-[1.75rem] border border-[#eadfce] bg-white shadow-sm">
-      <div className="border-b border-[#efe5d6] px-5 py-5 sm:px-6">
+    <div className="overflow-hidden rounded-[1.75rem] border border-slate-200 bg-white shadow-sm">
+      <div className="border-b border-slate-200 px-5 py-5 sm:px-6">
         <p className="text-2xl font-semibold text-slate-900">Pricing terms</p>
         <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-500">
           Set a clear rate so the client understands the scope and what you will
@@ -43,7 +43,7 @@ const Terms = ({ bidAmount, setBidAmount, isSubmitted }: TermsProps) => {
       </div>
 
       <div className="grid gap-6 px-5 py-5 sm:px-6 lg:grid-cols-[minmax(0,1fr)_320px]">
-        <div className="rounded-[1.5rem] border border-[#efe5d6] bg-[#fffdfa] p-4 sm:p-5">
+        <div className="rounded-[1.5rem] border border-slate-200 bg-slate-50 p-4 sm:p-5">
           <label className="flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.18em] text-slate-500">
             <BanknotesIcon className="h-4 w-4 text-primary-600" />
             Your bid amount
@@ -52,8 +52,8 @@ const Terms = ({ bidAmount, setBidAmount, isSubmitted }: TermsProps) => {
             className={`mt-4 flex items-center rounded-[1.25rem] border bg-white px-4 py-3 shadow-sm transition ${
               (isSubmitted || isTouched) &&
               (!bidAmount || parseFloat(bidAmount) < 10)
-                ? "border-red-400 ring-2 ring-red-100"
-                : "border-[#e6dccd] focus-within:border-primary-300 focus-within:ring-2 focus-within:ring-primary-100"
+                ? "border-primary-300 ring-2 ring-primary-100"
+                : "border-slate-200 focus-within:border-primary-300 focus-within:ring-2 focus-within:ring-primary-100"
             }`}
           >
             <span className="pr-3 text-2xl font-semibold text-slate-400">
@@ -74,7 +74,7 @@ const Terms = ({ bidAmount, setBidAmount, isSubmitted }: TermsProps) => {
           </p>
           {(isSubmitted || isTouched) &&
             (!bidAmount || parseFloat(bidAmount) < 10) && (
-              <p className="mt-3 text-sm text-red-500">
+              <p className="mt-3 text-sm text-slate-600">
                 The minimum bid amount is Rs 10.
               </p>
             )}
@@ -92,7 +92,7 @@ const Terms = ({ bidAmount, setBidAmount, isSubmitted }: TermsProps) => {
             </div>
             <div className="flex items-center justify-between rounded-2xl bg-white px-4 py-3 text-sm font-medium text-slate-600">
               <span>Service fee (10%)</span>
-              <span className="text-base text-red-500">-Rs {platformCut}</span>
+              <span className="text-base text-slate-700">-Rs {platformCut}</span>
             </div>
             <div className="rounded-2xl cta-gradient px-4 py-4 text-white">
               <div className="flex items-center justify-between">

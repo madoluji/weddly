@@ -23,6 +23,12 @@ const MenuBar = () => {
     currentPath.startsWith("/user") || currentPath.startsWith("/search/jobs");
   const isClientContext =
     currentPath.startsWith("/client") || currentPath.startsWith("/search/talent");
+  const userChatHref = session?.user?.id
+    ? `/user/chatroom/${session.user.id}`
+    : "/user/chatroom/0";
+  const clientChatHref = session?.user?.id
+    ? `/client/chatroom/${session.user.id}`
+    : "/client/chatroom/0";
 
   useEffect(() => {
     let isMounted = true;
@@ -109,9 +115,11 @@ const MenuBar = () => {
           </li>
           <li className="hover:text-primary-600 flex align-items-center justify-center">
             <Link
-              href={session?.user?.id ? `/user/chatroom/${session.user.id}` : "/user/best-matches"}
+              href={isClientContext ? clientChatHref : userChatHref}
               className={clsx({
-                "text-primary-600": currentPath == "/user/chatroom",
+                "text-primary-600":
+                  currentPath.startsWith("/user/chatroom") ||
+                  currentPath.startsWith("/client/chatroom"),
               })}
               onClick={() => setIsOpen(!isOpen)}
             >

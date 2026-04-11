@@ -88,3 +88,51 @@ export async function GET(req: NextRequest) {
         return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
     }
 }
+
+export async function PUT(req: NextRequest) {
+    try {
+        const userData = req.headers.get("user");
+        const user = userData ? JSON.parse(userData) : null;
+
+        if (!user || !user.id) {
+            return NextResponse.json({ message: "Unauthorized: No user data" }, { status: 401 });
+        }
+
+        const {
+            fullName,
+            isWeddingPlanner,
+            weddingStyle,
+            targetWeddingDate,
+            location,
+            averageBudget,
+        }: ClientRequestBody = await req.json();
+
+        await connectMongoDB();
+
+        const updatedClient = await ClientInfo.findOneAndUpdate(
+            { userId: user.id },
+            {
+                $set: {
+                    userId: user.id,
+                    fullName,
+                    isWeddingPlanner,
+                    weddingStyle,
+                    targetWeddingDate,
+                    location,
+                    averageBudget,
+                },
+            },
+            { upsert: true, new: true, runValidators: true }
+        );
+
+        await User.updateOne({ _id: user.id }, { $set: { "roles.client": true } });
+
+        return NextResponse.json(
+            { message: "Client profile updated", client: updatedClient },
+            { status: 200 }
+        );
+    } catch (error: any) {
+        console.error("ClientInfo PUT API Error:", error?.message || error);
+        return NextResponse.json({ error: error?.message || "Internal Server Error" }, { status: 500 });
+    }
+}

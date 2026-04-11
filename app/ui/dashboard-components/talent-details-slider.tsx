@@ -4,6 +4,7 @@ import {
   ArrowLeftIcon,
   BuildingLibraryIcon,
   CurrencyDollarIcon,
+  EyeIcon,
   TagIcon,
   SparklesIcon,
   AcademicCapIcon,
@@ -45,6 +46,8 @@ interface Freelancer {
     portfolioFiles: string[];
   }[];
 }
+
+const imageRegex = /\.(png|jpg|jpeg|webp|gif|svg)$/i;
 
 const formatDate = (dateString: string) => {
   const options: Intl.DateTimeFormatOptions = {
@@ -165,7 +168,7 @@ const TalentDetailsSlider: React.FC = () => {
             onClick={onClose}
           />
           <motion.div
-            className="relative bg-white w-full max-w-4xl h-full p-6 shadow-xl overflow-y-auto rounded-l-lg"
+            className="relative h-full w-full max-w-4xl overflow-y-auto rounded-l-2xl bg-slate-50 p-6 shadow-xl"
             variants={sliderVariants}
             initial="hidden"
             animate="visible"
@@ -193,238 +196,157 @@ const TalentDetailsSlider: React.FC = () => {
                   />
                   <div className="flex flex-col gap-4">
                     <motion.div
-                      className="h-12 w-48 bg-gray-300 rounded"
-                      variants={pulseVariants}
-                      animate="pulse"
-                    />
-                    <div className="flex gap-5">
-                      <motion.div
-                        className="h-5 w-24 bg-gray-300 rounded"
-                        variants={pulseVariants}
-                        animate="pulse"
-                      />
-                      <motion.div
-                        className="h-5 w-24 bg-gray-300 rounded"
-                        variants={pulseVariants}
-                        animate="pulse"
-                      />
-                    </div>
-                  </div>
-                </div>
-                <div className="mt-4 border-b pb-4">
-                  <motion.div
-                    className="h-6 w-1/3 bg-gray-300 rounded mb-2"
-                    variants={pulseVariants}
-                    animate="pulse"
-                  />
-                  <motion.div
-                    className="h-4 w-full bg-gray-300 rounded"
-                    variants={pulseVariants}
-                    animate="pulse"
-                  />
-                  <motion.div
-                    className="h-4 w-5/6 bg-gray-300 rounded"
-                    variants={pulseVariants}
-                    animate="pulse"
-                  />
-                </div>
-                <div className="mt-4 border-b pb-4">
-                  <motion.div
-                    className="h-6 w-1/3 bg-gray-300 rounded mb-2"
-                    variants={pulseVariants}
-                    animate="pulse"
-                  />
-                  <div className="flex gap-2">
-                    <motion.div
-                      className="h-8 w-20 bg-gray-300 rounded-full"
+                      className="h-6 w-32 bg-gray-300 rounded"
                       variants={pulseVariants}
                       animate="pulse"
                     />
                     <motion.div
-                      className="h-8 w-20 bg-gray-300 rounded-full"
+                      className="h-4 w-48 bg-gray-300 rounded"
+                      variants={pulseVariants}
+                      animate="pulse"
+                    />
+                    <motion.div
+                      className="h-4 w-40 bg-gray-300 rounded"
                       variants={pulseVariants}
                       animate="pulse"
                     />
                   </div>
-                </div>
-                <div className="mt-4 border-b pb-4">
-                  <motion.div
-                    className="h-6 w-1/3 bg-gray-300 rounded mb-2"
-                    variants={pulseVariants}
-                    animate="pulse"
-                  />
-                  <motion.div
-                    className="h-5 w-1/2 bg-gray-300 rounded mb-2"
-                    variants={pulseVariants}
-                    animate="pulse"
-                  />
-                  <motion.div
-                    className="h-4 w-3/4 bg-gray-300 rounded"
-                    variants={pulseVariants}
-                    animate="pulse"
-                  />
-                </div>
-                <div className="mt-4 border-b pb-4">
-                  <motion.div
-                    className="h-6 w-1/3 bg-gray-300 rounded mb-2"
-                    variants={pulseVariants}
-                    animate="pulse"
-                  />
-                  <motion.div
-                    className="h-5 w-1/2 bg-gray-300 rounded mb-2"
-                    variants={pulseVariants}
-                    animate="pulse"
-                  />
-                  <motion.div
-                    className="h-4 w-3/4 bg-gray-300 rounded"
-                    variants={pulseVariants}
-                    animate="pulse"
-                  />
-                </div>
-                <div className="mt-4 border-b pb-4">
-                  <motion.div
-                    className="h-6 w-1/3 bg-gray-300 rounded mb-2"
-                    variants={pulseVariants}
-                    animate="pulse"
-                  />
-                  <motion.div
-                    className="w-[200px] h-[200px] bg-gray-300 rounded-lg"
-                    variants={pulseVariants}
-                    animate="pulse"
-                  />
                 </div>
               </div>
             ) : (
-              <>
-                <div className="flex items-center justify-between mb-6">
-                  <button
-                    className="text-gray-500 hover:text-gray-700 flex items-center"
-                    onClick={onClose}
-                  >
-                    <ArrowLeftIcon className="w-6 h-6 mr-1" /> <span>Back</span>
-                  </button>
-                  <SaveButton
-                    itemId={freelancer.freelancerId}
-                    saved={freelancer.saved}
-                    itemType="freelancer"
-                  />
-                </div>
-                <div className="flex flex-row items-center space-y-10 border-b p-5 gap-10">
-                  <div className="flex items-center justify-center w-40 h-40 rounded-full overflow-hidden">
-                    <SafeImage
-                      src={freelancer.profilePicture || "/placeholder.svg"}
-                      width={200}
-                      height={200}
-                      alt="dp"
-                    />
-                  </div>
-                  <span className="flex flex-col gap-4">
-                    <h2 className="text-5xl font-medium mb-2">
-                      {freelancer.fullName}
-                    </h2>
-                    <div className="text-md flex pb-4 gap-5">
-                      <div className="flex items-center">
-                        <BuildingLibraryIcon className="w-4 h-4 mr-2 text-gray-600" />
-                        <p className="text-gray-600">{freelancer.location}</p>
-                      </div>
-                      <div className="flex items-center">
-                        <CurrencyDollarIcon className="w-5 h-5 mr-2 text-gray-600" />
-                        <p className="text-gray-600">Booking Fee / Rate: {freelancer.rate} $/hr</p>
-                      </div>
-                    </div>
-                  </span>
-                </div>
-                <div className="mt-4 border-b pb-4">
-                  <h3 className="text-2xl font-semibold my-3">About Me</h3>
-                  <p className="text-gray-800 text-md">{freelancer.bio}</p>
-                </div>
-                <div className="mt-4 border-b pb-4">
-                  <h3 className="text-2xl font-semibold my-3">Skills</h3>
-                  <div className="flex flex-wrap gap-2">
-                    {freelancer.skills?.map((skill, index) => (
-                      <span
-                        key={index}
-                        className="bg-gray-200 text-gray-700 px-3 py-1 rounded-full flex items-center"
-                      >
-                        <TagIcon className="w-4 h-4 mr-1" />
-                        {skill}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-                {freelancer.workExperience?.length ? (
-                  <div className="mt-4 border-b pb-4">
-                    <h3 className="text-2xl font-semibold mb-4 flex items-center">
-                      <SparklesIcon className="w-6 h-6 mr-2" /> Wedding
-                      Experience
-                    </h3>
-                    {freelancer.workExperience?.map((job) => (
-                      <div key={job._id} className="mb-4 flex flex-col">
-                        <h3 className="text-xl font-medium mt-2">
-                          {job.jobTitle}
-                        </h3>
-                        <p className="text-gray-600">{job.company}</p>
-                        <p className="text-md text-gray-500">
-                          {formatDate(job.startDate)} -{" "}
-                          {formatDate(job.endDate)}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-                ) : null}
-                {freelancer.education?.length ? (
-                  <div className="mt-4 border-b pb-4">
-                    <h3 className="text-2xl font-semibold mb-4 flex items-center">
-                      <AcademicCapIcon className="w-6 h-6 mr-2" /> Education
-                    </h3>
-                    {freelancer.education?.map((edu) => (
-                      <div key={edu._id} className="mb-4">
-                        <span className="flex justify-between items-center">
-                          <h3 className="text-xl font-medium">{edu.degree}</h3>
-                          <p className="text-md text-gray-500">
-                            {formatDate(edu.startDate)} -{" "}
-                            {formatDate(edu.endDate)}
-                          </p>
-                        </span>
-                        <p className="text-gray-600">{edu.institution}</p>
-                      </div>
-                    ))}
-                  </div>
-                ) : null}
-                {freelancer.projectPortfolio?.length ? (
-                  <div className="mt-4 border-b pb-16">
-                    <h3 className="text-2xl font-semibold mb-4 flex items-center">
-                      Project Portfolio
-                    </h3>
-                    {freelancer.projectPortfolio?.map((project, index) => (
-                      <div key={index} className="mb-4">
-                        <div className="flex flex-row flex-wrap">
-                          {project.portfolioFiles
-                            .slice(0, 1)
-                            .map((file, fileIndex) => (
-                              <div
-                                key={fileIndex}
-                                className="w-[200px] h-[200px] my-10 hover:shadow-xl border-neutral-200 border-2 hover:scale-105 rounded-lg transition-all duration-300"
-                                onClick={() => handleImageClick(project)}
-                              >
-                                <SafeImage
-                                  src={file || "/placeholder.svg"}
-                                  alt={`Project image ${fileIndex + 1}`}
-                                  width={150}
-                                  height={150}
-                                  className="rounded-lg object-cover w-full h-full"
-                                />
-                                <p className="font-medium mt-5 text-primary-600">
-                                  {project.projectTitle}
-                                </p>
+              <div className="rounded-2xl bg-white p-6 shadow-[0_16px_36px_rgba(26,44,35,0.08)]">
+                        <div className="flex flex-row items-center gap-8 border-b border-slate-200 pb-5">
+                          <div className="flex h-32 w-32 items-center justify-center overflow-hidden rounded-full bg-slate-100">
+                            <SafeImage
+                              src={freelancer.profilePicture || "/placeholder.svg"}
+                              width={140}
+                              height={140}
+                              alt="dp"
+                              className="h-full w-full object-cover"
+                            />
+                          </div>
+                          <span className="flex flex-col gap-3">
+                            <h2 className="font-headline text-5xl font-medium leading-tight text-slate-900">
+                              {freelancer.fullName || "Freelancer"}
+                            </h2>
+                            <div className="flex flex-wrap gap-5 text-sm text-slate-600">
+                              <div className="flex items-center">
+                                <BuildingLibraryIcon className="mr-2 h-4 w-4" />
+                                <p>{freelancer.location || "Location not specified"}</p>
                               </div>
-                            ))}
+                              <div className="flex items-center">
+                                <CurrencyDollarIcon className="mr-2 h-5 w-5" />
+                                <p>Booking Fee / Rate: {freelancer.rate || "N/A"} $/hr</p>
+                              </div>
+                            </div>
+                          </span>
                         </div>
+
+                        <div className="mt-5 border-b border-slate-200 pb-5">
+                          <h3 className="mb-2 font-headline text-3xl font-medium text-slate-900">About Me</h3>
+                          <p className="text-slate-700 text-md leading-7">{freelancer.bio || "No bio provided."}</p>
+                        </div>
+
+                        <div className="mt-5 border-b border-slate-200 pb-5">
+                          <h3 className="mb-3 font-headline text-3xl font-medium text-slate-900">Skills</h3>
+                          <div className="flex flex-wrap gap-2">
+                            {freelancer.skills?.length ? (
+                              freelancer.skills.map((skill, index) => (
+                                <span
+                                  key={index}
+                                  className="flex items-center rounded-full bg-primary-50 px-3 py-1 text-sm text-primary-800"
+                                >
+                                  <TagIcon className="mr-1 h-4 w-4" />
+                                  {skill}
+                                </span>
+                              ))
+                            ) : (
+                              <p className="text-sm text-slate-500">No skills listed.</p>
+                            )}
+                          </div>
+                        </div>
+
+                        {freelancer.workExperience?.length ? (
+                          <div className="mt-5 border-b border-slate-200 pb-5">
+                            <h3 className="mb-4 flex items-center font-headline text-3xl font-medium text-slate-900">
+                              <SparklesIcon className="mr-2 h-6 w-6" /> Wedding Experience
+                            </h3>
+                            <div className="space-y-4">
+                              {freelancer.workExperience.map((job) => (
+                                <div key={job._id} className="rounded-xl bg-slate-50 p-4">
+                                  <h4 className="text-xl font-semibold text-slate-900">{job.jobTitle}</h4>
+                                  <p className="mt-1 text-slate-600">{job.company}</p>
+                                  <p className="mt-1 text-sm text-slate-500">
+                                    {formatDate(job.startDate)} - {formatDate(job.endDate)}
+                                  </p>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        ) : null}
+
+                        {freelancer.education?.length ? (
+                          <div className="mt-5 border-b border-slate-200 pb-5">
+                            <h3 className="mb-4 flex items-center font-headline text-3xl font-medium text-slate-900">
+                              <AcademicCapIcon className="mr-2 h-6 w-6" /> Education
+                            </h3>
+                            <div className="space-y-4">
+                              {freelancer.education.map((edu) => (
+                                <div key={edu._id} className="rounded-xl bg-slate-50 p-4">
+                                  <div className="flex flex-wrap items-start justify-between gap-3">
+                                    <h4 className="text-xl font-semibold text-slate-900">{edu.degree}</h4>
+                                    <p className="text-sm text-slate-500">
+                                      {formatDate(edu.startDate)} - {formatDate(edu.endDate)}
+                                    </p>
+                                  </div>
+                                  <p className="mt-1 text-slate-600">{edu.institution}</p>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        ) : null}
+
+                        {freelancer.projectPortfolio?.length ? (
+                          <div className="mt-5 pb-2">
+                            <h3 className="mb-4 font-headline text-3xl font-medium text-slate-900">Project Portfolio</h3>
+                            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                              {freelancer.projectPortfolio.map((project, index) => {
+                                const firstImage = project.portfolioFiles.find((file) => imageRegex.test(file));
+                                return (
+                                  <button
+                                    key={index}
+                                    type="button"
+                                    className="group overflow-hidden rounded-xl border border-slate-200 bg-white text-left transition hover:shadow-[0_10px_28px_rgba(26,44,35,0.12)]"
+                                    onClick={() => handleImageClick(project)}
+                                  >
+                                    {firstImage ? (
+                                      <SafeImage
+                                        src={firstImage}
+                                        alt={project.projectTitle || `Project ${index + 1}`}
+                                        width={520}
+                                        height={300}
+                                        className="h-48 w-full object-cover transition duration-300 group-hover:scale-[1.02]"
+                                      />
+                                    ) : (
+                                      <div className="flex h-48 w-full items-center justify-center bg-slate-100 text-sm text-slate-500">
+                                        No preview image
+                                      </div>
+                                    )}
+                                    <div className="p-4">
+                                      <p className="text-base font-semibold text-slate-900">
+                                        {project.projectTitle || `Project ${index + 1}`}
+                                      </p>
+                                      <p className="mt-1 text-sm text-slate-600 line-clamp-2">
+                                        {project.projectDescription || "No description provided."}
+                                      </p>
+                                    </div>
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        ) : null}
                       </div>
-                    ))}
-                  </div>
-                ) : null}
-              </>
             )}
           </motion.div>
 
@@ -437,7 +359,7 @@ const TalentDetailsSlider: React.FC = () => {
               onClick={closeProjectPopup}
             >
               <motion.div
-                className="bg-white p-10 rounded-lg shadow-lg max-w-screen-xl w-[90%] relative overflow-y-auto"
+                className="relative max-h-[88vh] w-[92%] max-w-screen-xl overflow-y-auto rounded-2xl bg-white p-10 shadow-lg"
                 variants={popupVariants}
                 initial="hidden"
                 animate="visible"
@@ -477,19 +399,19 @@ const TalentDetailsSlider: React.FC = () => {
                       )}
                     </div>
                   </div>
-                  <div className="flex flex-col gap-10 justify-center w-1/2 m-auto items-center mt-2 overflow-y-auto">
-                    {selectedProject.portfolioFiles.map(
-                      (file: string, index: number) => (
+                  <div className="m-auto mt-2 flex w-1/2 flex-col gap-8 justify-center overflow-y-auto items-center">
+                    {selectedProject.portfolioFiles
+                      .filter((file: string) => imageRegex.test(file))
+                      .map((file: string, index: number) => (
                         <SafeImage
                           key={index}
                           src={file || "/placeholder.svg"}
                           alt={`Project image ${index + 1}`}
                           width={800}
                           height={800}
-                          className="rounded-lg object-cover w-full"
+                          className="w-full rounded-lg object-cover"
                         />
-                      )
-                    )}
+                      ))}
                   </div>
                 </div>
               </motion.div>

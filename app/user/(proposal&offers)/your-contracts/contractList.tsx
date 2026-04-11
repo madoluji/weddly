@@ -26,6 +26,7 @@ interface Contract {
   status: string;
   toDueDate: number | null;
   isNew: boolean;
+  lastUpdated: string;
 }
 
 const ContractList = () => {
@@ -72,6 +73,7 @@ const ContractList = () => {
               toDueDate: daysUntilDue,
               jobId: offer.jobId?._id || "",
               status: offer.status,
+              lastUpdated: changedAt || offer.updatedAt || offer.createdAt,
               isNew:
                 !!changedAt &&
                 new Date(changedAt) >
@@ -102,12 +104,34 @@ const ContractList = () => {
     router.push(`?${params.toString()}`, { scroll: false });
   };
 
-  // Filter contracts based on active tab
-  const filteredContracts = contract.filter((c) =>
-    activeTab === "active-contracts"
-      ? c.status === "active"
-      : ["completed", "canceled"].includes(c.status)
-  );
+  // Filter and prioritize contracts based on active tab
+  const filteredContracts = useMemo(() => {
+    const scoped = contract.filter((c) =>
+      activeTab === "active-contracts"
+        ? c.status === "active"
+        : ["completed", "canceled"].includes(c.status)
+    );
+
+    if (activeTab === "active-contracts") {
+      return scoped.sort((a, b) => {
+        const aDays = a.toDueDate ?? Number.POSITIVE_INFINITY;
+        const bDays = b.toDueDate ?? Number.POSITIVE_INFINITY;
+
+        // Lower day count first: overdue (-) -> due today (0) -> due soon -> later
+        if (aDays !== bDays) return aDays - bDays;
+
+        return (
+          new Date(b.lastUpdated).getTime() - new Date(a.lastUpdated).getTime()
+        );
+      });
+    }
+
+    // Archived: newest updates first
+    return scoped.sort(
+      (a, b) =>
+        new Date(b.lastUpdated).getTime() - new Date(a.lastUpdated).getTime()
+    );
+  }, [contract, activeTab]);
 
   const stats = useMemo(
     () => [
@@ -189,7 +213,7 @@ const ContractList = () => {
     if (item.status === "completed") return "from-primary-50 via-white to-white";
     if (item.status === "canceled") return "from-rose-50 via-white to-white";
     if (item.toDueDate !== null && item.toDueDate <= 3) {
-      return "from-amber-50 via-white to-white";
+      return "from-primary-50 via-white to-white";
     }
 
     return "from-emerald-50 via-white to-white";
@@ -221,6 +245,13 @@ const ContractList = () => {
     if (days === 0) return "Due today";
     if (days === 1) return "1 day remaining";
     return `${days} days remaining`;
+  };
+
+  const dueDateTone = (days: number | null) => {
+    if (days === null) return "text-slate-500";
+    if (days < 0) return "text-rose-600";
+    if (days <= 3) return "text-primary-700";
+    return "text-slate-500";
   };
 
   const renderLoadingCards = () => (
@@ -356,6 +387,9 @@ const ContractList = () => {
                     <p className="font-body mt-2 text-sm text-slate-500">
                       With {offer.company}
                     </p>
+                    <p className="font-body mt-1 text-xs text-slate-400">
+                      Updated {formatDate(offer.lastUpdated)}
+                    </p>
                   </div>
 
                   <span
@@ -387,7 +421,7 @@ const ContractList = () => {
                     <p className="mt-3 font-body text-lg font-semibold text-slate-900">
                       {formatDate(offer.deadline)}
                     </p>
-                    <p className="mt-2 text-sm text-slate-500">
+                    <p className={`mt-2 text-sm ${dueDateTone(offer.toDueDate)}`}>
                       {dueDateLabel(offer.toDueDate)}
                     </p>
                   </div>

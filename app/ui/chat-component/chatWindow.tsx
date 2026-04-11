@@ -43,7 +43,12 @@ const ChatWindow: React.FC = () => {
   const { userData, messagesId, chatUser, messages, setMessages, chatVisual } =
     useContext(Appcontext);
 
+  const getAvatar = (user: any) =>
+    user?.avatar || user?.profilePicture || "/images/image.png";
+  const getDisplayName = (user: any) => user?.username || user?.name || "User";
+
   const [input, setInput] = useState("");
+  const [density, setDensity] = useState<"comfortable" | "compact">("comfortable");
 
   const [isChatOpen, setIsChatOpen] = useState<boolean>(true);
 
@@ -86,7 +91,7 @@ const ChatWindow: React.FC = () => {
           messageId: messagesId,
           textPreview,
           senderName: userData.username || userData.name || "Someone",
-          senderAvatar: userData.avatar || null,
+          senderAvatar: getAvatar(userData),
         }),
       });
     } catch (error) {
@@ -486,95 +491,150 @@ const ChatWindow: React.FC = () => {
   return (
     <>
       <UserProfileLoader />
-      <div className="w-full p-5">
-        <div className="flex flex-row gap-5 justify-between bg-white">
-          <div className="w-1/3 h-[calc(100vh-120px)] relative rounded-3xl shadow-[0_10px_20px_rgba(228,228,228,_0.7)] overflow-hidden">
+      <div className="w-full">
+        <div className="mb-3 flex items-center justify-between px-1">
+          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
+            Display Density
+          </p>
+          <div className="inline-flex rounded-lg border border-slate-200 bg-white p-1">
+            <button
+              type="button"
+              onClick={() => setDensity("compact")}
+              className={`rounded-md px-3 py-1.5 text-xs font-semibold transition ${
+                density === "compact"
+                  ? "bg-primary-700 text-white"
+                  : "text-slate-600 hover:bg-slate-100"
+              }`}
+            >
+              Compact
+            </button>
+            <button
+              type="button"
+              onClick={() => setDensity("comfortable")}
+              className={`rounded-md px-3 py-1.5 text-xs font-semibold transition ${
+                density === "comfortable"
+                  ? "bg-primary-700 text-white"
+                  : "text-slate-600 hover:bg-slate-100"
+              }`}
+            >
+              Comfortable
+            </button>
+          </div>
+        </div>
+
+        <div className={`grid rounded-2xl border border-slate-200 bg-slate-50 lg:grid-cols-[300px_minmax(0,1fr)] ${density === "compact" ? "gap-2 p-2" : "gap-3 p-2 sm:p-3"}`}>
+          <div className={`h-[calc(100vh-220px)] overflow-hidden rounded-2xl border border-slate-200 bg-white ${density === "compact" ? "min-h-[520px]" : "min-h-[560px]"}`}>
             <Suspense>
-              <ChatList />
+              <ChatList density={density} />
             </Suspense>
           </div>
 
-          {chatUser.id !== "0" ? (
-            <>
-              <div className=" w-full rounded-3xl overflow-scroll h-[calc(100vh-120px)] shadow-[0_10px_20px_rgba(228,228,228,_0.7)] flex flex-col justify-between">
-                <div className="flex break-words flex-col-reverse mt-5">
+          {chatUser?.id !== "0" ? (
+            <div className={`flex h-[calc(100vh-220px)] flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white ${density === "compact" ? "min-h-[520px]" : "min-h-[560px]"}`}>
+              <div className={`flex items-center justify-between border-b border-slate-200 bg-white ${density === "compact" ? "px-3 py-2.5" : "px-4 py-3 sm:px-5"}`}>
+                <div className="flex min-w-0 items-center gap-3">
+                  <SafeImage
+                    src={getAvatar(chatUser)}
+                    className="h-10 w-10 rounded-full object-cover border border-slate-200"
+                    alt="Chat user avatar"
+                    width={40}
+                    height={40}
+                  />
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-semibold text-slate-900 sm:text-base">
+                      {getDisplayName(chatUser)}
+                    </p>
+                    <p className="truncate text-xs text-slate-500">
+                      Last seen {convertTimestamp(chatUser.lastSeen)}
+                    </p>
+                  </div>
+                </div>
+                <span className="rounded-full border border-primary-200 bg-primary-50 px-2.5 py-1 text-xs font-semibold text-primary-700">
+                  {isChatOpen ? "Active" : "Closed"}
+                </span>
+              </div>
+
+              <div className={`flex-1 overflow-y-auto ${density === "compact" ? "px-2.5 py-3" : "px-3 py-4 sm:px-4"}`}>
+                <div className={`flex flex-col-reverse break-words ${density === "compact" ? "gap-2" : "gap-3"}`}>
                   {messages?.map((msg: Message, index: number) => (
                     <div
                       key={index}
-                      className={`flex mb-4 items-center ${
+                      className={`flex items-end gap-2 ${
                         msg.attachment
                           ? "justify-center"
                           : msg.sId === userData?.id
                             ? "justify-end"
-                            : "justify-end flex-row-reverse"
-                      } `}
+                            : "justify-start"
+                      }`}
                     >
+                      {msg.sId !== userData?.id && !msg.attachment && (
+                        <SafeImage
+                          src={getAvatar(chatUser)}
+                          className="h-8 w-8 rounded-full object-cover"
+                          alt="User avatar"
+                          width={32}
+                          height={32}
+                        />
+                      )}
+
                       <div
-                        className={`py-3 px-4 text-white ${
+                        className={`${density === "compact" ? "px-3 py-2" : "px-4 py-2.5"} ${
                           msg.attachment
-                            ? "w-5/6"
+                            ? "w-[92%]"
                             : msg.sId === userData?.id
-                              ? "bg-primary-500 mr-2 rounded-bl-3xl max-w-md rounded-tl-3xl rounded-tr-xl"
-                              : "bg-gray-300 ml-2 rounded-br-3xl rounded-tr-3xl max-w-md rounded-tl-xl"
+                              ? "max-w-[75%] rounded-2xl rounded-br-md bg-primary-700 text-white"
+                              : "max-w-[75%] rounded-2xl rounded-bl-md bg-slate-100 text-slate-800"
                         }`}
                       >
                         {msg.image ? (
                           <SafeImage
-                            width={200}
-                            height={200}
+                            width={220}
+                            height={220}
                             src={msg.image}
                             alt={"msg-image"}
+                            className="rounded-lg"
                           />
                         ) : msg.attachment ? (
                           msg.attachment.type === "proposalDetails" ? (
-                            <ProposalDetailsComponent
-                              data={msg.attachment.data}
-                              msg={msg}
-                            />
+                            <ProposalDetailsComponent data={msg.attachment.data} msg={msg} />
                           ) : msg.attachment.type === "contractOffer" ? (
-                            <ContractOfferComponent
-                              data={msg.attachment.data}
-                              msg={msg}
-                            />
+                            <ContractOfferComponent data={msg.attachment.data} msg={msg} />
                           ) : msg.attachment.type === "activeContract" ? (
-                            <ActiveContractComponent
-                              data={msg.attachment.data}
-                              msg={msg}
-                            />
+                            <ActiveContractComponent data={msg.attachment.data} msg={msg} />
                           ) : null
                         ) : (
-                          <p className="msg break-words">{msg.text}</p>
+                          <p className="break-words text-sm leading-6">{msg.text}</p>
                         )}
                       </div>
-                      <SafeImage
-                        src={
-                          msg.sId === userData?.id
-                            ? userData.avatar || "/images/image.png"
-                            : chatUser.avatar || "/images/image.png"
-                        }
-                        className={`${msg.attachment ? "hidden" : ""} object-cover h-8 w-8 rounded-full`}
-                        alt="User avatar"
-                        width={32}
-                        height={32}
-                      />
-                      <p
-                        className={`text-sm mx-2 ${msg.attachment ? "hidden" : ""}`}
-                      >
-                        {convertTimestamp(msg.createdAt)}
-                      </p>
+
+                      {msg.sId === userData?.id && !msg.attachment && (
+                        <SafeImage
+                          src={getAvatar(userData)}
+                          className="h-8 w-8 rounded-full object-cover"
+                          alt="User avatar"
+                          width={32}
+                          height={32}
+                        />
+                      )}
+
+                      {!msg.attachment && (
+                        <p className="text-[11px] text-slate-500">{convertTimestamp(msg.createdAt)}</p>
+                      )}
                     </div>
                   ))}
                 </div>
+              </div>
 
-                {isChatOpen === true ? (
-                  <div className="py-5  flex items-center bottom-0 sticky bg-white w-full px-5">
+              {isChatOpen ? (
+                <div className={`border-t border-slate-200 bg-white ${density === "compact" ? "p-2.5" : "p-3 sm:p-4"}`}>
+                  <div className={`flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 ${density === "compact" ? "px-2.5 py-1.5" : "px-3 py-2"}`}>
                     <input
-                      className="w-full bg-gray-200 py-5 px-3 rounded-xl"
+                      className={`w-full bg-transparent text-sm text-slate-700 outline-none placeholder:text-slate-400 ${density === "compact" ? "h-9" : "h-10"}`}
                       onChange={(e) => setInput(e.target.value)}
                       value={input}
                       onKeyDown={handleKeyDown}
                       type="text"
-                      placeholder="Type your message here..."
+                      placeholder="Type your message..."
                     />
                     <input
                       onChange={sendImage}
@@ -583,48 +643,34 @@ const ChatWindow: React.FC = () => {
                       accept="image/png, image/jpeg"
                       hidden
                     />
-                    <label htmlFor="image">
-                      <PhotoIcon className="w-8 h-8 top-0 " />
+                    <label htmlFor="image" className="cursor-pointer rounded-lg p-1.5 transition hover:bg-slate-200">
+                      <PhotoIcon className="h-6 w-6 text-primary-700" />
                     </label>
-                    <span onClick={sendMessage}>
-                      <PaperAirplaneIcon className="w-8 h-8 top-0 " />
-                    </span>
+                    <button
+                      type="button"
+                      onClick={sendMessage}
+                      className="rounded-lg p-1.5 transition hover:bg-slate-200"
+                      aria-label="Send message"
+                    >
+                      <PaperAirplaneIcon className="h-6 w-6 text-primary-700" />
+                    </button>
                   </div>
-                ) : (
-                  <div className="py-5 flex items-center justify-center bottom-0 sticky text-center text-primary-500 bg-white w-full px-5">
-                    This chat is no longer available for you to send messages.
-                  </div>
-                )}
-              </div>
-
-              <div className="w-2/5 border-l-2 px-5">
-                <div className="flex flex-col">
-                  <div className="font-semibold text-xl py-4 ">
-                    {chatUser.username}
-                  </div>
-                  <SafeImage
-                    src={chatUser.avatar || "/images/image.png"}
-                    className="object-cover rounded-full"
-                    alt="Group image"
-                    width={200}
-                    height={200}
-                  />
-                  <div className="font-semibold py-4  text-neutral-400">
-                    Last seen {convertTimestamp(chatUser.lastSeen)}
-                  </div>
-                  <div className="font-light"></div>
                 </div>
-              </div>
-            </>
+              ) : (
+                <div className="border-t border-slate-200 bg-white px-4 py-5 text-center text-sm font-medium text-slate-600">
+                  This chat is no longer available for you to send messages.
+                </div>
+              )}
+            </div>
           ) : (
-            <div className={`chat-welcome ${chatVisual ? "" : "hidden"}`}>
+            <div className={`chat-welcome rounded-2xl border border-slate-200 bg-white ${chatVisual ? "" : "hidden"}`}>
               <Image
                 src={"/logo/weddlylogo-v2.png"}
                 width={32}
                 height={32}
                 alt={"logo"}
               />
-              <p>chat anytime, anywhere</p>
+              <p>Chat anytime, anywhere</p>
             </div>
           )}
         </div>

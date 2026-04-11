@@ -121,7 +121,10 @@ const Appcontextprovider: React.FC<Props> = ({ children }) => {
               getDoc(messageRef)
             ]);
 
-            const userData = userSnap.data() as UserData;
+            const userData = {
+              ...(userSnap.data() as UserData),
+              id: item.rId,
+            };
             const messagesList = messageSnap.data()?.messages || [];
             const lastMsg = messagesList.length > 0 ? messagesList[messagesList.length - 1] : null;
 

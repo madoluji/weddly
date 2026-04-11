@@ -1,597 +1,659 @@
 "use client";
+
+import Link from "next/link";
+import { useEffect, useMemo, useState } from "react";
+import {
+  CalendarDaysIcon,
+  ChartBarIcon,
+  CurrencyDollarIcon,
+  EyeIcon,
+  MapPinIcon,
+  PencilSquareIcon,
+  SparklesIcon,
+  StarIcon,
+  UserCircleIcon,
+  XMarkIcon,
+} from "@heroicons/react/24/outline";
+import SafeImage from "@/app/ui/shared/SafeImage";
 import { fetchWithAuth } from "@/app/lib/fetchWIthAuth";
 import { useAuth } from "@/app/providers";
-import { BuildingOffice2Icon } from "@heroicons/react/24/outline";
-import { useEffect, useState } from "react";
-import StarRating from "../starRating";
-import SafeImage from "@/app/ui/shared/SafeImage";
+
+type UserInfo = {
+  _id: string;
+  name?: string;
+  lastName?: string;
+  email?: string;
+  city?: string;
+  state?: string;
+  country?: string;
+  profilePicture?: string;
+  profileVisible?: boolean;
+  kycVerified?: boolean;
+  emailVerified?: boolean;
+};
+
+type ClientInfo = {
+  fullName?: string;
+  isWeddingPlanner?: boolean;
+  weddingStyle?: string;
+  targetWeddingDate?: string;
+  location?: string;
+  averageBudget?: number;
+  rating?: number;
+};
+
+type Job = {
+  jobId: string;
+  title: string;
+  type?: string;
+  experience?: string;
+  budget?: number;
+  createdAt: string;
+  eventDate?: string;
+  location?: string;
+  tags?: string[];
+  status?: string;
+  proposalCount?: number;
+};
+
+const formatDate = (date?: string) => {
+  if (!date) return "Not set";
+  const d = new Date(date);
+  if (Number.isNaN(d.getTime())) return "Not set";
+
+  return d.toLocaleDateString(undefined, {
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    timeZone: "UTC",
+  });
+};
 
 export default function DisplayClientProfile() {
-  const { session, status } = useAuth();
-  const [userData, setUserData] = useState<any>(null);
-  const [clientData, setClientData] = useState<any>(null);
-  const [activeTab, setActiveTab] = useState("personal");
-  // Fetch user data
-  useEffect(() => {
-    if (session?.user?.id) {
-      const fetchUserData = async () => {
-        try {
-          const res = await fetchWithAuth(
-            `/api/user?userId=${session?.user.id}`
-          );
-          const data = await res.json();
-          setUserData(data);
-        } catch (error) {
-          console.error("Error fetching user data:", error);
-        }
-      };
-      fetchUserData();
-    }
-  }, [session]);
+  const { session } = useAuth();
 
-  // Fetch client data
-  useEffect(() => {
-    if (session?.user?.id) {
-      const fetchClientData = async () => {
-        try {
-          const res = await fetchWithAuth(
-            `/api/clientInfo?userId=${session?.user.id}`
-          );
-          const data = await res.json();
-          setClientData(data.client); // Extract client object
-        } catch (error) {
-          console.error("Error fetching client data:", error);
-        }
-      };
-      fetchClientData();
-    }
-  }, [session]);
+  const [userData, setUserData] = useState<UserInfo | null>(null);
+  const [clientData, setClientData] = useState<ClientInfo | null>(null);
+  const [jobs, setJobs] = useState<Job[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [savingVisibility, setSavingVisibility] = useState(false);
+  const [quickEditOpen, setQuickEditOpen] = useState(false);
+  const [savingQuickEdit, setSavingQuickEdit] = useState(false);
+  const [quickEditForm, setQuickEditForm] = useState({
+    firstName: "",
+    lastName: "",
+    weddingStyle: "",
+    targetWeddingDate: "",
+    location: "",
+    averageBudget: "",
+    isWeddingPlanner: false,
+  });
 
-  // Get user initials for avatar fallback
-  const getInitials = () => {
-    if (!userData?.name) return "U";
-    return `${userData.name.charAt(0)}${userData.lastName ? userData.lastName.charAt(0) : ""}`;
+  const displayName = useMemo(() => {
+    const first = userData?.name || "";
+    const last = userData?.lastName || "";
+    const fromUser = `${first} ${last}`.trim();
+    return fromUser || clientData?.fullName || "Client";
+  }, [clientData?.fullName, userData?.lastName, userData?.name]);
+
+  const activeJobs = useMemo(
+    () => jobs.filter((job) => (job.status || "").toLowerCase() === "active").length,
+    [jobs]
+  );
+
+  const totalBudget = useMemo(
+    () => jobs.reduce((sum, job) => sum + Number(job.budget || 0), 0),
+    [jobs]
+  );
+
+  const totalProposals = useMemo(
+    () => jobs.reduce((sum, job) => sum + Number(job.proposalCount || 0), 0),
+    [jobs]
+  );
+
+  const topTags = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const job of jobs) {
+      for (const tag of job.tags || []) {
+        counts.set(tag, (counts.get(tag) || 0) + 1);
+      }
+    }
+
+    return Array.from(counts.entries())
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 8)
+      .map(([tag]) => tag);
+  }, [jobs]);
+
+  const profileStrength = useMemo(() => {
+    const checks = [
+      Boolean(userData?.profilePicture),
+      Boolean(clientData?.weddingStyle),
+      Boolean(clientData?.targetWeddingDate),
+      Boolean(clientData?.location),
+      Boolean(clientData?.averageBudget),
+      Boolean(jobs.length),
+      Boolean(topTags.length),
+      Boolean(userData?.city),
+      Boolean(userData?.country),
+      Boolean(userData?.emailVerified),
+    ];
+
+    const complete = checks.filter(Boolean).length;
+    return Math.round((complete / checks.length) * 100);
+  }, [
+    clientData?.averageBudget,
+    clientData?.location,
+    clientData?.targetWeddingDate,
+    clientData?.weddingStyle,
+    jobs.length,
+    topTags.length,
+    userData?.city,
+    userData?.country,
+    userData?.emailVerified,
+    userData?.profilePicture,
+  ]);
+
+  const clientSummary = useMemo(() => {
+    const pieces = [
+      clientData?.weddingStyle ? `${clientData.weddingStyle} style` : null,
+      clientData?.targetWeddingDate ? `Target ${formatDate(clientData.targetWeddingDate)}` : null,
+      clientData?.location || userData?.city || null,
+      clientData?.averageBudget ? `Budget Rs ${clientData.averageBudget.toLocaleString()}` : null,
+    ].filter(Boolean);
+
+    if (!pieces.length) {
+      return "Complete your settings to publish a richer client profile for better freelancer matches.";
+    }
+
+    return pieces.join(" • ");
+  }, [
+    clientData?.averageBudget,
+    clientData?.location,
+    clientData?.targetWeddingDate,
+    clientData?.weddingStyle,
+    userData?.city,
+  ]);
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      if (!session?.user?.id) {
+        setLoading(false);
+        return;
+      }
+
+      setLoading(true);
+      try {
+        const [userRes, clientRes, jobsRes] = await Promise.all([
+          fetchWithAuth(
+            "/api/user?fields=_id,name,lastName,email,city,state,country,profilePicture,profileVisible,kycVerified,emailVerified"
+          ),
+          fetchWithAuth(`/api/clientInfo?userId=${encodeURIComponent(session.user.id)}`),
+          fetchWithAuth(`/api/fetchJobs?userId=${encodeURIComponent(session.user.id)}`),
+        ]);
+
+        if (userRes.ok) {
+          const user = await userRes.json();
+          setUserData(user);
+        }
+
+        if (clientRes.ok) {
+          const data = await clientRes.json();
+          setClientData(data?.client || null);
+        } else {
+          setClientData(null);
+        }
+
+        if (jobsRes.ok) {
+          const jobsData = await jobsRes.json();
+          setJobs(jobsData?.jobs || []);
+        } else {
+          setJobs([]);
+        }
+      } catch (error) {
+        setUserData(null);
+        setClientData(null);
+        setJobs([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProfile();
+  }, [session?.user?.id]);
+
+  useEffect(() => {
+    setQuickEditForm({
+      firstName: userData?.name || "",
+      lastName: userData?.lastName || "",
+      weddingStyle: clientData?.weddingStyle || "",
+      targetWeddingDate: clientData?.targetWeddingDate || "",
+      location: clientData?.location || "",
+      averageBudget:
+        clientData?.averageBudget !== undefined ? String(clientData.averageBudget) : "",
+      isWeddingPlanner: Boolean(clientData?.isWeddingPlanner),
+    });
+  }, [
+    clientData?.averageBudget,
+    clientData?.isWeddingPlanner,
+    clientData?.location,
+    clientData?.targetWeddingDate,
+    clientData?.weddingStyle,
+    userData?.lastName,
+    userData?.name,
+  ]);
+
+  const handleQuickEditSave = async () => {
+    setSavingQuickEdit(true);
+    try {
+      const nextFirstName = quickEditForm.firstName.trim();
+      const nextLastName = quickEditForm.lastName.trim();
+
+      const userRes = await fetchWithAuth("/api/user", {
+        method: "PATCH",
+        body: JSON.stringify({
+          name: nextFirstName,
+          lastName: nextLastName,
+        }),
+      });
+
+      if (!userRes.ok) {
+        throw new Error("Failed to update user profile");
+      }
+
+      const clientRes = await fetchWithAuth("/api/clientInfo", {
+        method: "PUT",
+        body: JSON.stringify({
+          fullName: `${nextFirstName} ${nextLastName}`.trim(),
+          isWeddingPlanner: quickEditForm.isWeddingPlanner,
+          weddingStyle: quickEditForm.weddingStyle.trim() || "Modern",
+          targetWeddingDate: quickEditForm.targetWeddingDate,
+          location: quickEditForm.location.trim(),
+          averageBudget: Number(quickEditForm.averageBudget || 0),
+        }),
+      });
+
+      if (!clientRes.ok) {
+        throw new Error("Failed to update client profile");
+      }
+
+      setUserData((prev) =>
+        prev
+          ? {
+              ...prev,
+              name: nextFirstName,
+              lastName: nextLastName,
+            }
+          : prev
+      );
+
+      setClientData((prev) =>
+        prev
+          ? {
+              ...prev,
+              fullName: `${nextFirstName} ${nextLastName}`.trim(),
+              isWeddingPlanner: quickEditForm.isWeddingPlanner,
+              weddingStyle: quickEditForm.weddingStyle.trim() || "Modern",
+              targetWeddingDate: quickEditForm.targetWeddingDate,
+              location: quickEditForm.location.trim(),
+              averageBudget: Number(quickEditForm.averageBudget || 0),
+            }
+          : prev
+      );
+
+      setQuickEditOpen(false);
+    } finally {
+      setSavingQuickEdit(false);
+    }
   };
 
+  const handleVisibilityChange = async (checked: boolean) => {
+    setSavingVisibility(true);
+    try {
+      const res = await fetchWithAuth("/api/user", {
+        method: "PATCH",
+        body: JSON.stringify({ profileVisible: checked }),
+      });
+
+      if (!res.ok) return;
+      setUserData((prev) => (prev ? { ...prev, profileVisible: checked } : prev));
+    } finally {
+      setSavingVisibility(false);
+    }
+  };
+
+  if (loading) {
+    return <div className="px-4 py-8 text-sm text-slate-500">Loading profile...</div>;
+  }
+
   return (
-    <div className="container mx-auto px-4 py-8 max-w-6xl">
-      {/* Profile Header Card */}
-      <div className="bg-white rounded-xl shadow-md mb-8 overflow-hidden">
-        <div className="h-32 bg-gradient-to-r from-primary-500 to-primary-300"></div>
-        <div className="relative pt-0 px-6 pb-6">
-          <div className="flex flex-col md:flex-row items-start md:items-end -mt-16 gap-4">
-            <div className="h-32 w-32 rounded-full border-4 border-white bg-gray-100 overflow-hidden">
-              {userData?.profilePicture ? (
+    <div className="mx-auto w-full max-w-[1280px] space-y-7 px-2 pb-10 sm:px-4">
+      <section className="overflow-hidden rounded-[1.6rem] bg-gradient-to-br from-[#f8fbf9] via-white to-[#edf4f0] shadow-[0_24px_54px_rgba(26,44,35,0.08)]">
+        <div className="h-36 bg-[radial-gradient(circle_at_15%_20%,rgba(47,95,74,0.22),transparent_48%),radial-gradient(circle_at_80%_15%,rgba(197,160,89,0.22),transparent_42%),linear-gradient(130deg,#e8f1ec,#f9fbfa)]" />
+        <div className="-mt-14 px-6 pb-7 sm:px-8">
+          <div className="flex flex-wrap items-end justify-between gap-4">
+            <div className="flex items-end gap-4">
+              <div className="h-28 w-28 overflow-hidden rounded-full border-4 border-white bg-white shadow-lg">
                 <SafeImage
-                  width={128}
-                  height={128}
-                  src={userData.profilePicture || "/placeholder.svg"}
-                  alt={userData?.name || "User"}
+                  src={userData?.profilePicture || "/images/image.png"}
+                  alt={displayName}
+                  width={112}
+                  height={112}
                   className="h-full w-full object-cover"
                 />
-              ) : (
-                <div className="h-full w-full flex items-center justify-center bg-primary-100 text-primary-600 text-3xl font-bold">
-                  {getInitials()}
-                </div>
-              )}
-            </div>
-            <div className="flex-1 pt-4 md:pt-0">
-              <h1 className="text-3xl font-bold text-gray-800">
-                {userData?.name} {userData?.lastName}
-              </h1>
-              <div className="flex items-center text-gray-500 mt-1">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-4 w-4 mr-1"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
-                  <polyline points="22,6 12,13 2,6"></polyline>
-                </svg>
-                <span>{userData?.email}</span>
               </div>
-              {clientData && (
-                <div className="flex flex-wrap gap-2 mt-3">
-                  {clientData.weddingStyle && (
-                    <span className="px-2 py-1 bg-primary-100 text-primary-700 text-xs rounded-full">
-                      {clientData.weddingStyle} Wedding
-                    </span>
-                  )}
-                  {clientData.isWeddingPlanner && (
-                    <span className="px-2 py-1 bg-secondary-400 text-gray-800 text-xs rounded-full">
-                      Wedding Planner
-                    </span>
-                  )}
-                </div>
-              )}
+              <div className="pb-2">
+                <h1 className="font-headline text-3xl font-medium text-slate-900 sm:text-4xl">{displayName}</h1>
+                <p className="mt-1 flex items-center gap-2 text-sm text-slate-600">
+                  <span className="font-semibold text-primary-700">
+                    {clientData?.isWeddingPlanner ? "Wedding Planner" : "Client"}
+                  </span>
+                  <span className="text-slate-300">•</span>
+                  <span>{clientData?.location || userData?.city || "Location pending"}</span>
+                </p>
+              </div>
             </div>
-            <div className="flex gap-2 mt-4 md:mt-0">
-              <span
-                className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs ${userData?.kycVerified ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-700"}`}
+
+            <div className="flex flex-wrap gap-3 pb-2">
+              <button
+                type="button"
+                onClick={() => setQuickEditOpen(true)}
+                className="inline-flex items-center gap-2 rounded-xl bg-primary-700 px-4 py-2.5 text-xs font-semibold uppercase tracking-[0.14em] text-white"
               >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-3 w-3"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  {userData?.kycVerified ? (
-                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-                  ) : (
-                    <circle cx="12" cy="12" r="10"></circle>
-                  )}
-                  {userData?.kycVerified ? (
-                    <polyline points="22 4 12 14.01 9 11.01"></polyline>
-                  ) : (
-                    <line x1="15" y1="9" x2="9" y2="15"></line>
-                  )}
-                  {!userData?.kycVerified && (
-                    <line x1="9" y1="9" x2="15" y2="15"></line>
-                  )}
-                </svg>
-                KYC {userData?.kycVerified ? "Verified" : "Pending"}
-              </span>
-              <span
-                className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs ${userData?.emailVerified ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-700"}`}
+                <PencilSquareIcon className="h-4 w-4" />
+                Quick Edit
+              </button>
+              <Link
+                href="/client/setting"
+                className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-xs font-semibold uppercase tracking-[0.14em] text-white"
               >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-3 w-3"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  {userData?.emailVerified ? (
-                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-                  ) : (
-                    <circle cx="12" cy="12" r="10"></circle>
-                  )}
-                  {userData?.emailVerified ? (
-                    <polyline points="22 4 12 14.01 9 11.01"></polyline>
-                  ) : (
-                    <line x1="15" y1="9" x2="9" y2="15"></line>
-                  )}
-                  {!userData?.emailVerified && (
-                    <line x1="9" y1="9" x2="15" y2="15"></line>
-                  )}
-                </svg>
-                Email {userData?.emailVerified ? "Verified" : "Pending"}
-              </span>
+                <PencilSquareIcon className="h-4 w-4" />
+                Edit Profile
+              </Link>
+              <Link
+                href="/client/post-job"
+                className="inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2.5 text-xs font-semibold uppercase tracking-[0.14em] text-slate-700"
+              >
+                <EyeIcon className="h-4 w-4" />
+                Post New Job
+              </Link>
             </div>
           </div>
-        </div>
-      </div>
 
-      {/* Tabs */}
-      <div className="mb-8">
-        <div className="grid grid-cols-2 border-b">
-          <button
-            onClick={() => setActiveTab("personal")}
-            className={`py-3 font-medium text-sm ${activeTab === "personal" ? "border-b-2 border-primary-500 text-primary-600" : "text-gray-500"}`}
-          >
-            Personal Information
-          </button>
-          <button
-            onClick={() => setActiveTab("client")}
-            disabled={!clientData}
-            className={`py-3 font-medium text-sm ${activeTab === "client" ? "border-b-2 border-primary-500 text-primary-600" : "text-gray-500"} ${!clientData ? "opacity-50 cursor-not-allowed" : ""}`}
-          >
-            Client Profile
-          </button>
-        </div>
-      </div>
+          <div className="mt-6 inline-flex items-center gap-2 rounded-full bg-primary-50 px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-primary-700">
+            <SparklesIcon className="h-4 w-4" />
+            {userData?.profileVisible ? "Visible to freelancers" : "Private profile mode"}
+          </div>
 
-      {activeTab === "personal" && userData && (
+          <div className="mt-6 rounded-2xl bg-white p-5">
+            <h3 className="font-headline text-2xl font-medium text-slate-900">Client Brief</h3>
+            <p className="mt-3 text-sm leading-7 text-slate-600">{clientSummary}</p>
+          </div>
+        </div>
+      </section>
+
+      <section className="grid gap-4 md:grid-cols-[minmax(0,1.4fr)_repeat(3,minmax(0,1fr))]">
+        <article className="rounded-2xl bg-white p-5 shadow-[0_14px_32px_rgba(26,44,35,0.08)]">
+          <div className="flex items-end justify-between">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">Profile Strength</p>
+              <p className="mt-1 text-sm text-slate-600">Add planning details and post more active gigs</p>
+            </div>
+            <p className="font-headline text-3xl font-medium text-primary-700">{profileStrength}%</p>
+          </div>
+          <div className="mt-4 h-2.5 rounded-full bg-slate-100">
+            <div className="h-full rounded-full bg-primary-700 transition-all" style={{ width: `${profileStrength}%` }} />
+          </div>
+        </article>
+
+        <article className="rounded-2xl bg-white p-5 text-center shadow-[0_14px_32px_rgba(26,44,35,0.08)]">
+          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">Active Jobs</p>
+          <p className="mt-2 font-headline text-3xl font-medium text-slate-900">{activeJobs}</p>
+          <p className="text-xs uppercase tracking-[0.14em] text-slate-500">Live</p>
+        </article>
+
+        <article className="rounded-2xl bg-white p-5 text-center shadow-[0_14px_32px_rgba(26,44,35,0.08)]">
+          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">Total Proposals</p>
+          <p className="mt-2 font-headline text-3xl font-medium text-slate-900">{totalProposals}</p>
+          <p className="text-xs uppercase tracking-[0.14em] text-slate-500">Received</p>
+        </article>
+
+        <article className="rounded-2xl bg-white p-5 text-center shadow-[0_14px_32px_rgba(26,44,35,0.08)]">
+          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">Rating</p>
+          <div className="mt-2 flex items-center justify-center gap-1">
+            <p className="font-headline text-3xl font-medium text-slate-900">
+              {typeof clientData?.rating === "number" ? clientData.rating.toFixed(1) : "0.0"}
+            </p>
+            <StarIcon className="h-5 w-5 text-amber-500" />
+          </div>
+          <p className="text-xs uppercase tracking-[0.14em] text-slate-500">Freelancer feedback</p>
+        </article>
+      </section>
+
+      <section className="grid gap-6 lg:grid-cols-[300px_minmax(0,1fr)]">
+        <aside className="space-y-4">
+          <article className="rounded-2xl bg-white p-5 shadow-[0_16px_36px_rgba(26,44,35,0.08)]">
+            <h3 className="font-headline text-2xl font-medium text-slate-900">Wedding Preferences</h3>
+            <div className="mt-4 space-y-3 text-sm">
+              <p className="flex items-center gap-2 text-slate-700">
+                <CalendarDaysIcon className="h-4 w-4 text-primary-700" />
+                {formatDate(clientData?.targetWeddingDate)}
+              </p>
+              <p className="flex items-center gap-2 text-slate-700">
+                <MapPinIcon className="h-4 w-4 text-primary-700" />
+                {clientData?.location || "Location not set"}
+              </p>
+              <p className="flex items-center gap-2 text-slate-700">
+                <CurrencyDollarIcon className="h-4 w-4 text-primary-700" />
+                {clientData?.averageBudget
+                  ? `Rs ${clientData.averageBudget.toLocaleString()}`
+                  : "Budget not set"}
+              </p>
+              <p className="flex items-center gap-2 text-slate-700">
+                <UserCircleIcon className="h-4 w-4 text-primary-700" />
+                {clientData?.weddingStyle || "Style not selected"}
+              </p>
+            </div>
+          </article>
+
+          <article className="rounded-2xl bg-slate-50 p-5 shadow-[0_16px_36px_rgba(26,44,35,0.06)]">
+            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Profile Visibility</p>
+            <div className="mt-4 flex items-center justify-between gap-3">
+              <p className="text-sm text-slate-700">Visible to freelancers</p>
+              <button
+                type="button"
+                onClick={() => handleVisibilityChange(!userData?.profileVisible)}
+                disabled={savingVisibility}
+                className={`relative h-7 w-14 rounded-full transition ${
+                  userData?.profileVisible ? "bg-primary-700" : "bg-slate-300"
+                } ${savingVisibility ? "opacity-70" : ""}`}
+              >
+                <span
+                  className={`absolute top-1 h-5 w-5 rounded-full bg-white transition ${
+                    userData?.profileVisible ? "left-8" : "left-1"
+                  }`}
+                />
+              </button>
+            </div>
+          </article>
+        </aside>
+
         <div className="space-y-6">
-          {/* Personal Information Card */}
-          <div className="bg-white rounded-xl shadow-md overflow-hidden">
-            <div className="px-6 py-4 border-b">
-              <div className="flex items-center gap-2">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-5 w-5 text-primary-500"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                  <circle cx="12" cy="7" r="4"></circle>
-                </svg>
-                <h2 className="text-xl font-semibold text-gray-800">
-                  Personal Information
-                </h2>
-              </div>
+          <article className="rounded-2xl bg-white p-6 shadow-[0_16px_36px_rgba(26,44,35,0.08)]">
+            <div className="mb-4 flex items-center justify-between">
+              <h3 className="font-headline text-2xl font-medium text-slate-900">Recent Job Posts</h3>
+              <Link href="/client/post-job" className="text-xs font-semibold uppercase tracking-[0.14em] text-primary-700">
+                Create Job
+              </Link>
             </div>
-            <div className="p-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <div className="flex items-start gap-2">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="h-5 w-5 text-gray-400 mt-0.5"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
-                  </svg>
-                  <div>
-                    <p className="font-medium text-gray-800">Phone</p>
-                    <p className="text-gray-600">
-                      {userData?.phone || "Not provided"}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-2">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="h-5 w-5 text-gray-400 mt-0.5"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <circle cx="12" cy="12" r="10"></circle>
-                    <line x1="2" y1="12" x2="22" y2="12"></line>
-                    <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
-                  </svg>
-                  <div>
-                    <p className="font-medium text-gray-800">Country</p>
-                    <p className="text-gray-600">
-                      {userData?.country || "Not provided"}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-2">
-                  <BuildingOffice2Icon className="h-5 w-5 text-gray-400 mt-0.5" />
-                  <div>
-                    <p className="font-medium text-gray-800">City</p>
-                    <p className="text-gray-600">
-                      {userData?.city || "Not provided"}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-2">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="h-5 w-5 text-gray-400 mt-0.5"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
-                    <circle cx="12" cy="10" r="3"></circle>
-                  </svg>
-                  <div>
-                    <p className="font-medium text-gray-800">Postal Code</p>
-                    <p className="text-gray-600">
-                      {userData?.zipPostalCode || "Not provided"}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
 
-          {/* Account Information Card */}
-          <div className="bg-white rounded-xl shadow-md overflow-hidden">
-            <div className="px-6 py-4 border-b">
-              <div className="flex items-center gap-2">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-5 w-5 text-primary-500"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-                  <line x1="16" y1="2" x2="16" y2="6"></line>
-                  <line x1="8" y1="2" x2="8" y2="6"></line>
-                  <line x1="3" y1="10" x2="21" y2="10"></line>
-                </svg>
-                <h2 className="text-xl font-semibold text-gray-800">
-                  Account Information
-                </h2>
-              </div>
-            </div>
-            <div className="p-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="flex items-start gap-2">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="h-5 w-5 text-gray-400 mt-0.5"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
-                    <polyline points="22,6 12,13 2,6"></polyline>
-                  </svg>
-                  <div>
-                    <p className="font-medium text-gray-800">Email</p>
-                    <p className="text-gray-600">
-                      {userData?.email || "Not provided"}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-2">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="h-5 w-5 text-gray-400 mt-0.5"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-                    <polyline points="22 4 12 14.01 9 11.01"></polyline>
-                  </svg>
-                  <div>
-                    <p className="font-medium text-gray-800">KYC Verified</p>
-                    <p className="text-gray-600">
-                      {userData?.kycVerified ? "Yes" : "No"}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-2">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="h-5 w-5 text-gray-400 mt-0.5"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
-                    <polyline points="22,6 12,13 2,6"></polyline>
-                  </svg>
-                  <div>
-                    <p className="font-medium text-gray-800">Email Verified</p>
-                    <p className="text-gray-600">
-                      {userData?.emailVerified ? "Yes" : "No"}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {activeTab === "client" && clientData && (
-        <div className="space-y-6">
-          {/* Wedding Details Card */}
-          <div className="bg-white rounded-xl shadow-md overflow-hidden">
-            <div className="px-6 py-4 border-b">
-              <div className="flex items-center gap-2">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-5 w-5 text-primary-500"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
-                  <polyline points="9 22 9 12 15 12 15 22"></polyline>
-                </svg>
-                <h2 className="text-xl font-semibold text-gray-800">
-                  Wedding Details
-                </h2>
-              </div>
-            </div>
-            <div className="p-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="flex items-start gap-2">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="h-5 w-5 text-gray-400 mt-0.5"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                    <circle cx="12" cy="7" r="4"></circle>
-                  </svg>
-                  <div>
-                    <p className="font-medium text-gray-800">Full Name</p>
-                    <p className="text-gray-600">
-                      {clientData?.fullName || "Not provided"}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-2">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="h-5 w-5 text-gray-400 mt-0.5"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                    <circle cx="12" cy="7" r="4"></circle>
-                  </svg>
-                  <div>
-                    <p className="font-medium text-gray-800">Wedding Planner</p>
-                    <p className="text-gray-600">
-                      {clientData?.isWeddingPlanner ? "Yes" : "No"}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-2">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="h-5 w-5 text-gray-400 mt-0.5"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
-                    <circle cx="12" cy="10" r="3"></circle>
-                  </svg>
-                  <div>
-                    <p className="font-medium text-gray-800">Location</p>
-                    <p className="text-gray-600">
-                      {clientData?.location || "Not provided"}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-2">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="h-5 w-5 text-gray-400 mt-0.5"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-                    <line x1="16" y1="2" x2="16" y2="6"></line>
-                    <line x1="8" y1="2" x2="8" y2="6"></line>
-                    <line x1="3" y1="10" x2="21" y2="10"></line>
-                  </svg>
-                  <div>
-                    <p className="font-medium text-gray-800">Target Wedding Date</p>
-                    <p className="text-gray-600">
-                      {clientData?.targetWeddingDate || "Not provided"}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-2">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="h-5 w-5 text-gray-400 mt-0.5"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <line x1="12" y1="1" x2="12" y2="23"></line>
-                    <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
-                  </svg>
-                  <div>
-                    <p className="font-medium text-gray-800">Average Budget</p>
-                    <p className="text-gray-600">
-                      {clientData?.averageBudget
-                        ? `$${clientData.averageBudget}`
-                        : "Not provided"}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-2">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="h-5 w-5 text-gray-400 mt-0.5"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
-                  </svg>
-                  <div>
-                    <p className="font-medium text-gray-800">Rating</p>
-                    <StarRating rating={clientData?.rating} />{" "}
-                    {/* 
-                    <br />
-                    <p className="text-gray-600">
-                      {clientData?.rating !== undefined &&
-                      clientData?.rating !== null
-                        ? `${clientData.rating} / 5`
-                        : "Not rated yet"}
-                    </p>
-                     */}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Wedding Preferences Card */}
-          <div className="bg-white rounded-xl shadow-md overflow-hidden">
-            <div className="px-6 py-4 border-b">
-              <div className="flex items-center gap-2">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-5 w-5 text-primary-500"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
-                </svg>
-                <h2 className="text-xl font-semibold text-gray-800">
-                  Wedding Preferences
-                </h2>
-              </div>
-            </div>
-            <div className="p-6">
-              <div className="space-y-4">
-                <div>
-                  <h3 className="font-medium text-gray-800 mb-2">Wedding Style</h3>
-                  <div className="flex flex-wrap gap-2">
-                    {clientData?.weddingStyle ? (
-                      <span className="px-3 py-1 bg-primary-100 text-primary-700 text-sm rounded-full">
-                        {clientData.weddingStyle}
+            {jobs.length ? (
+              <div className="space-y-3">
+                {jobs.slice(0, 6).map((job, index) => (
+                  <div key={job.jobId || `job-${index}`} className="rounded-xl bg-slate-50 p-4">
+                    <div className="flex flex-wrap items-start justify-between gap-3">
+                      <div>
+                        <p className="text-base font-semibold text-slate-900">{job.title}</p>
+                        <p className="mt-1 text-xs uppercase tracking-[0.12em] text-slate-500">
+                          {job.type || "General"} • {job.experience || "Any"}
+                        </p>
+                      </div>
+                      <span className="rounded-full bg-white px-2.5 py-1 text-xs font-medium capitalize text-slate-700">
+                        {job.status || "active"}
                       </span>
-                    ) : (
-                      <p className="text-gray-500">No style selected</p>
-                    )}
+                    </div>
+
+                    <div className="mt-3 flex flex-wrap gap-3 text-xs text-slate-600">
+                      <span className="inline-flex items-center gap-1">
+                        <CalendarDaysIcon className="h-4 w-4 text-primary-700" />
+                        Posted {formatDate(job.createdAt)}
+                      </span>
+                      <span className="inline-flex items-center gap-1">
+                        <CurrencyDollarIcon className="h-4 w-4 text-primary-700" />
+                        Rs {Number(job.budget || 0).toLocaleString()}
+                      </span>
+                      <span className="inline-flex items-center gap-1">
+                        <ChartBarIcon className="h-4 w-4 text-primary-700" />
+                        {job.proposalCount || 0} proposals
+                      </span>
+                    </div>
                   </div>
-                </div>
+                ))}
               </div>
+            ) : (
+              <p className="text-sm text-slate-500">No jobs posted yet. Create your first job to start receiving proposals.</p>
+            )}
+          </article>
+
+          <article className="rounded-2xl bg-white p-6 shadow-[0_16px_36px_rgba(26,44,35,0.08)]">
+            <h3 className="font-headline text-2xl font-medium text-slate-900">Top Categories</h3>
+            <div className="mt-4 flex flex-wrap gap-2">
+              {topTags.length ? (
+                topTags.map((tag) => (
+                  <span
+                    key={tag}
+                    className="rounded-full bg-primary-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.1em] text-primary-800"
+                  >
+                    {tag}
+                  </span>
+                ))
+              ) : (
+                <p className="text-sm text-slate-500">Your most used categories will appear here once you post tagged jobs.</p>
+              )}
+            </div>
+          </article>
+        </div>
+      </section>
+
+      {quickEditOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-2xl rounded-2xl bg-white p-6 shadow-[0_26px_56px_rgba(26,44,35,0.24)]">
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="font-headline text-2xl font-medium text-slate-900">Quick Edit Client Profile</h2>
+              <button
+                type="button"
+                onClick={() => setQuickEditOpen(false)}
+                className="rounded-lg p-1 text-slate-500 transition hover:bg-slate-100"
+              >
+                <XMarkIcon className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              <label className="text-sm">
+                <span className="mb-1 block text-slate-500">First name</span>
+                <input
+                  value={quickEditForm.firstName}
+                  onChange={(e) =>
+                    setQuickEditForm((prev) => ({ ...prev, firstName: e.target.value }))
+                  }
+                  className="w-full rounded-lg bg-slate-100 px-3 py-2 outline-none focus:bg-white"
+                />
+              </label>
+              <label className="text-sm">
+                <span className="mb-1 block text-slate-500">Last name</span>
+                <input
+                  value={quickEditForm.lastName}
+                  onChange={(e) =>
+                    setQuickEditForm((prev) => ({ ...prev, lastName: e.target.value }))
+                  }
+                  className="w-full rounded-lg bg-slate-100 px-3 py-2 outline-none focus:bg-white"
+                />
+              </label>
+              <label className="text-sm sm:col-span-2">
+                <span className="mb-1 block text-slate-500">Wedding style</span>
+                <input
+                  value={quickEditForm.weddingStyle}
+                  onChange={(e) =>
+                    setQuickEditForm((prev) => ({ ...prev, weddingStyle: e.target.value }))
+                  }
+                  className="w-full rounded-lg bg-slate-100 px-3 py-2 outline-none focus:bg-white"
+                />
+              </label>
+              <label className="text-sm">
+                <span className="mb-1 block text-slate-500">Target wedding date</span>
+                <input
+                  type="date"
+                  value={quickEditForm.targetWeddingDate}
+                  onChange={(e) =>
+                    setQuickEditForm((prev) => ({ ...prev, targetWeddingDate: e.target.value }))
+                  }
+                  className="w-full rounded-lg bg-slate-100 px-3 py-2 outline-none focus:bg-white"
+                />
+              </label>
+              <label className="text-sm">
+                <span className="mb-1 block text-slate-500">Average budget (Rs)</span>
+                <input
+                  value={quickEditForm.averageBudget}
+                  onChange={(e) =>
+                    setQuickEditForm((prev) => ({ ...prev, averageBudget: e.target.value }))
+                  }
+                  className="w-full rounded-lg bg-slate-100 px-3 py-2 outline-none focus:bg-white"
+                />
+              </label>
+              <label className="text-sm sm:col-span-2">
+                <span className="mb-1 block text-slate-500">Location</span>
+                <input
+                  value={quickEditForm.location}
+                  onChange={(e) =>
+                    setQuickEditForm((prev) => ({ ...prev, location: e.target.value }))
+                  }
+                  className="w-full rounded-lg bg-slate-100 px-3 py-2 outline-none focus:bg-white"
+                />
+              </label>
+              <label className="inline-flex items-center gap-3 text-sm sm:col-span-2">
+                <input
+                  type="checkbox"
+                  checked={quickEditForm.isWeddingPlanner}
+                  onChange={(e) =>
+                    setQuickEditForm((prev) => ({
+                      ...prev,
+                      isWeddingPlanner: e.target.checked,
+                    }))
+                  }
+                  className="h-4 w-4 rounded border-slate-300 text-primary-700 focus:ring-primary-200"
+                />
+                <span className="text-slate-700">I am a wedding planner</span>
+              </label>
+            </div>
+
+            <div className="mt-6 flex justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => setQuickEditOpen(false)}
+                className="rounded-lg bg-slate-100 px-4 py-2 text-sm font-medium text-slate-700"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleQuickEditSave}
+                disabled={savingQuickEdit}
+                className="rounded-lg bg-primary-700 px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"
+              >
+                {savingQuickEdit ? "Saving..." : "Save Changes"}
+              </button>
             </div>
           </div>
         </div>

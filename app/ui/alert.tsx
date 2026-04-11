@@ -8,8 +8,8 @@ interface AlertProps {
 const Alert = ({ type, message }: AlertProps) => {
   return (
     <div
-      className={`p-3 rounded-md text-white text-sm font-medium ${
-        type === "success" ? "bg-green-500" : "bg-red-500"
+      className={`rounded-md p-3 text-sm font-medium text-white ${
+        type === "success" ? "bg-primary-700" : "bg-slate-700"
       }`}
     >
       {message}

@@ -1,6 +1,7 @@
 "use client"
 
 import type React from "react"
+import Link from "next/link"
 import { useCallback, useEffect, useState } from "react"
 import { fetchWithAuth } from "@/app/lib/fetchWIthAuth"
 import JobDetailsModal from "@/app/ui/client-components/jobdetailsmodal/jobdetailscard"
@@ -93,13 +94,13 @@ const AllJobsList: React.FC<AllJobsListProps> = ({ userId }) => {
     .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">My Posted Wedding Gigs</h1>
-          <p className="mt-1 text-sm text-gray-500">Manage and track all the wedding gigs you have posted</p>
+    <div>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-3">
+        <div className="text-sm text-gray-500">
+          {filteredJobs.length} result{filteredJobs.length === 1 ? "" : "s"}
+          {searchTerm || sortBy !== "active" ? " after filters" : ""}
         </div>
-        <div className="mt-4 md:mt-0 flex space-x-3">
+        <div className="flex flex-wrap gap-3">
           <button
             onClick={fetchJobs}
             className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
@@ -107,18 +108,18 @@ const AllJobsList: React.FC<AllJobsListProps> = ({ userId }) => {
             <ArrowPathIcon className="h-4 w-4 mr-2" />
             Refresh
           </button>
-            <a
+          <a
             href="/client/post-job"
             className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
-            >
+          >
             <PlusCircleIcon className="h-4 w-4 mr-2" />
             Post New Wedding Gig
-            </a>
+          </a>
         </div>
       </div>
 
       {/* Search and filter */}
-      <div className="bg-white rounded-lg shadow-sm mb-6 p-4">
+      <div className="bg-gray-50 border rounded-lg mb-6 p-4">
         <div className="flex flex-col sm:flex-row sm:items-center space-y-3 sm:space-y-0 sm:space-x-4">
           <div className="relative flex-grow">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -148,8 +149,10 @@ const AllJobsList: React.FC<AllJobsListProps> = ({ userId }) => {
       </div>
 
       {isLoading ? (
-        <div className="flex justify-center items-center h-64">
-          <ArrowPathIcon className="h-8 w-8 text-gray-400 animate-spin" />
+        <div className="space-y-4">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="h-36 w-full rounded-lg bg-gray-100 animate-pulse" />
+          ))}
         </div>
       ) : jobs.length === 0 ? (
         <div className="bg-white rounded-lg shadow-sm p-12 text-center">
@@ -245,8 +248,23 @@ const AllJobsList: React.FC<AllJobsListProps> = ({ userId }) => {
                 </div>
               </div>
 
-              <div className="bg-gray-50 px-6 py-3 flex justify-end">
-                <button className="text-sm font-medium text-primary-600 hover:text-primary-500">View Details →</button>
+              <div
+                className="bg-gray-50 px-6 py-3 flex justify-end gap-4"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <button
+                  type="button"
+                  onClick={() => handleJobClick(job)}
+                  className="text-sm font-medium text-gray-600 hover:text-gray-800"
+                >
+                  View Details
+                </button>
+                <Link
+                  href={`/client/job-proposal/${job._id}`}
+                  className="text-sm font-medium text-primary-600 hover:text-primary-500"
+                >
+                  Open Proposals →
+                </Link>
               </div>
             </div>
           ))}

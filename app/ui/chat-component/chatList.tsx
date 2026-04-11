@@ -2,6 +2,7 @@
 
 import { useContext, useEffect, useState } from "react";
 import SafeImage from "@/app/ui/shared/SafeImage";
+import { usePathname, useRouter } from "next/navigation";
 import {
   arrayUnion,
   collection,
@@ -18,7 +19,11 @@ import {
 import { db } from "@/app/lib/firebase";
 import { Appcontext } from "@/app/context/appContext";
 
-const ChatList: React.FC = () => {
+interface ChatListProps {
+  density?: "comfortable" | "compact";
+}
+
+const ChatList: React.FC<ChatListProps> = ({ density = "comfortable" }) => {
   type ChatDataItem = {
     messageId: string;
     lastMessage: string;
@@ -62,11 +67,18 @@ const ChatList: React.FC = () => {
     setMessagesId,
     setChatVisual,
   } = context;
+  const router = useRouter();
+  const pathname = usePathname();
 
   const [user, setUser] = useState<UserData | null>(null);
 
   const [showSearch, setShowSearch] = useState(false);
   const [searchResults, setSearchResults] = useState<ChatDataItem[]>([]);
+
+  const getAvatar = (user: UserData | null | undefined) =>
+    user?.avatar || user?.profilePicture || "/images/image.png";
+  const getDisplayName = (user: UserData | null | undefined) =>
+    user?.username || user?.name || "User";
 
   const inputHandler = async (e: React.ChangeEvent<HTMLInputElement>) => {
     try {
@@ -122,45 +134,53 @@ const ChatList: React.FC = () => {
       }
 
       setChatVisual(true);
+
+      const basePath = pathname.startsWith("/client")
+        ? "/client/chatroom"
+        : "/user/chatroom";
+      const ownerId = userData?.id || "0";
+
+      // Ensure chat rows always open the dedicated chatroom view.
+      router.push(
+        `${basePath}/${ownerId}?messageId=${encodeURIComponent(item.messageId)}&recipientId=${encodeURIComponent(item.rId)}`
+      );
     } catch (error: any) {
       console.error(error.message);
     }
   };
 
   return (
-    <div className="h-full relative overflow-hidden rounded-2xl shadow-[0_10px_20px_rgba(228,228,228,_0.7)] border-r-2">
+    <div className="relative h-full overflow-hidden rounded-2xl bg-white">
       {/* Search component */}
-      <div className="border-b-2 py-4 px-2">
+      <div className={`border-b border-slate-200 bg-slate-50 ${density === "compact" ? "px-2.5 py-2.5" : "px-3 py-3"}`}>
         <input
           onChange={inputHandler}
           type="text"
-          placeholder="search here.."
-          className="py-2 px-2 border-2 border-gray-200 hover:border-primary-400 rounded-2xl w-full"
+          placeholder="Search conversations"
+          className={`w-full rounded-xl border border-slate-200 bg-white text-sm text-slate-700 outline-none transition focus:border-primary-300 ${density === "compact" ? "px-2.5 py-2" : "px-3 py-2.5"}`}
         />
       </div>
 
       {/* User list */}
-      <div className="h-full pb-16 overflow-scroll">
+      <div className="h-full overflow-y-auto pb-16">
         <div className="flex flex-col">
           {showSearch && searchResults.length > 0
             ? searchResults.map((item, index) => (
                 <div
                   key={index}
                   onClick={() => setChat(item)}
-                  className="flex flex-row py-2 px-2 justify-center hover:bg-gray-200 items-center border-b-2"
+                  className={`flex items-center gap-3 border-b border-slate-100 transition hover:bg-slate-50 ${density === "compact" ? "px-2.5 py-2.5" : "px-3 py-3"}`}
                 >
-                  <div className="w-1/4">
-                    <SafeImage
-                      src={item.userData.avatar || "/images/image.png"}
-                      className="object-cover h-12 w-12 rounded-full"
-                      alt={item.userData.username || "User"}
-                      width={48}
-                      height={48}
-                    />
-                  </div>
-                  <div className="w-[80%] relative">
-                    <div className="text-lg font-medium">
-                      {item.userData.username}
+                  <SafeImage
+                    src={getAvatar(item.userData)}
+                    className={`${density === "compact" ? "h-10 w-10" : "h-12 w-12"} rounded-full object-cover`}
+                    alt={getDisplayName(item.userData)}
+                    width={density === "compact" ? 40 : 48}
+                    height={density === "compact" ? 40 : 48}
+                  />
+                  <div className="relative min-w-0 flex-1">
+                    <div className="truncate text-sm font-semibold text-slate-900">
+                      {getDisplayName(item.userData)}
                     </div>
                   </div>
                 </div>
@@ -168,30 +188,28 @@ const ChatList: React.FC = () => {
             : chatData?.map((item: ChatDataItem, index: number) => (
                 <div
                   key={index}
-                  className="flex flex-row py-2 px-2 justify-center hover:bg-gray-200 items-center border-b-2"
+                  className={`flex items-center gap-3 border-b border-slate-100 transition hover:bg-slate-50 ${density === "compact" ? "px-2.5 py-2.5" : "px-3 py-3"}`}
                   onClick={() => setChat(item)}
                 >
-                  <div className="w-1/4">
-                    <SafeImage
-                      src={item.userData.avatar || "/images/image.png"}
-                      className="object-cover h-12 w-12 rounded-full"
-                      alt={item.userData.username}
-                      width={48}
-                      height={48}
-                    />
-                  </div>
-                  <div className="w-[80%] relative">
-                    <div className="text-lg font-medium">
-                      {item.userData.username}
+                  <SafeImage
+                    src={getAvatar(item.userData)}
+                    className={`${density === "compact" ? "h-10 w-10" : "h-12 w-12"} rounded-full object-cover`}
+                    alt={getDisplayName(item.userData)}
+                    width={density === "compact" ? 40 : 48}
+                    height={density === "compact" ? 40 : 48}
+                  />
+                  <div className="relative min-w-0 flex-1">
+                    <div className="truncate text-sm font-semibold text-slate-900">
+                      {getDisplayName(item.userData)}
                       {!item.messageSeen &&
                         item.rId === item.lastMessageSender && (
                           <span className="absolute top-0 right-0 h-3 w-3">
-                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-yellow-400 "></span>
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#2f5f4a]"></span>
                           </span>
                         )}
                     </div>
                     <div
-                      className={`text-sm w-[80%] overflow-hidden text-gray-500 ${!item.messageSeen ? "font-bold" : ""}`}
+                      className={`truncate text-xs text-slate-500 ${!item.messageSeen ? "font-semibold text-slate-700" : ""}`}
                     >
                       {item.rId === item.lastMessageSender ? "" : "You: "}
                       {item.lastMessage}

@@ -230,14 +230,26 @@ const LinksDropdown = ({ isDropdownVisible, isOpen, currentMode }: Props) => {
           </div>
 
           <div className="hover:bg-slate-200 p-1">
-            <Link href={"/user/setting"}>
-              <span className="flex items-center gap-1">
-                <Cog6ToothIcon className="size-8" />
-                <span className="flex flex-col ">
-                  <p>Settings</p>
+            {currentMode?.startsWith("/client") ||
+            currentMode?.startsWith("/search/talent") ? (
+              <Link href={"/client/setting"}>
+                <span className="flex items-center gap-1">
+                  <Cog6ToothIcon className="size-8" />
+                  <span className="flex flex-col ">
+                    <p>Settings</p>
+                  </span>
                 </span>
-              </span>
-            </Link>
+              </Link>
+            ) : (
+              <Link href={"/user/setting"}>
+                <span className="flex items-center gap-1">
+                  <Cog6ToothIcon className="size-8" />
+                  <span className="flex flex-col ">
+                    <p>Settings</p>
+                  </span>
+                </span>
+              </Link>
+            )}
           </div>
           <button
             onClick={() => signOut()}

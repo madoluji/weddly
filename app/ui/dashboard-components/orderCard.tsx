@@ -46,24 +46,22 @@ const OrderCard = ({ mode }: Props) => {
 
   return (
     <div
-      className="flex min-w-[250px] w-[15%] flex-col gap-5 justify-center 
-      items-center relative rounded-3xl h-[250px] p-5 overflow-hidden 
-      shadow-[0_10px_20px_rgba(228,228,228,_0.7)]"
+      className="relative flex h-[250px] w-full flex-col items-center justify-center gap-6 overflow-hidden rounded-3xl border border-primary-100/70 bg-white p-5 shadow-[0_12px_30px_rgba(15,23,42,0.08)]"
     >
-      <h1 className="text-3xl font-medium">
+      <h1 className="font-headline text-2xl font-medium leading-none text-slate-900 xl:text-[1.7rem]">
         {mode === "Client" ? "Your Gigs" : "Bookings"}
       </h1>
-      <div className="w-full flex gap-3 flex-col">
+      <div className="flex w-full flex-col gap-3">
         {/* Pending Orders */}
-        <div className="bg-primary-400 text-primary-700 relative rounded-3xl p-[3px] pl-10">
-          <p>{activeCount} Pending</p>
-          <ClockIcon className="h-4 w-5 absolute -translate-y-[50%] left-3 top-1/2" />
+        <div className="relative rounded-2xl border border-primary-100 bg-primary-50 px-3 py-2 pl-10 text-primary-800">
+          <p className="text-base font-medium leading-none">{activeCount} Pending</p>
+          <ClockIcon className="absolute left-3 top-1/2 h-4 w-5 -translate-y-[50%]" />
         </div>
 
-        {/* Completed Orders with Green Background */}
-        <div className="bg-success-400 text-green-600 relative rounded-3xl p-[3px] pl-10">
-          <p>{completeCount} Completed</p>
-          <CheckBadgeIcon className="h-4 w-5 absolute -translate-y-[50%]  left-3 top-1/2 " />
+        {/* Completed Orders */}
+        <div className="relative rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2 pl-10 text-slate-700">
+          <p className="text-base font-medium leading-none">{completeCount} Completed</p>
+          <CheckBadgeIcon className="absolute left-3 top-1/2 h-4 w-5 -translate-y-[50%]" />
         </div>
       </div>
     </div>

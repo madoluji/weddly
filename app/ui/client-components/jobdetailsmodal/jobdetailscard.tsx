@@ -192,7 +192,7 @@ const JobDetailsModal: React.FC<JobDetailsModalProps> = ({ job, onClose }) => {
             <div className="bg-gray-50 rounded-lg p-4 border">
               <div className="flex items-center justify-between">
                 <div className="flex items-center">
-                  <span className="bg-green-100 text-green-800 text-sm font-medium px-3 py-1 rounded-full mr-3">
+                  <span className="bg-primary-50 text-primary-700 text-sm font-medium px-3 py-1 rounded-full mr-3">
                     {job.proposalCount} Proposals
                   </span>
                   <p className="text-gray-700">

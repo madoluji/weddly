@@ -54,8 +54,8 @@ const CoverLetter = ({
   };
 
   return (
-    <div className="overflow-hidden rounded-[1.75rem] border border-[#eadfce] bg-white shadow-sm">
-      <div className="border-b border-[#efe5d6] px-5 py-5 sm:px-6">
+    <div className="overflow-hidden rounded-[1.75rem] border border-slate-200 bg-white shadow-sm">
+      <div className="border-b border-slate-200 px-5 py-5 sm:px-6">
         <p className="text-2xl font-semibold text-slate-900">Cover letter</p>
         <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-500">
           Help the client understand your style, experience, and why you are a
@@ -69,10 +69,10 @@ const CoverLetter = ({
             value={coverLetter}
             onChange={(e) => setCoverLetter(e.target.value)}
             placeholder="Introduce your approach, highlight relevant wedding experience, and explain how you would make this event memorable."
-            className={`min-h-[220px] w-full resize-y rounded-[1.5rem] border bg-[#fffdfa] p-5 text-base leading-7 text-slate-700 outline-none transition ${
+            className={`min-h-[220px] w-full resize-y rounded-[1.5rem] border bg-slate-50 p-5 text-base leading-7 text-slate-700 outline-none transition ${
               isSubmitted && !coverLetter.trim()
-                ? "border-red-400 ring-2 ring-red-100"
-                : "border-[#e6dccd] focus:border-primary-300 focus:ring-2 focus:ring-primary-100"
+                ? "border-primary-300 ring-2 ring-primary-100"
+                : "border-slate-200 focus:border-primary-300 focus:ring-2 focus:ring-primary-100"
             }`}
           />
 
@@ -87,14 +87,14 @@ const CoverLetter = ({
           </div>
 
           {isSubmitted && !coverLetter.trim() && (
-            <p className="mt-3 text-sm text-red-500">
+            <p className="mt-3 text-sm text-slate-600">
               Cover letter is required.
             </p>
           )}
         </div>
 
         <div
-          className="rounded-[1.5rem] border-2 border-dashed border-[#d8c9ad] bg-[#fffaf2] p-6 text-center transition hover:border-primary-300 hover:bg-white"
+          className="rounded-[1.5rem] border-2 border-dashed border-slate-300 bg-slate-50 p-6 text-center transition hover:border-primary-300 hover:bg-white"
           onDragOver={handleDragOver}
           onDrop={handleDrop}
           onClick={handleFileSelectClick}
@@ -122,7 +122,7 @@ const CoverLetter = ({
             {files.map((file) => (
               <li
                 key={file.name}
-                className="flex items-center justify-between gap-3 rounded-2xl border border-[#efe5d6] bg-[#fffdfa] px-4 py-3"
+                className="flex items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3"
               >
                 <div className="flex min-w-0 items-center gap-3">
                   <div className="rounded-xl bg-white p-2 text-primary-700 shadow-sm">
@@ -139,7 +139,7 @@ const CoverLetter = ({
                 </div>
                 <button
                   type="button"
-                  className="rounded-full p-2 text-slate-400 transition hover:bg-red-50 hover:text-red-500"
+                  className="rounded-full p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
                   onClick={() => handleFileRemove(file.name)}
                 >
                   <TrashIcon className="h-5 w-5" />

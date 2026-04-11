@@ -196,7 +196,7 @@ const JobList = ({ bestMatches, mostRecent, savedJobs, query }: Props) => {
                 Event Date: {formatEventDate(job.eventDate)}
               </div>
               <p className="text-sm mt-1 text-success-600/75">
-                {job.type} • {job.experience} • Booking Fee / Rate: ${job.budget}
+                {job.type || "General"} • {job.experience || "Any experience"} • Booking Fee / Rate: ${job.budget}
               </p>
               <p className="text-success-600 my-4 leading-7 ">
                 {truncateString(job.description, 400)}

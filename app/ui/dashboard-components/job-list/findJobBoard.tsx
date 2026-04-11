@@ -523,7 +523,7 @@ const FindJobBoard = ({ initialFilters }: Props) => {
                       <h3 className="mt-2 text-xl font-semibold text-[#1f3229]">{job.title}</h3>
 
                       <p className="mt-1 text-sm font-medium text-[#496459]">
-                        {job.fullName} • {job.type}
+                        {job.fullName || "Client"} • {job.type || "General"}
                       </p>
 
                       {job.eventDate && (

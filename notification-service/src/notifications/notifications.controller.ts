@@ -7,14 +7,11 @@ import {
   Patch,
   Post,
   Query,
-  UseGuards,
 } from "@nestjs/common";
 import { CreateNotificationDto } from "./dto/create-notification.dto";
 import { NotificationEventDto } from "./dto/notification-event.dto";
 import { NotificationsService } from "./notifications.service";
-import { JwtAuthGuard } from "../common/guards/jwt-auth.guard";
 
-@UseGuards(JwtAuthGuard)
 @Controller("notifications")
 export class NotificationsController {
   constructor(private readonly notificationsService: NotificationsService) {}

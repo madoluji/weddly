@@ -1,13 +1,17 @@
 import FreelancerList from "@/app/ui/dashboard-components/talent-posting/talentList";
-import { Suspense } from "react";
-import Loading from "../loading";
-
-
-
-const page = ( ) => {
+import PageShell from "@/app/ui/layout/PageShell";
+import PageCard from "@/app/ui/layout/PageCard";
+const Page = () => {
   return (
-      <FreelancerList  savedFreelancers={true} />
+    <PageShell
+      title="Saved Talents"
+      description="Review freelancers you bookmarked for your upcoming projects"
+    >
+      <PageCard>
+        <FreelancerList savedFreelancers={true} />
+      </PageCard>
+    </PageShell>
   );
 };
 
-export default page;
+export default Page;

@@ -230,8 +230,36 @@ export const authOptions: NextAuthOptions = {
       return true;
     },
 
-    async jwt({ token, user }) {
-      return { ...token, ...user };
+    async jwt({ token, user, trigger, session }) {
+      if (user) {
+        return { ...token, ...user };
+      }
+
+      if (trigger === "update" && session) {
+        const updated = session as {
+          name?: string;
+          email?: string;
+          lastName?: string;
+          profilePicture?: string;
+          user?: {
+            name?: string;
+            email?: string;
+            lastName?: string;
+            profilePicture?: string;
+          };
+        };
+
+        return {
+          ...token,
+          name: updated.name ?? updated.user?.name ?? token.name,
+          email: updated.email ?? updated.user?.email ?? token.email,
+          lastName: updated.lastName ?? updated.user?.lastName ?? token.lastName,
+          profilePicture:
+            updated.profilePicture ?? updated.user?.profilePicture ?? token.profilePicture,
+        };
+      }
+
+      return token;
     },
 
     async session({ session, token }) {

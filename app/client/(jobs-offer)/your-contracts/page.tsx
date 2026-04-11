@@ -1,18 +1,27 @@
 import { Suspense } from "react";
 import ContractsList from "@/app/ui/client-components/all-contracts/contractsList";
 import ContractsFilter from "@/app/ui/client-components/all-contracts/contractFilter";
+import PageShell from "@/app/ui/layout/PageShell";
+import PageCard from "@/app/ui/layout/PageCard";
 
 export default function YourContractsPage() {
   return (
-    <div className="container mx-auto py-8 px-4 max-w-7xl">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold tracking-tight">Your Contracts</h1>
-        <p className="text-gray-500 mt-2">
-          Manage and track all your freelancer contracts in one place
-        </p>
-      </div>
-
-      <div className="bg-white rounded-xl shadow-sm border p-6">
+    <PageShell
+      header={
+        <section className="rounded-[1.75rem] border border-slate-200 bg-[linear-gradient(135deg,#ffffff_0%,#f8fafc_55%,#eef6f2_100%)] px-6 py-7 shadow-sm sm:px-8">
+          <p className="font-label text-xs uppercase tracking-[0.24em] text-primary-700">
+            Client Workspace
+          </p>
+          <h1 className="font-headline mt-3 text-3xl leading-tight text-slate-900 sm:text-4xl">
+            Your contracts
+          </h1>
+          <p className="font-body mt-3 max-w-3xl text-sm leading-7 text-slate-600 sm:text-base">
+            Review active client bookings, monitor contract progress, and keep every agreement detail in one place.
+          </p>
+        </section>
+      }
+    >
+      <PageCard>
         <Suspense
           fallback={
             <div className="space-y-6">
@@ -33,7 +42,7 @@ export default function YourContractsPage() {
             <ContractsList />
           </div>
         </Suspense>
-      </div>
-    </div>
+      </PageCard>
+    </PageShell>
   );
 }

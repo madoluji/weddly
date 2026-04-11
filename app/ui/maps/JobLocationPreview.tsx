@@ -74,8 +74,8 @@ const JobLocationPreview = ({ location, className }: JobLocationPreviewProps) =>
   const label = getLocationDisplay(location);
 
   return (
-    <div className={className}>
-      <div className="h-[220px] overflow-hidden rounded-lg border border-gray-200">
+    <div className={`w-full min-w-0 ${className ?? ""}`}>
+      <div className="h-[220px] w-full overflow-hidden rounded-lg border border-gray-200">
         <MapContainer
           key={mapMountKey}
           center={{ lat: parsed.lat, lng: parsed.lng }}
@@ -101,13 +101,13 @@ const JobLocationPreview = ({ location, className }: JobLocationPreviewProps) =>
         </MapContainer>
       </div>
 
-      <div className="mt-2 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-        <p className="text-sm text-gray-600">{label}</p>
+      <div className="mt-3 grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-start">
+        <p className="min-w-0 break-words text-sm leading-6 text-gray-600">{label}</p>
         <a
           href={mapLink}
           target="_blank"
           rel="noreferrer"
-          className="inline-flex items-center justify-center rounded-md border border-primary-500 px-3 py-1.5 text-sm font-medium text-primary-700 hover:bg-primary-50"
+          className="inline-flex min-w-[110px] shrink-0 items-center justify-center whitespace-nowrap rounded-md border border-primary-500 px-3 py-1.5 text-sm font-medium text-primary-700 hover:bg-primary-50"
         >
           View on Map
         </a>

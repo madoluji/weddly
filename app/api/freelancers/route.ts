@@ -33,13 +33,23 @@ export async function GET(req: NextRequest) {
         // Check if the freelancer profile is saved by the current user and fetch the user profile in parallel.
         const [Saved, user] = await Promise.all([
           SavedFreelancers.exists({ userId: userId, freelancerId: freelancer._id }),
-          User.findOne({ _id: freelancer.userId }),
+          User.findOne({ _id: freelancer.userId }).select("name lastName profilePicture profileVisible"),
         ]);
+
+        if (user?.profileVisible === false && userId !== freelancer.userId.toString()) {
+          return NextResponse.json({ message: "Freelancer not found" }, { status: 404 });
+        }
+
+        const displayFullName =
+          user && (user.name || user.lastName)
+            ? `${user.name || ""} ${user.lastName || ""}`.trim()
+            : freelancer.fullName;
 
         if (isSaved) {
           const freelancerWithDetails = {
             freelancerId: freelancer._id, // Include freelancer ID
             ...freelancer.toObject(),    // Include freelancer details
+            fullName: displayFullName,
             saved: Boolean(Saved), // Set saved flag based on whether it's saved
             profilePicture: user?.profilePicture || "/images/image.png", // Include profile picture
           };
@@ -49,6 +59,7 @@ export async function GET(req: NextRequest) {
         const freelancerWithDetails = {
           freelancerId: freelancer._id, // Include freelancer ID
           ...freelancer.toObject(),    // Include freelancer details
+          fullName: displayFullName,
           saved: false,                // Default to false for individual fetch
           profilePicture: user?.profilePicture || "/images/image.png", // Include profile picture
         };
@@ -98,11 +109,20 @@ export async function GET(req: NextRequest) {
         freelancers = await FreelancerInfo.find({ userId: { $in: savedFreelancerIds } });
       }
     } else {
-      // Fetch freelancers matching the search parameter
-      freelancers = await FreelancerInfo.find({
-        userId: { $ne: userId },
-        fullName: { $regex: params, $options: "i" }, // Case-insensitive search
-      });
+      // Fetch freelancers matching current user names, honoring profile visibility.
+      const matchingUsers = await User.find({
+        _id: { $ne: userId },
+        profileVisible: { $ne: false },
+        $or: [
+          { name: { $regex: params, $options: "i" } },
+          { lastName: { $regex: params, $options: "i" } },
+        ],
+      })
+        .select("_id")
+        .lean();
+
+      const matchingUserIds = matchingUsers.map((u) => u._id);
+      freelancers = await FreelancerInfo.find({ userId: { $in: matchingUserIds } });
     }
 
     const freelancerUserIds = Array.from(
@@ -112,7 +132,7 @@ export async function GET(req: NextRequest) {
     const [savedFreelancerRecords, users] = await Promise.all([
       SavedFreelancers.find({ userId }).select("freelancerId").lean(),
       User.find({ _id: { $in: freelancerUserIds } })
-        .select("_id profilePicture")
+        .select("_id name lastName profilePicture profileVisible")
         .lean(),
     ]);
 
@@ -120,18 +140,27 @@ export async function GET(req: NextRequest) {
       savedFreelancerRecords.map((record) => record.freelancerId.toString())
     );
 
-    const profilePictureByUserId = new Map<string, string | null>();
+    const userMetaByUserId = new Map<string, { profilePicture: string | null; fullName: string | null; profileVisible: boolean }>();
     for (const user of users) {
-      profilePictureByUserId.set(user._id.toString(), user.profilePicture || null);
+      const fullName = `${user.name || ""} ${user.lastName || ""}`.trim();
+      userMetaByUserId.set(user._id.toString(), {
+        profilePicture: user.profilePicture || null,
+        fullName: fullName || null,
+        profileVisible: user.profileVisible !== false,
+      });
     }
 
-    const freelancersWithSavedFlag = freelancers.map((freelancer) => ({
-      freelancerId: freelancer._id, // Include freelancer ID
-      ...freelancer._doc,          // Include freelancer details
-      saved: savedFreelancerIds.has(freelancer.userId.toString()), // Check if saved
-      profilePicture:
-        profilePictureByUserId.get(freelancer.userId.toString()) || "/images/image.png", // Include profile picture
-    }));
+    const freelancersWithSavedFlag = freelancers
+      .filter((freelancer) => userMetaByUserId.get(freelancer.userId.toString())?.profileVisible)
+      .map((freelancer) => ({
+        freelancerId: freelancer._id, // Include freelancer ID
+        ...freelancer._doc, // Include freelancer details
+        fullName:
+          userMetaByUserId.get(freelancer.userId.toString())?.fullName || freelancer.fullName,
+        saved: savedFreelancerIds.has(freelancer.userId.toString()), // Check if saved
+        profilePicture:
+          userMetaByUserId.get(freelancer.userId.toString())?.profilePicture || "/images/image.png", // Include profile picture
+      }));
 
 
 

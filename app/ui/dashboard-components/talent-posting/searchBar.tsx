@@ -8,13 +8,6 @@ const SearchBar = () => {
   const searchParams = useSearchParams();
   const pathName = usePathname();
   const { replace } = useRouter();
-  const router = useRouter();
-
-  const handlePush = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const searchUrl = `/search/talent?talentName=${searchParams.get("talentName")}`;
-    router.push(searchUrl);
-  };
 
   const handleSearch = (term: string) => {
     const params = new URLSearchParams(searchParams);
@@ -29,20 +22,22 @@ const SearchBar = () => {
     replace(newUrl);
   };
   return (
-    <form onSubmit={handlePush}>
-      <div className="relative ">
+    <form onSubmit={(e) => e.preventDefault()}>
+      <div className="rounded-2xl border border-slate-200 bg-white p-3 shadow-[0_10px_30px_rgba(26,44,35,0.06)]">
+        <div className="relative">
         <label htmlFor="search"></label>
         <input
           type="search"
           name="search"
           placeholder="Search Wedding Planners/Coordinators"
-          className="w-full border border-primary-300 block bg-white rounded-2xl py-3 pl-12 pr-4 outline-none text-success-600 placeholder:text-success-600/60 focus:ring-2 focus:ring-primary-400/70 focus:border-primary-500"
+          className="w-full rounded-xl border border-slate-200 bg-slate-50 py-3 pl-12 pr-4 text-slate-700 outline-none placeholder:text-slate-400 transition focus:border-primary-300 focus:bg-white"
           onChange={(e) => {
             handleSearch(e.target.value);
           }}
-          defaultValue={searchParams.get("query")?.toString()}
+          defaultValue={searchParams.get("talentName")?.toString()}
         />
         <MagnifyingGlassIcon className="pointer-events-none absolute left-4 top-1/2 h-[20px] w-[20px] -translate-y-1/2 text-primary-700" />
+        </div>
       </div>
     </form>
   );

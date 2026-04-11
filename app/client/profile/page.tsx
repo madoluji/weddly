@@ -1,18 +1,18 @@
-'use client';
+"use client";
 
-import DisplayProfile from '@/app/ui/client-components/clientProfile';
-import React from 'react';
+import DisplayProfile from "@/app/ui/client-components/clientProfile";
+import React from "react";
+import PageShell from "@/app/ui/layout/PageShell";
 
-
-const Profile: React.FC = ({ }) => {
+const Profile: React.FC = () => {
     return (
-        <div >
-            <h1 className='text-5xl font-semibold text-center mt-5'>Client Profile</h1>
-           <DisplayProfile />
-        </div>
+        <PageShell
+            title="Client Profile"
+            description="View and manage your personal and client profile details"
+        >
+            <DisplayProfile />
+        </PageShell>
     );
 };
-
-
 
 export default Profile;

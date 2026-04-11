@@ -37,30 +37,32 @@ const LinksRight = () => {
   }, []);
 
   return (
-    <ul className="xl:flex gap-5 hidden  ml-2 items-center">
-      <li className="relative">
-        <QuestionMarkCircleIcon
-          onMouseEnter={() => setDropdownVisible(3)}
-          onMouseLeave={() => setDropdownVisible(0)}
-          className="size-8 "
-        />
+    <ul className="ml-2 hidden items-center gap-4 xl:flex">
+      <li
+        className="relative flex h-10 w-10 items-center justify-center"
+        onMouseEnter={() => setDropdownVisible(3)}
+        onMouseLeave={() => setDropdownVisible(0)}
+      >
+        <button type="button" aria-label="Help" className="inline-flex h-10 w-10 items-center justify-center">
+          <QuestionMarkCircleIcon className="h-8 w-8" />
+        </button>
         {isDropdownVisible === 3 && (
           <LinksDropdown isDropdownVisible={isDropdownVisible} />
         )}
       </li>
 
       
-      <li className="relative">
+      <li className="relative flex h-10 w-10 items-center justify-center">
         <NotificationBell />
       </li>
-      <li>
+      <li className="flex h-10 w-10 items-center justify-center">
         <div
-          className="relative"
+          className="relative inline-flex h-10 w-10 items-center justify-center"
           onMouseEnter={() => setDropdownVisible(6)}
           onMouseLeave={() => setDropdownVisible(0)}
           onClick={() => setIsOpen(!isOpen)}
         >
-          <UserCircleIcon className="size-8" />
+          <UserCircleIcon className="h-8 w-8" />
           {isOpen && (
             <div
               ref={dropdownRef}

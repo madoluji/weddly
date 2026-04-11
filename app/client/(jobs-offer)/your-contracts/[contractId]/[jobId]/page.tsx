@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { ArrowLeftIcon } from "@heroicons/react/24/outline";
 import ContractDetailsPage from "@/app/user/(proposal&offers)/your-contracts/[contractId]/[jobId]/comp/workDetails";
+import PageShell from "@/app/ui/layout/PageShell";
+import PageCard from "@/app/ui/layout/PageCard";
 
 // import JobDetails from "./jobDetails";
 // import ContractDetails from "./contractDetails";
@@ -13,18 +15,26 @@ export default async function ContractOfferPage({
   const { contractId, jobId } = await params;
 
   return (
-    <div className="container mx-auto py-8 px-4">
-      <Link
-        href="/client/your-contracts"
-        className="flex items-center text-sm text-gray-500 hover:text-gray-900"
-      >
-        <ArrowLeftIcon className="mr-2 h-4 w-4" />
-        Back to Your-Contracts
-      </Link>
-
-      <div className="">
+    <PageShell
+      header={
+        <>
+          <Link
+            href="/client/your-contracts"
+            className="inline-flex items-center text-sm text-gray-500 hover:text-gray-900"
+          >
+            <ArrowLeftIcon className="mr-2 h-4 w-4" />
+            Back to Your Contracts
+          </Link>
+          <h1 className="text-3xl font-bold tracking-tight mt-4">Contract Details</h1>
+          <p className="text-gray-500 mt-2">
+            Review agreement terms, timeline, and freelancer details
+          </p>
+        </>
+      }
+    >
+      <PageCard>
         <ContractDetailsPage contractId={contractId} jobId={jobId} />
-      </div>
-    </div>
+      </PageCard>
+    </PageShell>
   );
 }

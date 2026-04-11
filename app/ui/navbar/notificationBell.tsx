@@ -494,14 +494,14 @@ const NotificationBell = () => {
   }, [unreadCount]);
 
   return (
-    <div className="relative" ref={panelRef}>
+    <div className="relative inline-flex h-10 w-10 items-center justify-center" ref={panelRef}>
       <button
         type="button"
-        className="relative"
+        className="relative inline-flex h-10 w-10 items-center justify-center"
         onClick={() => setIsOpen((prev) => !prev)}
         aria-label="Open notifications"
       >
-        <BellIcon className="size-8" />
+        <BellIcon className="h-8 w-8" />
         {hasUnread && (
           <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-600 px-1 text-xs font-semibold text-white">
             {unreadCount > 99 ? "99+" : unreadCount}

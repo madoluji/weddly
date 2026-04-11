@@ -293,9 +293,9 @@ const JobProposalModal: React.FC<JobProposalModalProps> = ({ proposal, onClose }
     <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
       <div
         ref={modalRef}
-        className="flex max-h-[90vh] w-full max-w-4xl flex-col overflow-hidden rounded-[2rem] border border-[#e8dece] bg-white shadow-2xl"
+        className="flex max-h-[90vh] w-full max-w-4xl flex-col overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-2xl"
       >
-        <div className="flex items-center justify-between border-b border-[#efe5d6] bg-gradient-to-br from-[#fff7ee] to-white px-6 py-5">
+        <div className="flex items-center justify-between border-b border-slate-200 bg-gradient-to-br from-slate-50 to-white px-6 py-5">
           <div className="flex items-center">
             <div className="mr-3 flex h-11 w-11 items-center justify-center rounded-2xl bg-primary-50 text-primary-700">
               <DocumentTextIcon className="h-5 w-5" />
@@ -325,8 +325,8 @@ const JobProposalModal: React.FC<JobProposalModalProps> = ({ proposal, onClose }
             <div className="flex-1 overflow-y-auto">
               <div className="grid grid-cols-1 gap-6 p-6 lg:grid-cols-[320px_minmax(0,1fr)]">
                 <div className="min-w-0">
-                  <div className="overflow-hidden rounded-[1.75rem] border border-[#e8dece] bg-white">
-                    <div className="border-b border-[#efe5d6] bg-[#fffaf2] px-5 py-4">
+                  <div className="overflow-hidden rounded-[1.75rem] border border-slate-200 bg-white">
+                    <div className="border-b border-slate-200 bg-slate-50 px-5 py-4">
                       <h3 className="flex items-center font-semibold text-slate-900">
                         <UserIcon className="mr-2 h-4 w-4 text-primary-700" />
                         Freelancer
@@ -352,18 +352,18 @@ const JobProposalModal: React.FC<JobProposalModalProps> = ({ proposal, onClose }
 
                         <div className="mt-2 flex items-center justify-center space-x-4">
                           {freelancer?.rating && (
-                            <div className="flex items-center rounded-full bg-yellow-50 px-2 py-1">
-                              <StarIcon className="h-4 w-4 text-yellow-500" />
-                              <span className="ml-1 text-sm font-medium text-yellow-700">
+                            <div className="flex items-center rounded-full bg-primary-50 px-2 py-1">
+                              <StarIcon className="h-4 w-4 text-primary-600" />
+                              <span className="ml-1 text-sm font-medium text-primary-700">
                                 {freelancer.rating.toFixed(1)}
                               </span>
                             </div>
                           )}
 
                           {freelancer?.jobSuccess && (
-                            <div className="flex items-center rounded-full bg-green-50 px-2 py-1">
-                              <CheckBadgeIcon className="h-4 w-4 text-green-500" />
-                              <span className="ml-1 text-sm font-medium text-green-700">{freelancer.jobSuccess}%</span>
+                            <div className="flex items-center rounded-full bg-slate-100 px-2 py-1">
+                              <CheckBadgeIcon className="h-4 w-4 text-slate-600" />
+                              <span className="ml-1 text-sm font-medium text-slate-700">{freelancer.jobSuccess}%</span>
                             </div>
                           )}
                         </div>
@@ -404,8 +404,8 @@ const JobProposalModal: React.FC<JobProposalModalProps> = ({ proposal, onClose }
                 </div>
 
                 <div className="min-w-0 space-y-5">
-                  <div className="overflow-hidden rounded-[1.75rem] border border-[#e8dece] bg-white">
-                    <div className="border-b border-[#efe5d6] bg-[#fffaf2] px-5 py-4">
+                  <div className="overflow-hidden rounded-[1.75rem] border border-slate-200 bg-white">
+                    <div className="border-b border-slate-200 bg-slate-50 px-5 py-4">
                       <h3 className="flex items-center font-semibold text-slate-900">
                         <CurrencyDollarIcon className="mr-2 h-4 w-4 text-primary-700" />
                         Bid Details
@@ -415,12 +415,12 @@ const JobProposalModal: React.FC<JobProposalModalProps> = ({ proposal, onClose }
                     <div className="p-5">
                       <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
                         <div className="flex items-center">
-                          <div className="mr-4 flex h-12 w-12 items-center justify-center rounded-full bg-green-100">
-                            <CurrencyDollarIcon className="h-6 w-6 text-green-600" />
+                          <div className="mr-4 flex h-12 w-12 items-center justify-center rounded-full bg-primary-50">
+                            <CurrencyDollarIcon className="h-6 w-6 text-primary-700" />
                           </div>
                           <div>
                             <p className="text-sm text-gray-500">Bid Amount</p>
-                            <p className="text-2xl font-bold text-green-600">₹{proposal.bidAmount.toLocaleString()}</p>
+                            <p className="text-2xl font-bold text-primary-700">₹{proposal.bidAmount.toLocaleString()}</p>
                           </div>
                         </div>
 
@@ -452,8 +452,8 @@ const JobProposalModal: React.FC<JobProposalModalProps> = ({ proposal, onClose }
                     </div>
                   </div>
 
-                  <div className="overflow-hidden rounded-[1.75rem] border border-[#e8dece] bg-white">
-                    <div className="border-b border-[#efe5d6] bg-[#fffaf2] px-5 py-4">
+                  <div className="overflow-hidden rounded-[1.75rem] border border-slate-200 bg-white">
+                    <div className="border-b border-slate-200 bg-slate-50 px-5 py-4">
                       <h3 className="flex items-center font-semibold text-slate-900">
                         <DocumentTextIcon className="mr-2 h-4 w-4 text-primary-700" />
                         Cover Letter
@@ -461,7 +461,7 @@ const JobProposalModal: React.FC<JobProposalModalProps> = ({ proposal, onClose }
                     </div>
 
                     <div className="p-5">
-                      <div className="rounded-2xl border border-[#efe5d6] bg-[#fffdfa] p-4">
+                      <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
                         <p className="text-gray-700 whitespace-pre-line">{proposal.coverLetter}</p>
                       </div>
                     </div>
@@ -470,7 +470,7 @@ const JobProposalModal: React.FC<JobProposalModalProps> = ({ proposal, onClose }
               </div>
             </div>
 
-            <div className="flex flex-wrap justify-end gap-4 border-t border-[#efe5d6] bg-[#fffdfa] p-5">
+            <div className="flex flex-wrap justify-end gap-4 border-t border-slate-200 bg-slate-50 p-5">
               <Link
                 href={`/client/job-proposal/${proposal.jobId._id}/offer/${proposal.userId}/new`}
                 className="inline-flex items-center rounded-xl bg-primary-700 px-5 py-3 text-sm font-medium text-white transition hover:bg-primary-800"
@@ -486,8 +486,8 @@ const JobProposalModal: React.FC<JobProposalModalProps> = ({ proposal, onClose }
       {/* Message Input Modal */}
       {showMessageInput && (
         <div className="fixed inset-0 z-[1100] flex items-center justify-center bg-black/70 p-4">
-          <div className="w-full max-w-lg overflow-hidden rounded-[1.75rem] border border-[#e8dece] bg-white shadow-2xl">
-            <div className="flex items-center justify-between border-b border-[#efe5d6] bg-[#fffaf2] px-6 py-4">
+          <div className="w-full max-w-lg overflow-hidden rounded-[1.75rem] border border-slate-200 bg-white shadow-2xl">
+            <div className="flex items-center justify-between border-b border-slate-200 bg-slate-50 px-6 py-4">
               <h3 className="flex items-center text-lg font-semibold text-slate-900">
                 <EnvelopeIcon className="mr-2 h-5 w-5 text-primary-700" />
                 Message to {freelancer?.fullName}

@@ -7,7 +7,6 @@ import { usePathname } from "next/navigation"; // Import usePathname from Next.j
 import { fetchWithAuth } from "@/app/lib/fetchWIthAuth";
 import { useAuth } from "@/app/providers";
 import RatingSkeletonCard from "../skeletons/ratingSkeletonCard"; // Assuming RatingSkeletonCard is the skeleton component
-import { set } from "mongoose";
 
 const Rating = () => {
   const pathname = usePathname(); // Get the current pathname
@@ -35,7 +34,6 @@ const Rating = () => {
         );
 
         const { reviews } = await response.json();
-        console.log(reviews);
         setRating(reviews?.rating || 0); // Set the rating from the response
       } catch (error) {
         console.error("Error fetching payments:", error);
@@ -71,16 +69,10 @@ const Rating = () => {
   }
 
   return (
-    <div className="min-w-[250px] w-[15%] flex flex-col gap-1 justify-center items-center relative rounded-3xl h-[250px] p-5 overflow-hidden shadow-[0_10px_20px_rgba(228,228,228,_0.7)]">
-      <h1 className="text-3xl font-medium">Rating</h1>
+    <div className="relative flex h-[250px] w-full flex-col items-center justify-center gap-1 overflow-hidden rounded-3xl border border-primary-100/70 bg-white p-5 shadow-[0_12px_30px_rgba(15,23,42,0.08)]">
+      <h1 className="font-headline text-2xl font-medium leading-none text-slate-900 xl:text-[1.7rem]">Rating</h1>
       <h1
-        className={clsx("text-8xl font-semibold", {
-          "text-red-700": count <= 1,
-          "text-red-500": count > 1 && count <= 2,
-          "text-amber-500": count > 2 && count <= 3,
-          "text-green-400": count > 3 && count <= 4,
-          "text-green-600": count > 4,
-        })}
+        className={clsx("text-6xl font-medium text-primary-700")}
       >
         {count}
       </h1>

@@ -28,6 +28,8 @@ const ProposalForm = ({ jobId }: ProposalFormProps) => {
   const [bidAmount, setBidAmount] = useState<string>("");
   const [coverLetter, setCoverLetter] = useState<string>("");
   const [duration, setDuration] = useState<string>("");
+  const [customDuration, setCustomDuration] = useState<string>("");
+  const [customDurationUnit, setCustomDurationUnit] = useState<"days" | "months">("days");
   const [files, setFiles] = useState<File[]>([]);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [isSubmitted, setIsSubmitted] = useState<boolean>(false);
@@ -38,7 +40,22 @@ const ProposalForm = ({ jobId }: ProposalFormProps) => {
   } | null>(null);
 
   const storage = getStorage(app); // Firebase Storage reference
-  const completedSteps = [bidAmount.trim(), coverLetter.trim(), duration].filter(
+  const formatCustomDuration = (value: string, unit: "days" | "months") => {
+    const trimmedValue = value.trim();
+    if (!trimmedValue) return "";
+
+    const numericValue = Number(trimmedValue);
+    if (!Number.isFinite(numericValue) || numericValue <= 0) return "";
+
+    const normalizedUnit = numericValue === 1 ? unit.slice(0, -1) : unit;
+    return `${numericValue} ${normalizedUnit}`;
+  };
+
+  const resolvedDuration =
+    duration === "custom"
+      ? formatCustomDuration(customDuration, customDurationUnit)
+      : duration;
+  const completedSteps = [bidAmount.trim(), coverLetter.trim(), resolvedDuration].filter(
     Boolean
   ).length;
   const progressPercent = Math.round((completedSteps / 3) * 100);
@@ -76,7 +93,7 @@ const ProposalForm = ({ jobId }: ProposalFormProps) => {
     setAlert(null); // Clear previous alerts
 
     // Frontend validation
-    if (!bidAmount.trim() || !coverLetter.trim() || !duration) {
+    if (!bidAmount.trim() || !coverLetter.trim() || !resolvedDuration) {
       setAlert({
         type: "error",
         message: "Please fill in all required fields.",
@@ -101,7 +118,7 @@ const ProposalForm = ({ jobId }: ProposalFormProps) => {
         jobId,
         bidAmount,
         coverLetter,
-        duration,
+        duration: resolvedDuration,
         attachments: uploadedFiles,
       };
 
@@ -120,7 +137,6 @@ const ProposalForm = ({ jobId }: ProposalFormProps) => {
         throw new Error(result.error || result.message || "Failed to submit proposal");
       }
 
-      console.log("Proposal submitted successfully");
       setShowSuccessPopup(true);
       setAlert(null);
     } catch (error: any) {
@@ -169,7 +185,7 @@ const ProposalForm = ({ jobId }: ProposalFormProps) => {
         </div>
       )}
 
-      <section className="overflow-hidden rounded-[2rem] border border-primary-100 bg-gradient-to-br from-white via-[#fffaf2] to-primary-50 editorial-shadow">
+      <section className="overflow-hidden rounded-[2rem] border border-primary-100 bg-gradient-to-br from-white via-slate-50 to-primary-50/40 editorial-shadow">
         <div className="grid gap-8 px-6 py-8 sm:px-8 lg:grid-cols-[minmax(0,1.5fr)_280px] lg:px-10 lg:py-10">
           <div className="space-y-5">
             <div className="inline-flex w-fit items-center gap-2 rounded-full border border-primary-200 bg-white/80 px-4 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-primary-700">
@@ -202,7 +218,7 @@ const ProposalForm = ({ jobId }: ProposalFormProps) => {
                 {progressPercent}%
               </div>
             </div>
-            <div className="mt-4 h-2 overflow-hidden rounded-full bg-[#f2eadc]">
+            <div className="mt-4 h-2 overflow-hidden rounded-full bg-slate-200">
               <div
                 className="h-full rounded-full cta-gradient transition-all duration-300"
                 style={{ width: `${progressPercent}%` }}
@@ -220,12 +236,12 @@ const ProposalForm = ({ jobId }: ProposalFormProps) => {
                 },
                 {
                   label: "Choose a timeline",
-                  complete: Boolean(duration),
+                  complete: Boolean(resolvedDuration),
                 },
               ].map((item) => (
                 <div
                   key={item.label}
-                  className="flex items-center gap-3 rounded-2xl border border-[#efe5d6] bg-[#fffdfa] px-3 py-3"
+                  className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-3 py-3"
                 >
                   <CheckCircleIcon
                     className={`h-5 w-5 ${
@@ -266,10 +282,14 @@ const ProposalForm = ({ jobId }: ProposalFormProps) => {
           <Duration
             duration={duration}
             setDuration={setDuration}
+            customDuration={customDuration}
+            setCustomDuration={setCustomDuration}
+            customDurationUnit={customDurationUnit}
+            setCustomDurationUnit={setCustomDurationUnit}
             isSubmitted={isSubmitted}
           />
 
-          <div className="rounded-[1.75rem] border border-[#eadfce] bg-white p-5 shadow-sm sm:p-6">
+          <div className="rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex items-start gap-3">
                 <div className="rounded-2xl bg-primary-50 p-3 text-primary-700">

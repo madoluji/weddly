@@ -25,6 +25,12 @@ const Links = () => {
     currentPath.startsWith("/user") || currentPath.startsWith("/search/jobs");
   const isClientContext =
     currentPath.startsWith("/client") || currentPath.startsWith("/search/talent");
+  const userChatHref = session?.user?.id
+    ? `/user/chatroom/${session.user.id}`
+    : "/user/chatroom/0";
+  const clientChatHref = session?.user?.id
+    ? `/client/chatroom/${session.user.id}`
+    : "/client/chatroom/0";
 
   useEffect(() => {
     let isMounted = true;
@@ -145,9 +151,9 @@ const Links = () => {
         <li className="flex align-items-center justify-center">
           {isFreelancerContext && (
             <Link
-              href={`/user/chatroom/${session?.user?.id}`}
+              href={userChatHref}
               className={clsx("hover:text-primary-600", {
-                "text-primary-600": currentPath == "/user/chatroom",
+                "text-primary-600": currentPath.startsWith("/user/chatroom"),
               })}
             >
               Messages
@@ -155,9 +161,9 @@ const Links = () => {
           )}
           {isClientContext && (
             <Link
-              href={`/client/chatroom/${session?.user?.id}`}
+              href={clientChatHref}
               className={clsx("hover:text-primary-600", {
-                "text-primary-600": currentPath == "/user/chatroom",
+                "text-primary-600": currentPath.startsWith("/client/chatroom"),
               })}
             >
               Messages

@@ -294,7 +294,7 @@ export async function GET(req: NextRequest) {
           .select("jobId status")
           .lean(),
         User.find({ _id: { $in: clientUserIds } })
-          .select("_id profilePicture")
+          .select("_id name lastName profilePicture")
           .lean(),
       ]);
 
@@ -313,9 +313,16 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    const profilePictureByUserId = new Map<string, string | null>();
+    const userMetaByUserId = new Map<
+      string,
+      { profilePicture: string | null; fullName: string | null }
+    >();
     for (const user of clientUsers) {
-      profilePictureByUserId.set(user._id.toString(), user.profilePicture || null);
+      const fullName = `${user.name || ""} ${user.lastName || ""}`.trim();
+      userMetaByUserId.set(user._id.toString(), {
+        profilePicture: user.profilePicture || null,
+        fullName: fullName || null,
+      });
     }
 
     const jobsWithSavedFlag = normalizedJobs.map((job) => {
@@ -325,9 +332,15 @@ export async function GET(req: NextRequest) {
       return {
         jobId: normalizedJobId,
         ...withLocationFields(job),
+        fullName:
+          userMetaByUserId.get(job.userId.toString())?.fullName ||
+          job.fullName ||
+          "Client",
+        type: typeof job.type === "string" && job.type.trim() ? job.type : "General",
         saved: savedJobIds.has(normalizedJobId),
         proposalCount: proposalCountsByJobId.get(normalizedJobId) || 0,
-        profilePicture: profilePictureByUserId.get(job.userId.toString()) || null,
+        profilePicture:
+          userMetaByUserId.get(job.userId.toString())?.profilePicture || null,
         hasApplied: proposalStatus !== null,
         myProposalStatus: proposalStatus,
       };

@@ -8,71 +8,49 @@ import { usePathname } from "next/navigation";
 const JobNavBar = () => {
   const currentPath = usePathname(); // Get the current path from Next.js router
 
+  const navItems = [
+    { label: "Best Matches", href: "/user/best-matches" },
+    { label: "Most Recent", href: "/user/most-recent" },
+    { label: "Saved Wedding Gigs", href: "/user/saved-jobs" },
+  ];
+
+  const isActive = (href: string) => {
+    if (href === "/user/best-matches") {
+      return currentPath === "/user" || currentPath === href || currentPath.startsWith(`${href}/`);
+    }
+    return currentPath === href || currentPath.startsWith(`${href}/`);
+  };
+
+  const activeItem = navItems.find((item) => isActive(item.href));
+
+  const baseLinkClass =
+    "rounded-full border border-transparent px-3 py-1.5 text-sm font-medium transition";
+
   return (
-    <ul className="flex border-b-4 mt-2 py-2 text-slate-600 flex-row gap-5">
-      {/* Best Matches link */}
-      <li className="relative">
-        <Link
-          className={clsx(
-            "hover:text-primary-600",
-            currentPath === "/user/best-matches" ? "text-primary-600" : ""
-          )}
-          href="/user/best-matches"
-        >
-          Best Matches
-        </Link>
-        <div
-          className={clsx(
-            "h-1 border-r-[5px] bg-primary-600 transition-all duration-80 ease-in-out absolute -bottom-3",
-            currentPath === "/user/best-matches"
-              ? "w-full opacity-100 border-white"
-              : "w-0 opacity-0"
-          )}
-        />
-      </li>
+    <div className="mt-3 space-y-2">
+      <p className="text-xs font-medium uppercase tracking-[0.11em] text-slate-500">
+        You are viewing: <span className="text-primary-700">{activeItem?.label || "Jobs"}</span>
+      </p>
 
-      {/* Most Recent link */}
-      <li className="relative">
-        <Link
-          className={clsx(
-            "hover:text-primary-600",
-            currentPath === "/user/most-recent" ? "text-primary-600" : ""
-          )}
-          href="/user/most-recent"
-        >
-          Most Recent
-        </Link>
-        <div
-          className={clsx(
-            "h-1 -left-1 border-x-[5px] bg-primary-600 transition-all duration-80 ease-in-out absolute -bottom-3",
-            currentPath === "/user/most-recent"
-              ? "w-[110px] opacity-100 border-white"
-              : "w-0 opacity-0"
-          )}
-        />
-      </li>
-
-      {/* Saved Jobs link */}
-      <li className="relative">
-        <Link
-          className={clsx(
-            "hover:text-primary-600",
-            currentPath === "/user/saved-jobs" ? "text-primary-600" : ""
-          )}
-          href="/user/saved-jobs"
-        >
-          Saved Wedding Gigs
-        </Link>
-        <div
-          className={clsx(
-            "h-1 -left-1 border-x-[5px] bg-primary-600 transition-all duration-80 ease-in-out absolute -bottom-3",
-            currentPath === "/user/saved-jobs"
-              ? "w-[100px] opacity-100 border-white"
-              : "w-0 opacity-0"
-          )}
-        />
-      </li>
-    </ul>
+      <ul className="flex flex-row flex-wrap gap-2 text-slate-600">
+        {navItems.map((item) => (
+          <li key={item.href} className="relative">
+            <Link
+              className={clsx(
+                baseLinkClass,
+                isActive(item.href)
+                  ? "border-primary-200 bg-primary-50 text-primary-700"
+                  : "hover:border-slate-200 hover:bg-slate-50 hover:text-primary-600"
+              )}
+              href={item.href}
+              aria-current={isActive(item.href) ? "page" : undefined}
+            >
+              {item.label}
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </div>
   );
 };
 

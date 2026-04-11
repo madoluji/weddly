@@ -12,7 +12,7 @@ export interface IProposal extends Document {
     coverLetter: string;
     attachments: string[];
     bidAmount: number;
-    duration: 'less than 1 month' | "1 to 3 months" | "3 to 6 months" | "more than 6 months";
+    duration: string;
     status: "pending" | "shortlisted" | "accepted" | "rejected" | "withdrawn" | "canceled";
     statusHistory: StatusHistory[];
     createdAt: Date;
@@ -30,7 +30,6 @@ const ProposalSchema: Schema = new Schema(
         duration: {
             type: String,
             required: true,
-            enum: ["less than 1 month", "1 to 3 months", "3 to 6 months", "more than 6 months"]
         },
         status: {
             type: String,
@@ -54,4 +53,11 @@ ProposalSchema.index({ jobId: 1, createdAt: -1 });
 ProposalSchema.index({ userId: 1, jobId: 1, createdAt: -1 });
 ProposalSchema.index({ clientId: 1, status: 1, createdAt: -1 });
 
-export default mongoose.models.Proposal || mongoose.model<IProposal>("Proposal", ProposalSchema);
+const ProposalModelName = "Proposal";
+
+// In dev/hot-reload, ensure schema updates are applied instead of reusing stale cached model.
+if (mongoose.models[ProposalModelName]) {
+    delete mongoose.models[ProposalModelName];
+}
+
+export default mongoose.model<IProposal>(ProposalModelName, ProposalSchema);
