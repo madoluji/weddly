@@ -45,7 +45,7 @@ export default function Layout({ children }: Props) {
         </DashboardCardsProvider>
         <div
           className="w-full
-        bg-white
+        bg-white dark:bg-dark-background
          gap-12
          2xl:grid
          2xl:grid-cols-5 "
@@ -61,7 +61,7 @@ export default function Layout({ children }: Props) {
           <div className="w-full col-span-4">
             <div className="2xl:grid 2xl:grid-cols-[minmax(0,1fr)_340px] 2xl:items-start 2xl:gap-12">
               <div className="min-w-0">
-                <div className="sticky z-[2]  top-[75px] pt-5  bg-white">
+                <div className="sticky z-[2]  top-[75px] pt-5  bg-white dark:bg-dark-background">
                   <Suspense>
                     <SearchInput />
                   </Suspense>

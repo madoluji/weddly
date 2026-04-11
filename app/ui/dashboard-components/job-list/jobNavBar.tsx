@@ -28,11 +28,11 @@ const JobNavBar = () => {
 
   return (
     <div className="mt-3 space-y-2">
-      <p className="text-xs font-medium uppercase tracking-[0.11em] text-slate-500">
+      <p className="text-xs font-medium uppercase tracking-[0.11em] text-slate-500 dark:text-dark-on-surface-variant">
         You are viewing: <span className="text-primary-700">{activeItem?.label || "Jobs"}</span>
       </p>
 
-      <ul className="flex flex-row flex-wrap gap-2 text-slate-600">
+      <ul className="flex flex-row flex-wrap gap-2 text-slate-600 dark:text-dark-on-surface-variant">
         {navItems.map((item) => (
           <li key={item.href} className="relative">
             <Link
@@ -40,7 +40,7 @@ const JobNavBar = () => {
                 baseLinkClass,
                 isActive(item.href)
                   ? "border-primary-200 bg-primary-50 text-primary-700"
-                  : "hover:border-slate-200 hover:bg-slate-50 hover:text-primary-600"
+                  : "hover:border-slate-200 dark:hover:border-dark-outline-variant hover:bg-slate-50 dark:hover:bg-dark-surface-container hover:text-primary-600"
               )}
               href={item.href}
               aria-current={isActive(item.href) ? "page" : undefined}

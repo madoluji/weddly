@@ -6,7 +6,6 @@ interface SearchParams {
   title?: string;
   location?: string;
   category?: string;
-  experience?: string;
   minBudget?: string;
   maxBudget?: string;
   eventDate?: string;

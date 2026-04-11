@@ -5,7 +5,6 @@ type FilterableJob = {
   type?: string;
   location?: string;
   tags?: unknown[];
-  experience?: string;
   budget?: unknown;
   eventDate?: unknown;
   createdAt?: string | Date;
@@ -15,7 +14,6 @@ export interface JobFilterOptions {
   search?: string | null;
   location?: string | null;
   category?: string | null;
-  experiences: string[];
   minBudget: number | null;
   maxBudget: number | null;
   eventDate?: string | null;
@@ -116,12 +114,6 @@ export const applyServerFilters = <T extends FilterableJob>(
   const trimmedCategory = options.category?.trim();
   if (trimmedCategory && trimmedCategory !== "All Categories") {
     filtered = filtered.filter((job) => job.type === trimmedCategory);
-  }
-
-  if (options.experiences.length > 0) {
-    filtered = filtered.filter(
-      (job) => typeof job.experience === "string" && options.experiences.includes(job.experience)
-    );
   }
 
   if (options.eventDate) {

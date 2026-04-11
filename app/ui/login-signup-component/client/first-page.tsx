@@ -6,11 +6,11 @@ import { useEffect, useState } from "react";
 import { fetchWithAuth } from "@/app/lib/fetchWIthAuth";
 
 const BUDGET_OPTIONS = [
-  "Under $10,000",
-  "$10,000 – $25,000",
-  "$25,000 – $50,000",
-  "$50,000 – $100,000",
-  "$100,000+",
+  "Under Rs 10,00,000",
+  "Rs 10,00,000 – Rs 25,00,000",
+  "Rs 25,00,000 – Rs 50,00,000",
+  "Rs 50,00,000 – Rs 1,00,00,000",
+  "Rs 1,00,00,000+",
 ];
 
 const WelcomeText = () => {
@@ -202,7 +202,7 @@ const WelcomeText = () => {
 
             <div className="pw-field">
               <label className="pw-label">
-                Wedding Date <span className="pw-label-opt">(optional)</span>
+                Wedding Date <span className="text-red-500 font-semibold">*</span>
               </label>
               <input
                 type="date"
@@ -210,6 +210,7 @@ const WelcomeText = () => {
                 value={weddingDate}
                 min={new Date().toISOString().split("T")[0]}
                 onChange={(e) => setWeddingDate(e.target.value)}
+                required
               />
             </div>
 
@@ -235,6 +236,14 @@ const WelcomeText = () => {
               type="button"
               className="pw-btn"
               onClick={() => {
+                if (!weddingDate) {
+                  alert("Please select a wedding date to proceed.");
+                  return;
+                }
+                if (!budget) {
+                  alert("Please select a budget range to proceed.");
+                  return;
+                }
                 const params = new URLSearchParams();
                 if (weddingDate) params.set("date", weddingDate);
                 if (budget) params.set("budget", budget);

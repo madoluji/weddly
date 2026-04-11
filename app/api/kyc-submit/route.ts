@@ -15,6 +15,26 @@ export async function POST(req: NextRequest) {
     await connectMongoDB();
 
     try {
+        // Check if user already has a pending KYC submission
+        const pendingKYC = await KYC.findOne({ userId: session.user.id, status: "pending" }).select("_id submittedAt");
+        
+        if (pendingKYC) {
+            const submittedTime = new Date(pendingKYC.submittedAt);
+            const now = new Date();
+            const minutesDiff = Math.floor((now.getTime() - submittedTime.getTime()) / (1000 * 60));
+            
+            // Allow resubmission only after 24 hours
+            if (minutesDiff < 1440) {
+                return NextResponse.json(
+                    { 
+                        message: "You already have a pending KYC submission. Please wait for admin verification or resubmit after 24 hours.",
+                        alreadySubmitted: true 
+                    },
+                    { status: 400 }
+                );
+            }
+        }
+
         const payload = {
             ...data,
             userId: session.user.id,

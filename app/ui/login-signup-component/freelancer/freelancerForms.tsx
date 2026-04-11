@@ -9,6 +9,7 @@ import clsx from "clsx";
 import { fetchWithAuth } from "@/app/lib/fetchWIthAuth";
 import { jobCategories, skills as predefinedSkills } from "@/app/lib/data";
 import { languageTags } from "@/app/lib/data";
+import { useAuth } from "@/app/providers";
 
 export type project = {
   projectTitle: string;
@@ -77,6 +78,7 @@ const MultiStepForm = () => {
   };
   const [formData, setFormData] = useState<FormData>(initialFormData);
   const router = useRouter();
+  const { session, update: updateSession } = useAuth();
   const [step, setStep] = useState(0);
   const [uploading, setUploading] = useState<boolean>(false);
   const [files, setFiles] = useState<{ [key: number]: File[] }>([]); // Store file data
@@ -204,7 +206,15 @@ const MultiStepForm = () => {
       if (response.ok) {
         setFormData(initialFormData);
         setFiles({});
-        router.push(`/`);
+        await updateSession({
+          user: {
+            roles: {
+              ...session?.user?.roles,
+              freelancer: true,
+            },
+          },
+        });
+        router.push(`/user/best-matches`);
       } else {
         alert("Error submitting portfolio.");
       }
@@ -456,7 +466,7 @@ const MultiStepForm = () => {
           onClick={() =>
             handleAddItem("projectPortfolio", defaultPortfolioItem)
           }
-          className=" px-4 py-2 mt-4"
+          className="text-white px-4 py-2 mt-4"
         >
           Add Project
         </Button>
@@ -554,7 +564,7 @@ const MultiStepForm = () => {
           onClick={() =>
             handleAddItem("workExperience", defaultWorkExperienceItem)
           }
-          className=" px-4 py-2 mt-4"
+          className="text-white px-4 py-2 mt-4"
         >
           Add Work
         </Button>
@@ -646,7 +656,7 @@ const MultiStepForm = () => {
         <Button
           type="button"
           onClick={() => handleAddItem("education", defaultEducationItem)}
-          className={clsx("px-4 py-2 mt-4")}
+          className={clsx("text-white px-4 py-2 mt-4")}
         >
           Add Education
         </Button>
@@ -654,12 +664,12 @@ const MultiStepForm = () => {
 
       <div className="flex justify-between mt-4">
         {step > 0 && (
-          <Button type="button" onClick={() => setStep((prev) => prev - 1)}>
+          <Button type="button" onClick={() => setStep((prev) => prev - 1)} className="text-white">
             Previous
           </Button>
         )}
         {step < stepTitles.length - 1 && (
-          <Button type="button" onClick={() => setStep((prev) => prev + 1)}>
+          <Button type="button" onClick={() => setStep((prev) => prev + 1)} className="text-white">
             Next
           </Button>
         )}

@@ -19,6 +19,8 @@
     "test": "tsx --test tests/**/*.test.ts",
     "test:filters": "tsx --test tests/job-filters.test.ts",
     "test:flow": "tsx --test tests/find-job-flow.test.ts",
+    "migrate:notifications:sender-names": "tsx scripts/migrate-notification-sender-names.ts",
+    "migrate:notifications:sender-names:dry": "tsx scripts/migrate-notification-sender-names.ts --dry-run",
     "seed:superadmin": "tsx scripts/seed-superadmin.ts",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",

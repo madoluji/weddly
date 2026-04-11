@@ -7,6 +7,7 @@ import {
   SparklesIcon,
 } from "@heroicons/react/24/outline";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import JobDetails from "./job-details";
 import Terms from "./term";
 import CoverLetter from "./cover-letter";
@@ -38,8 +39,45 @@ const ProposalForm = ({ jobId }: ProposalFormProps) => {
     type: "success" | "error";
     message: string;
   } | null>(null);
+  const [emailVerified, setEmailVerified] = useState<boolean | null>(null);
+  const [kycVerified, setKycVerified] = useState<boolean | null>(null);
+  const [isLoadingVerification, setIsLoadingVerification] = useState(true);
 
   const storage = getStorage(app); // Firebase Storage reference
+  
+  // Fetch verification status on component mount and when verificationStatusTime changes
+  useEffect(() => {
+    const fetchVerificationStatus = async () => {
+      try {
+        // Check both sessionStorage and localStorage for cache buster
+        const timestampSession = typeof window !== "undefined" ? sessionStorage.getItem("verificationStatusTime") : null;
+        const timestampLocal = typeof window !== "undefined" ? localStorage.getItem("verificationStatusTime") : null;
+        const timestamp = timestampSession || timestampLocal;
+        
+        const url = timestamp ? `/api/verification-status?t=${timestamp}` : "/api/verification-status";
+        
+        const response = await fetchWithAuth(url);
+        if (response.ok) {
+          const data = await response.json();
+          setEmailVerified(data.emailVerified);
+          setKycVerified(data.kycVerified);
+          
+          if (timestamp) {
+            sessionStorage.removeItem("verificationStatusTime");
+            localStorage.removeItem("verificationStatusTime");
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching verification status:", error);
+      } finally {
+        setIsLoadingVerification(false);
+      }
+    };
+
+    if (session?.user?.id) {
+      fetchVerificationStatus();
+    }
+  }, [session?.user?.id]);
   const formatCustomDuration = (value: string, unit: "days" | "months") => {
     const trimmedValue = value.trim();
     if (!trimmedValue) return "";
@@ -91,6 +129,23 @@ const ProposalForm = ({ jobId }: ProposalFormProps) => {
     event.preventDefault();
     setIsSubmitted(true);
     setAlert(null); // Clear previous alerts
+
+    // Check verification status first
+    if (!emailVerified) {
+      setAlert({
+        type: "error",
+        message: "Please verify your email before submitting a proposal. Check your inbox or resend verification email.",
+      });
+      return;
+    }
+
+    if (!kycVerified) {
+      setAlert({
+        type: "error",
+        message: "Please complete your KYC verification before submitting a proposal.",
+      });
+      return;
+    }
 
     // Frontend validation
     if (!bidAmount.trim() || !coverLetter.trim() || !resolvedDuration) {
@@ -260,6 +315,36 @@ const ProposalForm = ({ jobId }: ProposalFormProps) => {
 
       {alert && <Alert type={alert.type} message={alert.message} />}
 
+      {!isLoadingVerification && (!emailVerified || !kycVerified) && (
+        <div className={`rounded-md p-4 text-sm font-medium text-white ${
+          !emailVerified ? "bg-orange-600" : "bg-red-600"
+        }`}>
+          {!emailVerified ? (
+            <div>
+              Your email is not verified. Please{" "}
+              <Link 
+                href="/email-required" 
+                className="underline font-bold hover:opacity-80"
+              >
+                verify your email
+              </Link>
+              {" "}to submit a proposal.
+            </div>
+          ) : (
+            <div>
+              Your KYC verification is pending. Please{" "}
+              <Link 
+                href="/kyc-form" 
+                className="underline font-bold hover:opacity-80"
+              >
+                complete KYC verification
+              </Link>
+              {" "}to submit a proposal.
+            </div>
+          )}
+        </div>
+      )}
+
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1.2fr)_minmax(320px,0.8fr)] lg:items-start lg:gap-8">
         <form
           onSubmit={handleSubmit}
@@ -309,11 +394,24 @@ const ProposalForm = ({ jobId }: ProposalFormProps) => {
               <Button
                 type="submit"
                 className={`h-12 min-w-[180px] rounded-full px-6 text-sm font-semibold text-white shadow-sm ${
-                  isSubmitting ? "bg-gray-400" : ""
+                  isSubmitting || !emailVerified || !kycVerified || isLoadingVerification ? "bg-gray-400" : ""
                 }`}
-                disabled={isSubmitting}
+                disabled={isSubmitting || !emailVerified || !kycVerified || isLoadingVerification}
+                title={
+                  isLoadingVerification
+                    ? "Loading verification status..."
+                    : !emailVerified
+                    ? "Please verify your email to submit"
+                    : !kycVerified
+                    ? "Please complete KYC verification to submit"
+                    : undefined
+                }
               >
-                {isSubmitting ? "Submitting..." : "Submit Proposal"}
+                {isSubmitting
+                  ? "Submitting..."
+                  : isLoadingVerification
+                  ? "Loading..."
+                  : "Submit Proposal"}
               </Button>
             </div>
           </div>

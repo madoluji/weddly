@@ -40,8 +40,6 @@ const AppLogo = ({
       <Image
         src={weddlyLogo}
         alt={alt}
-        width={width}
-        height={height}
         className={`block h-auto w-full bg-transparent ${className || ""}`}
         style={mergedStyle}
         sizes={`(max-width: 768px) min(100vw, ${width}px), ${width}px`}

@@ -1,17 +1,20 @@
 "use client";
 
-import { Suspense, use, useContext, useEffect, useState } from "react";
+import { Suspense, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import ChatList from "./chatList";
 import Image from "next/image";
 import SafeImage from "@/app/ui/shared/SafeImage";
 import { Appcontext } from "@/app/context/appContext";
 import { db, upload } from "@/app/lib/firebase";
 import {
+  collection,
   updateDoc,
   doc,
   arrayUnion,
   getDoc,
   onSnapshot,
+  serverTimestamp,
+  setDoc,
 } from "firebase/firestore";
 import {
   ClipboardDocumentCheckIcon,
@@ -27,6 +30,7 @@ import {
 import UserProfileLoader from "@/app/lib/userProfileLoader";
 import Link from "next/link";
 import { fetchWithAuth } from "@/app/lib/fetchWIthAuth";
+import { usePathname, useSearchParams } from "next/navigation";
 
 interface Message {
   sId: string;
@@ -40,17 +44,207 @@ interface Message {
 }
 
 const ChatWindow: React.FC = () => {
-  const { userData, messagesId, chatUser, messages, setMessages, chatVisual } =
+  const {
+    userData,
+    chatData,
+    messagesId,
+    setMessagesId,
+    chatUser,
+    setChatUser,
+    messages,
+    setMessages,
+    chatVisual,
+    setChatVisual,
+  } =
     useContext(Appcontext);
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
 
   const getAvatar = (user: any) =>
     user?.avatar || user?.profilePicture || "/images/image.png";
   const getDisplayName = (user: any) => user?.username || user?.name || "User";
+  const getSenderDisplayName = (user: any) => {
+    const username = typeof user?.username === "string" ? user.username.trim() : "";
+    if (username) {
+      return username;
+    }
+
+    const first = typeof user?.name === "string" ? user.name.trim() : "";
+    const last = typeof user?.lastName === "string" ? user.lastName.trim() : "";
+    const full = `${first} ${last}`.trim();
+    if (full) {
+      return full;
+    }
+
+    if (first) {
+      return first;
+    }
+
+    const email = typeof user?.email === "string" ? user.email : "";
+    if (email.includes("@")) {
+      const localPart = email.split("@")[0]?.trim();
+      if (localPart) {
+        return localPart;
+      }
+    }
+
+    return "User";
+  };
 
   const [input, setInput] = useState("");
   const [density, setDensity] = useState<"comfortable" | "compact">("comfortable");
 
   const [isChatOpen, setIsChatOpen] = useState<boolean>(true);
+  const routeConversationInitRef = useRef<string | null>(null);
+
+  const queryMessageId = searchParams.get("messageId");
+  const queryRecipientId = searchParams.get("recipientId");
+  const routeSegmentId = useMemo(() => {
+    const segments = pathname.split("/").filter(Boolean);
+    const last = segments[segments.length - 1];
+    return last ? decodeURIComponent(last) : null;
+  }, [pathname]);
+
+  const openOrCreateConversationByPeerId = useCallback(
+    async (peerId: string) => {
+      if (!userData?.id || peerId === userData.id) {
+        return;
+      }
+
+      const chatsRef = collection(db, "chats");
+      const myChatsRef = doc(chatsRef, userData.id);
+      const myChatsSnap = await getDoc(myChatsRef);
+      const myChatsData = myChatsSnap.data()?.chatsData || [];
+      const existingChat = myChatsData.find(
+        (item: { rId?: string; messageId?: string }) => item?.rId === peerId
+      );
+
+      let targetMessageId: string | undefined = existingChat?.messageId;
+
+      if (!targetMessageId) {
+        const now = Date.now();
+        const newMessageRef = doc(collection(db, "messages"));
+        targetMessageId = newMessageRef.id;
+
+        await setDoc(newMessageRef, {
+          createdAt: serverTimestamp(),
+          messages: [],
+        });
+
+        await setDoc(
+          myChatsRef,
+          {
+            chatsData: arrayUnion({
+              messageId: targetMessageId,
+              lastMessage: "",
+              rId: peerId,
+              updatedAt: now,
+              messageSeen: true,
+              chatStatus: "open",
+            }),
+          },
+          { merge: true }
+        );
+
+        await setDoc(
+          doc(chatsRef, peerId),
+          {
+            chatsData: arrayUnion({
+              messageId: targetMessageId,
+              lastMessage: "",
+              rId: userData.id,
+              updatedAt: now,
+              messageSeen: false,
+              chatStatus: "open",
+            }),
+          },
+          { merge: true }
+        );
+      }
+
+      const peerSnap = await getDoc(doc(db, "users", peerId));
+      const peerProfile = peerSnap.exists()
+        ? { ...(peerSnap.data() as Record<string, unknown>), id: peerId }
+        : {
+            id: peerId,
+            username: "User",
+            name: "User",
+            avatar: "/images/image.png",
+          };
+
+      setMessagesId(targetMessageId);
+      setChatUser(peerProfile as any);
+      setChatVisual(true);
+    },
+    [setChatUser, setChatVisual, setMessagesId, userData?.id]
+  );
+
+  useEffect(() => {
+    if (!chatData?.length || !userData?.id) {
+      return;
+    }
+
+    let targetChat =
+      (queryMessageId
+        ? chatData.find((item: any) => item.messageId === queryMessageId)
+        : undefined) ||
+      (queryRecipientId
+        ? chatData.find((item: any) => item.rId === queryRecipientId)
+        : undefined);
+
+    if (!targetChat && routeSegmentId && routeSegmentId !== userData.id) {
+      targetChat = chatData.find((item: any) => item.rId === routeSegmentId);
+    }
+
+    if (!targetChat && queryRecipientId && queryRecipientId !== userData.id) {
+      if (routeConversationInitRef.current === queryRecipientId) {
+        return;
+      }
+      routeConversationInitRef.current = queryRecipientId;
+      void openOrCreateConversationByPeerId(queryRecipientId);
+      return;
+    }
+
+    if (!targetChat && routeSegmentId && routeSegmentId !== userData.id) {
+      if (routeConversationInitRef.current === routeSegmentId) {
+        return;
+      }
+      routeConversationInitRef.current = routeSegmentId;
+      void openOrCreateConversationByPeerId(routeSegmentId);
+      return;
+    }
+
+    if (!targetChat) {
+      return;
+    }
+
+    routeConversationInitRef.current = null;
+
+    if (messagesId !== targetChat.messageId) {
+      setMessagesId(targetChat.messageId);
+    }
+
+    if (!chatUser || chatUser.id !== targetChat.userData?.id) {
+      setChatUser(targetChat.userData);
+    }
+
+    if (!chatVisual) {
+      setChatVisual(true);
+    }
+  }, [
+    chatData,
+    chatUser,
+    chatVisual,
+    messagesId,
+    queryMessageId,
+    queryRecipientId,
+    routeSegmentId,
+    openOrCreateConversationByPeerId,
+    setChatUser,
+    setChatVisual,
+    setMessagesId,
+    userData?.id,
+  ]);
 
   useEffect(() => {
     if (!userData?.id || !chatUser?.id) return;
@@ -90,7 +284,7 @@ const ChatWindow: React.FC = () => {
           recipientId: chatUser.id,
           messageId: messagesId,
           textPreview,
-          senderName: userData.username || userData.name || "Someone",
+          senderName: getSenderDisplayName(userData),
           senderAvatar: getAvatar(userData),
         }),
       });
@@ -98,6 +292,72 @@ const ChatWindow: React.FC = () => {
       console.warn("Failed to emit chat notification:", error);
     }
   };
+
+  const updateChatPreviewForParticipants = useCallback(
+    async (lastMessage: string) => {
+      if (!messagesId || !userData?.id || !chatUser?.id) {
+        return;
+      }
+
+      const now = Date.now();
+      const chatParticipants = [
+        {
+          docId: userData.id,
+          peerId: chatUser.id,
+          messageSeen: true,
+        },
+        {
+          docId: chatUser.id,
+          peerId: userData.id,
+          messageSeen: false,
+        },
+      ];
+
+      for (const participant of chatParticipants) {
+        const userChatsRef = doc(db, "chats", participant.docId);
+        const userChatsSnapshot = await getDoc(userChatsRef);
+        const existingChatsData = userChatsSnapshot.exists()
+          ? userChatsSnapshot.data()?.chatsData
+          : [];
+
+        const chatsData = Array.isArray(existingChatsData)
+          ? [...existingChatsData]
+          : [];
+
+        const chatIndex = chatsData.findIndex(
+          (c: { messageId?: string }) => c?.messageId === messagesId
+        );
+
+        if (chatIndex === -1) {
+          chatsData.push({
+            messageId: messagesId,
+            lastMessage,
+            rId: participant.peerId,
+            updatedAt: now,
+            messageSeen: participant.messageSeen,
+            chatStatus: "open",
+          });
+        } else {
+          chatsData[chatIndex] = {
+            ...chatsData[chatIndex],
+            lastMessage,
+            updatedAt: now,
+            messageSeen: participant.messageSeen,
+            chatStatus: chatsData[chatIndex]?.chatStatus || "open",
+          };
+        }
+
+        await setDoc(
+          userChatsRef,
+          {
+            chatsData,
+          },
+          { merge: true }
+        );
+      }
+    },
+    [chatUser?.id, messagesId, userData?.id]
+  );
 
   const sendMessage = async () => {
     try {
@@ -110,28 +370,7 @@ const ChatWindow: React.FC = () => {
           }),
         });
 
-        const userIDs = [chatUser.id, userData.id];
-
-        userIDs.forEach(async (id) => {
-          const userChatsRef = doc(db, "chats", id);
-          const userChatsSnapshot = await getDoc(userChatsRef);
-
-          if (userChatsSnapshot.exists()) {
-            const userChatData = userChatsSnapshot.data();
-            const chatIndex = userChatData.chatsData.findIndex(
-              (c: { messageId: string }) => c.messageId === messagesId
-            );
-            userChatData.chatsData[chatIndex].lastMessage = input.slice(0, 30);
-            userChatData.chatsData[chatIndex].updatedAt = Date.now();
-            if (userChatData.chatsData[chatIndex].rId === userData.id) {
-              userChatData.chatsData[chatIndex].messageSeen = false;
-            }
-
-            await updateDoc(userChatsRef, {
-              chatsData: userChatData.chatsData,
-            });
-          }
-        });
+        await updateChatPreviewForParticipants(input.slice(0, 30));
 
         await notifyNewMessage(input);
       }
@@ -155,28 +394,7 @@ const ChatWindow: React.FC = () => {
           }),
         });
 
-        const userIDs = [chatUser.id, userData.id];
-
-        userIDs.forEach(async (id) => {
-          const userChatsRef = doc(db, "chats", id);
-          const userChatsSnapshot = await getDoc(userChatsRef);
-
-          if (userChatsSnapshot.exists()) {
-            const userChatData = userChatsSnapshot.data();
-            const chatIndex = userChatData.chatsData.findIndex(
-              (c: { messageId: string }) => c.messageId === messagesId
-            );
-            userChatData.chatsData[chatIndex].lastMessage = "Image";
-            userChatData.chatsData[chatIndex].updatedAt = Date.now();
-            if (userChatData.chatsData[chatIndex].rId === userData.id) {
-              userChatData.chatsData[chatIndex].messageSeen = false;
-            }
-
-            await updateDoc(userChatsRef, {
-              chatsData: userChatData.chatsData,
-            });
-          }
-        });
+        await updateChatPreviewForParticipants("Image");
 
         await notifyNewMessage("Sent an image");
       }
@@ -377,8 +595,8 @@ const ChatWindow: React.FC = () => {
             <SafeImage
               src={
                 msg.sId === userData?.id
-                  ? userData.avatar || "/images/image.png"
-                  : chatUser.avatar || "/images/image.png"
+                  ? getAvatar(userData)
+                  : getAvatar(chatUser)
               }
               className={`object-cover h-16 w-16 mr-4 rounded-full`}
               alt="User avatar"
@@ -493,17 +711,17 @@ const ChatWindow: React.FC = () => {
       <UserProfileLoader />
       <div className="w-full">
         <div className="mb-3 flex items-center justify-between px-1">
-          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
+          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500 dark:text-dark-on-surface-variant">
             Display Density
           </p>
-          <div className="inline-flex rounded-lg border border-slate-200 bg-white p-1">
+          <div className="inline-flex rounded-lg border border-slate-200 dark:border-dark-outline-variant bg-white dark:bg-dark-surface p-1">
             <button
               type="button"
               onClick={() => setDensity("compact")}
               className={`rounded-md px-3 py-1.5 text-xs font-semibold transition ${
                 density === "compact"
                   ? "bg-primary-700 text-white"
-                  : "text-slate-600 hover:bg-slate-100"
+                  : "text-slate-600 dark:text-dark-on-surface-variant hover:bg-slate-100 dark:hover:bg-dark-surface-container"
               }`}
             >
               Compact
@@ -514,7 +732,7 @@ const ChatWindow: React.FC = () => {
               className={`rounded-md px-3 py-1.5 text-xs font-semibold transition ${
                 density === "comfortable"
                   ? "bg-primary-700 text-white"
-                  : "text-slate-600 hover:bg-slate-100"
+                  : "text-slate-600 dark:text-dark-on-surface-variant hover:bg-slate-100 dark:hover:bg-dark-surface-container"
               }`}
             >
               Comfortable
@@ -522,29 +740,29 @@ const ChatWindow: React.FC = () => {
           </div>
         </div>
 
-        <div className={`grid rounded-2xl border border-slate-200 bg-slate-50 lg:grid-cols-[300px_minmax(0,1fr)] ${density === "compact" ? "gap-2 p-2" : "gap-3 p-2 sm:p-3"}`}>
-          <div className={`h-[calc(100vh-220px)] overflow-hidden rounded-2xl border border-slate-200 bg-white ${density === "compact" ? "min-h-[520px]" : "min-h-[560px]"}`}>
+        <div className={`grid rounded-2xl border border-slate-200 dark:border-dark-outline-variant bg-slate-50 dark:bg-dark-surface-container lg:grid-cols-[300px_minmax(0,1fr)] ${density === "compact" ? "gap-2 p-2" : "gap-3 p-2 sm:p-3"}`}>
+          <div className={`h-[calc(100vh-220px)] overflow-hidden rounded-2xl border border-slate-200 dark:border-dark-outline-variant bg-white dark:bg-dark-surface ${density === "compact" ? "min-h-[520px]" : "min-h-[560px]"}`}>
             <Suspense>
               <ChatList density={density} />
             </Suspense>
           </div>
 
           {chatUser?.id !== "0" ? (
-            <div className={`flex h-[calc(100vh-220px)] flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white ${density === "compact" ? "min-h-[520px]" : "min-h-[560px]"}`}>
-              <div className={`flex items-center justify-between border-b border-slate-200 bg-white ${density === "compact" ? "px-3 py-2.5" : "px-4 py-3 sm:px-5"}`}>
+            <div className={`flex h-[calc(100vh-220px)] flex-col overflow-hidden rounded-2xl border border-slate-200 dark:border-dark-outline-variant bg-white dark:bg-dark-surface ${density === "compact" ? "min-h-[520px]" : "min-h-[560px]"}`}>
+              <div className={`flex items-center justify-between border-b border-slate-200 dark:border-dark-outline-variant bg-white dark:bg-dark-surface ${density === "compact" ? "px-3 py-2.5" : "px-4 py-3 sm:px-5"}`}>
                 <div className="flex min-w-0 items-center gap-3">
                   <SafeImage
                     src={getAvatar(chatUser)}
-                    className="h-10 w-10 rounded-full object-cover border border-slate-200"
+                    className="h-10 w-10 rounded-full object-cover border border-slate-200 dark:border-dark-outline-variant"
                     alt="Chat user avatar"
                     width={40}
                     height={40}
                   />
                   <div className="min-w-0">
-                    <p className="truncate text-sm font-semibold text-slate-900 sm:text-base">
+                    <p className="truncate text-sm font-semibold text-slate-900 dark:text-dark-on-surface sm:text-base">
                       {getDisplayName(chatUser)}
                     </p>
-                    <p className="truncate text-xs text-slate-500">
+                    <p className="truncate text-xs text-slate-500 dark:text-dark-on-surface-variant">
                       Last seen {convertTimestamp(chatUser.lastSeen)}
                     </p>
                   </div>
@@ -583,7 +801,7 @@ const ChatWindow: React.FC = () => {
                             ? "w-[92%]"
                             : msg.sId === userData?.id
                               ? "max-w-[75%] rounded-2xl rounded-br-md bg-primary-700 text-white"
-                              : "max-w-[75%] rounded-2xl rounded-bl-md bg-slate-100 text-slate-800"
+                              : "max-w-[75%] rounded-2xl rounded-bl-md bg-slate-100 dark:bg-dark-surface-container-high text-slate-800 dark:text-dark-on-surface"
                         }`}
                       >
                         {msg.image ? (
@@ -626,10 +844,10 @@ const ChatWindow: React.FC = () => {
               </div>
 
               {isChatOpen ? (
-                <div className={`border-t border-slate-200 bg-white ${density === "compact" ? "p-2.5" : "p-3 sm:p-4"}`}>
-                  <div className={`flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 ${density === "compact" ? "px-2.5 py-1.5" : "px-3 py-2"}`}>
+                <div className={`border-t border-slate-200 dark:border-dark-outline-variant bg-white dark:bg-dark-surface ${density === "compact" ? "p-2.5" : "p-3 sm:p-4"}`}>
+                  <div className={`flex items-center gap-2 rounded-xl border border-slate-200 dark:border-dark-outline-variant bg-slate-50 dark:bg-dark-surface-container ${density === "compact" ? "px-2.5 py-1.5" : "px-3 py-2"}`}>
                     <input
-                      className={`w-full bg-transparent text-sm text-slate-700 outline-none placeholder:text-slate-400 ${density === "compact" ? "h-9" : "h-10"}`}
+                      className={`w-full bg-transparent text-sm text-slate-700 dark:text-dark-on-surface outline-none placeholder:text-slate-400 dark:placeholder:text-dark-on-surface-variant ${density === "compact" ? "h-9" : "h-10"}`}
                       onChange={(e) => setInput(e.target.value)}
                       value={input}
                       onKeyDown={handleKeyDown}
@@ -657,7 +875,7 @@ const ChatWindow: React.FC = () => {
                   </div>
                 </div>
               ) : (
-                <div className="border-t border-slate-200 bg-white px-4 py-5 text-center text-sm font-medium text-slate-600">
+                <div className="border-t border-slate-200 dark:border-dark-outline-variant bg-white dark:bg-dark-surface px-4 py-5 text-center text-sm font-medium text-slate-600 dark:text-dark-on-surface-variant">
                   This chat is no longer available for you to send messages.
                 </div>
               )}

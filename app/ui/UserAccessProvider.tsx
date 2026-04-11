@@ -8,7 +8,6 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { usePathname } from "next/navigation";
 import { fetchWithAuth } from "@/app/lib/fetchWIthAuth";
 import { useAuth } from "@/app/providers";
 
@@ -45,11 +44,10 @@ export const UserAccessProvider = ({
   children: ReactNode;
 }) => {
   const { session, status } = useAuth();
-  const pathname = usePathname();
   const [data, setData] = useState<UserAccessData | null>(null);
   const [loading, setLoading] = useState(status === "authenticated");
   const shouldSkipUserAccess =
-    pathname.startsWith("/admin") || pathname.startsWith("/api/admin");
+    session?.user?.role === "admin";
 
   useEffect(() => {
     if (status === "loading") {
@@ -127,7 +125,7 @@ export const UserAccessProvider = ({
     return () => {
       mounted = false;
     };
-  }, [pathname, session?.user?.id, shouldSkipUserAccess, status]);
+  }, [session?.user?.id, shouldSkipUserAccess, status]);
 
   const value = useMemo(
     () => ({

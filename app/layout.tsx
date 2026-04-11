@@ -5,6 +5,8 @@ import Appcontextprovider from "./context/appContext";
 import { getServerSession } from "next-auth";
 import { authOptions } from "./lib/auth";
 import { UserAccessProvider } from "./ui/UserAccessProvider";
+import { ThemeScript } from "@/app/ui/ThemeScript";
+import { ThemeProvider } from "@/app/context/ThemeProvider";
 
 export default async function RootLayout({
   children,
@@ -16,10 +18,12 @@ export default async function RootLayout({
   return (
     <html
       lang="en"
+      suppressHydrationWarning
       data-scroll-behavior="smooth"
       className={`scroll-smooth subpixel-antialiased ${inter.variable} ${notoSerif.variable} ${montserrat.variable} ${playfairDisplay.variable} ${montserrat.className}`}
     >
       <head>
+        <ThemeScript />
         <meta charSet="utf-8" />
         <meta
           name="viewport"
@@ -32,11 +36,13 @@ export default async function RootLayout({
         />
         <title>Weddly</title>
       </head>
-      <body>
-        <div className="min-h-screen">
+      <body className="bg-white dark:bg-dark-background text-on-surface dark:text-dark-on-surface">
+        <div className="min-h-screen bg-white dark:bg-dark-background">
           <AuthProvider session={session}>
             <UserAccessProvider>
-              <Appcontextprovider>{children}</Appcontextprovider>
+              <ThemeProvider defaultTheme="light" storageKey="weddly-theme">
+                <Appcontextprovider>{children}</Appcontextprovider>
+              </ThemeProvider>
             </UserAccessProvider>
           </AuthProvider>
         </div>

@@ -43,8 +43,8 @@ const Rating = () => {
   }
 
   return (
-    <div className="relative flex h-[250px] w-full flex-col items-center justify-center gap-1 overflow-hidden rounded-3xl border border-primary-100/70 bg-white p-5 shadow-[0_12px_30px_rgba(15,23,42,0.08)]">
-      <h1 className="font-headline text-2xl font-medium leading-none text-slate-900 xl:text-[1.7rem]">Rating</h1>
+    <div className="relative flex h-[250px] w-full flex-col items-center justify-center gap-1 overflow-hidden rounded-3xl border border-primary-100/70 dark:border-dark-outline-variant bg-white dark:bg-dark-surface p-5 shadow-[0_12px_30px_rgba(15,23,42,0.08)]">
+      <h1 className="font-headline text-2xl font-medium leading-none text-slate-900 dark:text-dark-on-surface xl:text-[1.7rem]">Rating</h1>
       <h1
         className={clsx("text-6xl font-medium text-primary-700")}
       >

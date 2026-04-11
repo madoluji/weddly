@@ -119,6 +119,8 @@ const ProfileUploadForm = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setUploading(true);
+    setStatusMessage("");
+    setStatusType("");
     try {
       const updatedFormData = { ...formData };
 
@@ -133,6 +135,16 @@ const ProfileUploadForm = () => {
         updatedFormData.phone = PHONE_PREFIX + updatedFormData.phone.replace(/[^\d]/g, "");
       }
 
+      const normalizedPhone = updatedFormData.phone.replace(/[\s-]/g, "").trim();
+      if (!/^(?:\+977)?9\d{9}$/.test(normalizedPhone)) {
+        setStatusType("error");
+        setStatusMessage(
+          "Please enter a valid Nepal phone number in the format 9XXXXXXXXX."
+        );
+        setUploading(false);
+        return;
+      }
+
       const response = await fetchWithAuth("/api/profile-update", {
         method: "POST",
         headers: {
@@ -141,15 +153,17 @@ const ProfileUploadForm = () => {
         body: JSON.stringify(updatedFormData),
       });
 
-      const userId = session?.user.id ?? "111";
-      const docRef = doc(db, "users", userId);
-      await setDoc(
-        docRef,
-        { avatar: updatedFormData.profilePicture },
-        { merge: true }
-      );
+      const responsePayload = await response.json().catch(() => ({}));
 
       if (response.ok) {
+        const userId = session?.user.id ?? "111";
+        const docRef = doc(db, "users", userId);
+        await setDoc(
+          docRef,
+          { avatar: updatedFormData.profilePicture },
+          { merge: true }
+        );
+
         setStatusType("success");
         setStatusMessage("Portfolio submitted successfully!");
         setFormData(updatedFormData);
@@ -161,7 +175,11 @@ const ProfileUploadForm = () => {
         router.push("/signup/usermode-select");
       } else {
         setStatusType("error");
-        setStatusMessage("Error submitting portfolio. Please try again.");
+        setStatusMessage(
+          typeof responsePayload?.message === "string"
+            ? responsePayload.message
+            : "Error submitting portfolio. Please try again."
+        );
       }
     } catch (error) {
       console.error("An error occurred while submitting the form", error);

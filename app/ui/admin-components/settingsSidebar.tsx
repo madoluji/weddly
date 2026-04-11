@@ -18,6 +18,7 @@ import { fetchWithAuth } from "@/app/lib/fetchWIthAuth";
 import { signOut } from "next-auth/react";
 import { useAuth } from "@/app/providers";
 import SafeImage from "@/app/ui/shared/SafeImage";
+import DarkModeToggle from "@/app/ui/navbar/DarkModeToggle";
 
 interface NavItemProps {
   href: string;
@@ -79,7 +80,7 @@ const SettingsSidebar: React.FC = () => {
   };
 
   return (
-    <div className="left-0 top-0 h-screen px-5 w-1/6 bg-white shadow-md text-black">
+    <div className="left-0 top-0 h-screen px-5 w-1/6 bg-white dark:bg-dark-surface shadow-md text-black dark:text-dark-on-surface">
       <nav className="flex flex-col h-full py-6">
         {/* Logo */}
         <div className="flex items-center justify-center px-4 mb-6">
@@ -148,6 +149,10 @@ const SettingsSidebar: React.FC = () => {
         {/* Logout Button */}
 
         <div className="mt-auto space-y-3">
+          <div className="flex items-center space-x-4 p-3">
+            <DarkModeToggle />
+            <span className="text-sm font-medium">Toggle Theme</span>
+          </div>
           <button
             onClick={() => signOut()}
             className={`flex items-center space-x-4 p-3 w-full rounded-lg transition

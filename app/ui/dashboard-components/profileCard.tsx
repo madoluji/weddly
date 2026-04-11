@@ -43,12 +43,12 @@ const ProfileCard = ({ mode }: Props) => {
 
   // Render the profile card with user data
   return (
-    <div className="relative flex h-[250px] w-full flex-col overflow-hidden rounded-3xl border border-primary-100/70 bg-white shadow-[0_12px_30px_rgba(15,23,42,0.08)]">
+    <div className="relative flex h-[250px] w-full flex-col overflow-hidden rounded-3xl border border-primary-100/70 bg-white dark:bg-dark-surface dark:border-dark-outline-variant shadow-[0_12px_30px_rgba(15,23,42,0.08)]">
       {/* Cover image section */}
       <div className="h-[40%] overflow-hidden bg-gradient-to-r from-primary-800 via-primary-700 to-primary-600" />
 
       {/* Profile image section */}
-      <div className="absolute left-1/2 h-20 w-20 -translate-x-1/2 translate-y-[50%] overflow-hidden rounded-full border-4 border-white bg-white shadow-sm">
+      <div className="absolute left-1/2 h-20 w-20 -translate-x-1/2 translate-y-[50%] overflow-hidden rounded-full border-4 border-white dark:border-dark-surface bg-white dark:bg-dark-surface shadow-sm">
         <SafeImage
           src={displayPicture || session?.user?.profilePicture || "/images/image.png"}
           alt="profile"
@@ -64,11 +64,11 @@ const ProfileCard = ({ mode }: Props) => {
       <div className="flex h-2/3 flex-col items-center justify-center px-4">
         <div className="text-center pt-10">
           {/* Display user's name and last name */}
-          <h2 className="font-headline text-2xl font-medium leading-none text-slate-900 xl:text-[1.65rem]">
+          <h2 className="font-headline text-2xl font-medium leading-none text-slate-900 dark:text-dark-on-surface xl:text-[1.65rem]">
             {displayName || `${session?.user?.name || ""}${session?.user?.lastName ? ` ${session.user.lastName}` : ""}`}
           </h2>
           {/* Display mode */}
-          <p className="mt-2 text-base font-medium text-slate-500">{mode}</p>
+          <p className="mt-2 text-base font-medium text-slate-500 dark:text-dark-on-surface-variant">{mode}</p>
         </div>
       </div>
     </div>

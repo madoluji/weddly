@@ -9,7 +9,6 @@ import {
   ClockIcon,
   DocumentTextIcon,
   MapPinIcon,
-  TrophyIcon,
 } from "@heroicons/react/24/outline";
 import Link from "next/link";
 
@@ -23,7 +22,6 @@ type Data = {
   fullName: string;
   location: string;
   tags: string[];
-  experience: string;
   budget: string;
   description: string;
   title: string;
@@ -99,20 +97,6 @@ const JobDetails = ({ jobId }: JobDetailsProps) => {
       <div className="space-y-6 px-5 py-5 sm:px-6 sm:py-6">
         <div className="rounded-[1.5rem] bg-slate-50 p-4">
           <div className="grid gap-3 sm:grid-cols-2">
-            <div className="rounded-2xl border border-slate-200 bg-white p-4">
-              <div className="flex items-center gap-3 text-slate-700">
-                <TrophyIcon className="h-5 w-5 text-primary-600" />
-                <div>
-                  <p className="text-xs uppercase tracking-[0.2em] text-slate-400">
-                    Experience
-                  </p>
-                  <p className="mt-1 text-sm font-medium text-slate-900">
-                    {data.experience}
-                  </p>
-                </div>
-              </div>
-            </div>
-
             <div className="rounded-2xl border border-slate-200 bg-white p-4">
               <div className="flex items-center gap-3 text-slate-700">
                 <BanknotesIcon className="h-5 w-5 text-primary-600" />

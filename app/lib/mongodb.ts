@@ -1,15 +1,16 @@
-import mongoose from "mongoose";
+import mongoose, { type Connection } from "mongoose";
 
-export const connectMongoDB = async () => {
+export const connectMongoDB = async (): Promise<void> => {
   if (mongoose.connection.readyState >= 1) {
     // Already connected, skip the connection
     return;
   }
 
   try {
-    await mongoose.connect(process.env.MONGODB_URI);
+    await mongoose.connect(process.env.MONGODB_URI!);
     console.log("Connected to MongoDB");
   } catch (error) {
     console.error("Error connecting to MongoDB", error);
+    throw error;
   }
 };

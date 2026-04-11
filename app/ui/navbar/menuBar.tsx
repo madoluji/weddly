@@ -40,7 +40,7 @@ const MenuBar = () => {
 
       <div
         className={clsx(
-          " top-0 -left-0 w-screen  transition-all duration-800 ease-in-out h-screen flex flex-col gap-10 p-5 bg-white z-40",
+          " top-0 -left-0 w-screen  transition-all duration-800 ease-in-out h-screen flex flex-col gap-10 p-5 bg-white dark:bg-dark-surface z-40",
           { hidden: !isOpen },
           { block: isOpen },
           { "translate-x-0": isOpen }

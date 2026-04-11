@@ -48,9 +48,9 @@ const ReviewsCard = () => {
   const visibleReviews = recentReviews.slice(currentIndex, currentIndex + 2);
 
   return (
-    <div className="relative flex h-[250px] w-full flex-col gap-2 overflow-hidden rounded-3xl border border-primary-100/70 bg-white px-5 py-3 shadow-[0_12px_30px_rgba(15,23,42,0.08)]">
+    <div className="relative flex h-[250px] w-full flex-col gap-2 overflow-hidden rounded-3xl border border-primary-100/70 dark:border-dark-outline-variant bg-white dark:bg-dark-surface px-5 py-3 shadow-[0_12px_30px_rgba(15,23,42,0.08)]">
       <div className="flex justify-between items-center">
-        <h1 className="font-headline text-2xl font-medium leading-none text-slate-900 xl:text-[1.7rem]">Reviews</h1>
+        <h1 className="font-headline text-2xl font-medium leading-none text-slate-900 dark:text-dark-on-surface xl:text-[1.7rem]">Reviews</h1>
         {recentReviews.length > 2 && (
           <div className="flex gap-2">
             <button
@@ -95,12 +95,12 @@ const ReviewsCard = () => {
                     initial={{ opacity: 0, x: 20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ duration: 0.3, delay: index * 0.1 }}
-                    className="w-full flex gap-3 flex-row rounded-xl border border-transparent px-2 py-1 transition hover:border-primary-100 hover:bg-primary-50/40"
+                    className="w-full flex gap-3 flex-row rounded-xl border border-transparent dark:border-dark-outline-variant/0 px-2 py-1 transition hover:border-primary-100 dark:hover:border-dark-outline-variant hover:bg-primary-50/40 dark:hover:bg-dark-surface-container"
                   >
                     <div className="flex items-center justify-center">
                       <motion.div
                         whileHover={{ scale: 1.05 }}
-                        className="h-10 w-10 overflow-hidden rounded-full border border-primary-100 bg-primary-50"
+                        className="h-10 w-10 overflow-hidden rounded-full border border-primary-100 dark:border-dark-outline-variant bg-primary-50 dark:bg-dark-surface-container"
                       >
                         <SafeImage
                           width={40}
@@ -112,14 +112,14 @@ const ReviewsCard = () => {
                       </motion.div>
                     </div>
                     <div className="flex flex-col gap-0.5">
-                      <p className="text-[0.95rem] font-medium leading-tight text-slate-800">
+                      <p className="text-[0.95rem] font-medium leading-tight text-slate-800 dark:text-dark-on-surface">
                         {review.reviewerId.name}{review.reviewerId.lastName ? ` ${review.reviewerId.lastName}` : ""}
                       </p>
                       <div className="flex justify-start items-center text-[.7rem] gap-2">
                         <StarRating rating={review.rating} /> 
-                        <span className="border-l border-slate-200 pl-2 text-slate-400">1 week ago</span>
+                        <span className="border-l border-slate-200 dark:border-dark-outline-variant pl-2 text-slate-400 dark:text-dark-on-surface-variant">1 week ago</span>
                       </div>
-                      <p className="text-[.75rem] leading-normal text-slate-600">
+                      <p className="text-[.75rem] leading-normal text-slate-600 dark:text-dark-on-surface-variant">
                         {truncateString(review.comment || "No comment provided.", 90)}
                         {review.comment && review.comment.length > 90 && (
                           <button className="ml-1 font-semibold text-primary-700">
@@ -131,7 +131,7 @@ const ReviewsCard = () => {
                   </motion.div>
                 ))
               ) : (
-                <p className="text-[.9rem] text-slate-600">No reviews available.</p>
+                <p className="text-[.9rem] text-slate-600 dark:text-dark-on-surface-variant">No reviews available.</p>
               )}
             </motion.div>
           )}

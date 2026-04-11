@@ -28,7 +28,20 @@ const useFirebaseAuth = () => {
 
                 firebaseAuthInFlight = (async () => {
                     const res = await fetchWithAuth("/api/firebase-token");
-                    const { token } = await res.json();
+                    const payload = await res.json().catch(() => ({}));
+                    if (!res.ok) {
+                        const apiMessage =
+                            typeof payload?.message === "string"
+                                ? payload.message
+                                : `Failed to fetch Firebase token (${res.status})`;
+                        throw new Error(apiMessage);
+                    }
+
+                    const token = typeof payload?.token === "string" ? payload.token : "";
+                    if (!token) {
+                        throw new Error("Missing Firebase custom token in response");
+                    }
+
                     await authenticateWithFirebase(token);
                     lastAuthedUserId = sessionUserId;
                 })();

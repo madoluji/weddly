@@ -45,7 +45,6 @@ test("search-filter-apply flow keeps URL/state/data/action aligned", () => {
     search: "photographer",
     location: "chicago",
     category: "Reception",
-    experience: "Expert",
     minBudget: "900",
     maxBudget: "1600",
     eventDate: "2026-09-12",
@@ -57,7 +56,6 @@ test("search-filter-apply flow keeps URL/state/data/action aligned", () => {
   assert.equal(params.get("search"), "photographer");
   assert.equal(params.get("location"), "chicago");
   assert.equal(params.get("category"), "Reception");
-  assert.equal(params.get("experience"), "Expert");
   assert.equal(params.get("minBudget"), "900");
   assert.equal(params.get("maxBudget"), "1600");
   assert.equal(params.get("eventDate"), "2026-09-12");
@@ -67,7 +65,6 @@ test("search-filter-apply flow keeps URL/state/data/action aligned", () => {
     search: initial.search,
     location: initial.location,
     category: initial.category,
-    experiences: initial.experienceFilters,
     minBudget: Number(initial.minBudget),
     maxBudget: Number(initial.maxBudget),
     eventDate: initial.eventDate,

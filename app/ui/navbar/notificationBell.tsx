@@ -22,13 +22,56 @@ type NotificationDisplayItem = {
   groupedCount: number;
 };
 
+const GENERIC_NOTIFICATION_SENDER_LABELS = new Set([
+  "someone",
+  "user",
+  "client",
+  "freelancer",
+  "venue",
+]);
+
+const toUsableSenderName = (value: unknown): string | null => {
+  if (typeof value !== "string") {
+    return null;
+  }
+
+  const trimmed = value.trim();
+  if (!trimmed) {
+    return null;
+  }
+
+  if (GENERIC_NOTIFICATION_SENDER_LABELS.has(trimmed.toLowerCase())) {
+    return null;
+  }
+
+  return trimmed;
+};
+
+const senderNameFromTitle = (title?: string): string | null => {
+  if (typeof title !== "string") {
+    return null;
+  }
+
+  const singleMatch = title.match(/^new message from\s+(.+)$/i);
+  if (singleMatch?.[1]) {
+    return toUsableSenderName(singleMatch[1]);
+  }
+
+  const groupedMatch = title.match(/^\d+\s+new messages from\s+(.+)$/i);
+  if (groupedMatch?.[1]) {
+    return toUsableSenderName(groupedMatch[1]);
+  }
+
+  return null;
+};
+
 const NOTIFICATION_POLL_INTERVAL_MS = 8000;
 const NOTIFICATION_RETRY_BACKOFF_MS = 30000;
 
 const NotificationBell = () => {
   const router = useRouter();
   const pathname = usePathname();
-  const { status } = useAuth();
+  const { session, status } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
@@ -138,9 +181,11 @@ const NotificationBell = () => {
       }
 
       const senderName =
-        (typeof existingGroup.item.metadata?.senderName === "string" && existingGroup.item.metadata.senderName) ||
-        (typeof item.metadata?.senderName === "string" && item.metadata.senderName) ||
-        "someone";
+        toUsableSenderName(existingGroup.item.metadata?.senderName) ||
+        toUsableSenderName(item.metadata?.senderName) ||
+        senderNameFromTitle(existingGroup.item.title) ||
+        senderNameFromTitle(item.title) ||
+        "User";
 
       existingGroup.groupedIds.push(item._id);
       existingGroup.groupedCount += 1;
@@ -288,9 +333,27 @@ const NotificationBell = () => {
     }
 
     if (item.type === "NEW_MESSAGE") {
+      const senderId = item.metadata?.senderId;
       const recipientId = item.metadata?.recipientId;
-      if (typeof recipientId === "string" && recipientId.length > 0) {
-        return isClientArea ? `/client/chatroom/${recipientId}` : `/user/chatroom/${recipientId}`;
+      const messageId = item.metadata?.messageId;
+      const chatPeerId =
+        typeof senderId === "string" && senderId.length > 0
+          ? senderId
+          : typeof recipientId === "string" && recipientId.length > 0
+          ? recipientId
+          : null;
+      const ownerId = session?.user?.id;
+
+      if (chatPeerId && ownerId) {
+        const basePath = isClientArea
+          ? `/client/chatroom/${ownerId}`
+          : `/user/chatroom/${ownerId}`;
+        const params = new URLSearchParams();
+        params.set("recipientId", chatPeerId);
+        if (typeof messageId === "string" && messageId.length > 0) {
+          params.set("messageId", messageId);
+        }
+        return `${basePath}?${params.toString()}`;
       }
     }
 
@@ -510,12 +573,12 @@ const NotificationBell = () => {
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 top-11 z-20 w-96 rounded-xl bg-white p-3 shadow-[0_0px_20px_rgba(228,228,228,1)] before:absolute before:-top-1 before:right-2 before:z-10 before:rotate-[135deg] before:border-8 before:border-white before:bg-white after:absolute after:-top-5 after:right-0 after:h-6 after:w-full">
+        <div className="absolute right-0 top-11 z-20 w-96 rounded-xl bg-white dark:bg-dark-surface p-3 shadow-[0_0px_20px_rgba(228,228,228,1)] dark:shadow-[0_0px_20px_rgba(0,0,0,0.4)] before:absolute before:-top-1 before:right-2 before:z-10 before:rotate-[135deg] before:border-8 before:border-white before:bg-white dark:before:border-dark-surface dark:before:bg-dark-surface after:absolute after:-top-5 after:right-0 after:h-6 after:w-full">
           <div className="mb-2 flex items-center justify-between">
-            <h3 className="text-sm font-semibold text-gray-800">Notifications</h3>
+            <h3 className="text-sm font-semibold text-gray-800 dark:text-dark-on-surface">Notifications</h3>
             <button
               type="button"
-              className="text-xs text-gray-500 hover:text-gray-700"
+              className="text-xs text-gray-500 dark:text-dark-on-surface-variant hover:text-gray-700 dark:hover:text-dark-on-surface"
               onClick={() => setIsOpen(false)}
             >
               Close
@@ -523,9 +586,9 @@ const NotificationBell = () => {
           </div>
 
           {isLoading ? (
-            <p className="py-3 text-sm text-gray-500">Loading...</p>
+            <p className="py-3 text-sm text-gray-500 dark:text-dark-on-surface-variant">Loading...</p>
           ) : displayNotifications.length === 0 ? (
-            <p className="py-3 text-sm text-gray-500">No notifications yet.</p>
+            <p className="py-3 text-sm text-gray-500 dark:text-dark-on-surface-variant">No notifications yet.</p>
           ) : (
             <ul className="max-h-96 space-y-2 overflow-auto pr-1">
               {displayNotifications.map(({ item, groupedIds, groupedCount }) => {
@@ -534,15 +597,15 @@ const NotificationBell = () => {
                 return (
                   <li
                     key={item._id}
-                    className={`rounded-lg border p-3 ${isRead ? "bg-gray-50" : "bg-blue-50"} ${itemHref ? "cursor-pointer hover:border-primary-300 hover:bg-primary-50/50" : ""}`}
+                    className={`rounded-lg border dark:border-dark-outline-variant p-3 ${isRead ? "bg-gray-50 dark:bg-dark-surface-container" : "bg-blue-50 dark:bg-dark-surface-container"} ${itemHref ? "cursor-pointer hover:border-primary-300 hover:bg-primary-50/50 dark:hover:bg-dark-surface-container-high" : ""}`}
                     onClick={() => void handleNotificationClick(item, groupedIds)}
                   >
-                    <p className="text-sm font-semibold text-gray-800">{item.title}</p>
-                    <p className="mt-1 text-sm text-gray-600">
+                    <p className="text-sm font-semibold text-gray-800 dark:text-dark-on-surface">{item.title}</p>
+                    <p className="mt-1 text-sm text-gray-600 dark:text-dark-on-surface-variant">
                       {groupedCount > 1 ? `${item.body} (${groupedCount} unread)` : item.body}
                     </p>
                     <div className="mt-2 flex items-center justify-between">
-                      <span className="text-xs uppercase tracking-wide text-gray-400">{item.type}</span>
+                      <span className="text-xs uppercase tracking-wide text-gray-400 dark:text-dark-on-surface-variant">{item.type}</span>
                       {!isRead ? (
                         <button
                           type="button"
@@ -555,7 +618,7 @@ const NotificationBell = () => {
                           {groupedCount > 1 ? `Mark all ${groupedCount} as read` : "Mark as read"}
                         </button>
                       ) : (
-                        <span className="text-xs text-gray-400">Read</span>
+                        <span className="text-xs text-gray-400 dark:text-dark-on-surface-variant">Read</span>
                       )}
                     </div>
                   </li>

@@ -7,10 +7,20 @@
   scrollbar-color: #ebebeb #f9f9f9;
 }
 
+.dark * {
+  scrollbar-color: #3a4240 #1a1f1c;
+}
+
 body {
   background-color: #f9fafb;
   color: #1f2f27;
   font-family: var(--font-montserrat), sans-serif;
+}
+
+.dark body,
+.dark {
+  background-color: #0f1410;
+  color: #e3e3e0;
 }
 
 .font-body {

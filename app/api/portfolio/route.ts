@@ -1,12 +1,19 @@
-// pages/api/portfolio.js
 import { connectMongoDB } from "@/app/lib/mongodb";
-import User from "@/models/user"; // Import User model
-import Portfolio from "@/models/portfolios"; // Import Portfolio model
-import { NextResponse } from "next/server";
+import User from "@/models/user";
+import Portfolio from "@/models/portfolios";
+import { NextResponse, type NextRequest } from "next/server";
 
-export async function POST(req) {
+interface PortfolioRequestBody {
+  userId: string;
+  projectTitle: string;
+  projectDescription: string;
+  portfolioFiles: string[];
+  technologies: string[];
+}
+
+export async function POST(req: NextRequest): Promise<NextResponse> {
   try {
-    await connectMongoDB(); // Connect to MongoDB
+    await connectMongoDB();
 
     // Parse JSON from the request body
     const {
@@ -15,7 +22,7 @@ export async function POST(req) {
       projectDescription,
       portfolioFiles,
       technologies,
-    } = await req.json();
+    }: PortfolioRequestBody = await req.json();
 
     // Fetch user data using the userId
     const user = await User.findById(userId);

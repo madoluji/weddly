@@ -8,7 +8,7 @@ export default function RootLayout({
 }>) {
   return (
     <div className="overflow-x-hidden">
-      <div className="fixed left-0 right-0 z-10 bg-white w-full">
+      <div className="fixed left-0 right-0 z-[1200] bg-white w-full">
         <NavBar />
       </div>
       <div className=" body-container pt-[75px] m-auto w-full">

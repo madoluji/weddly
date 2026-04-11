@@ -8,8 +8,8 @@ export default async function VenueLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <div className="overflow-x-hidden">
-      <div className="fixed left-0 right-0 z-10 bg-white w-full">
+    <div className="overflow-x-hidden bg-white dark:bg-dark-background min-h-screen">
+      <div className="fixed left-0 right-0 z-[1200] bg-white dark:bg-dark-surface w-full">
         <NavBar />
       </div>
       <KYCStatus />

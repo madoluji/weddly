@@ -32,11 +32,7 @@ export default app;
 export { RTdb, storage, auth, db };
 
 export const authenticateWithFirebase = async (customToken: string) => {
-    try {
-        await signInWithCustomToken(auth, customToken);
-    } catch (error) {
-        console.error("Error authenticating with Firebase:", error);
-    }
+    await signInWithCustomToken(auth, customToken);
 }
 
 interface User {

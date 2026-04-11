@@ -7,7 +7,6 @@ import {
   BanknotesIcon,
   BuildingLibraryIcon,
   CalendarDaysIcon,
-  TrophyIcon,
 } from "@heroicons/react/24/outline";
 import Link from "next/link";
 interface JobDetailsProps {
@@ -20,7 +19,6 @@ type Data = {
   fullName: string;
   location: string;
   tags: string[];
-  experience: string;
   budget: string;
   description: string;
   title: string;
@@ -73,10 +71,6 @@ const JobDetails = ({ jobId }: JobDetailsProps) => {
         </div>
         <div className="py-5 m-10 pr-14 text-md">
           <div className="flex flex-col gap-5">
-            <div className="flex gap-2 justify-start items-center">
-              <TrophyIcon className="w-5 h-5 text-primary-500" />
-              <p className="text-black">{data?.experience}</p>
-            </div>
             <div className="flex gap-2 justify-start items-center">
               <BanknotesIcon className="w-5 h-5 text-primary-500" />
               <p className="text-black">

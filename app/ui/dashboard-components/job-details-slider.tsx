@@ -104,13 +104,13 @@ const JobDetailsSlider: React.FC = () => {
       />
 
       <div
-        className={`relative flex h-full w-full max-w-3xl transform flex-col overflow-hidden border-l border-slate-200 bg-[#f9fafb] shadow-2xl transition-transform duration-1000 ${
+        className={`relative flex h-full w-full max-w-3xl transform flex-col overflow-hidden border-l border-slate-200 dark:border-dark-outline-variant bg-[#f9fafb] dark:bg-dark-surface-container shadow-2xl transition-transform duration-1000 ${
           jobDetailsVisible ? "translate-x-0" : "translate-x-full"
         }`}
       >
-        <div className="flex items-center justify-between border-b border-slate-200 bg-white px-4 py-4 sm:px-6">
+        <div className="flex items-center justify-between border-b border-slate-200 dark:border-dark-outline-variant bg-white dark:bg-dark-surface px-4 py-4 sm:px-6">
           <button
-            className="inline-flex items-center gap-2 text-sm font-medium text-slate-500 transition hover:text-slate-900"
+            className="inline-flex items-center gap-2 text-sm font-medium text-slate-500 dark:text-dark-on-surface-variant transition hover:text-slate-900 dark:hover:text-dark-on-surface"
             onClick={onClose}
           >
             <ArrowLeftIcon className="h-5 w-5" />
@@ -124,7 +124,7 @@ const JobDetailsSlider: React.FC = () => {
 
         <div className="flex-1 overflow-y-auto">
           <div className="mx-auto flex w-full max-w-2xl flex-col gap-8 px-4 py-6 sm:px-6 sm:py-8">
-            <section className="border-b border-slate-200 pb-8">
+            <section className="border-b border-slate-200 dark:border-dark-outline-variant pb-8">
               <div className="flex items-start gap-4">
                 <SafeImage
                   src={job?.profilePicture || "/images/image.png"}
@@ -137,10 +137,10 @@ const JobDetailsSlider: React.FC = () => {
                   <p className="text-xs font-semibold uppercase tracking-[0.22em] text-primary-700">
                     Wedding gig
                   </p>
-                  <h2 className="mt-3 text-3xl font-medium leading-tight text-slate-900">
+                  <h2 className="mt-3 text-3xl font-medium leading-tight text-slate-900 dark:text-dark-on-surface">
                     {job?.title}
                   </h2>
-                  <p className="mt-3 text-sm text-slate-500">
+                  <p className="mt-3 text-sm text-slate-500 dark:text-dark-on-surface-variant">
                     {job?.fullName || "Client"} posted this opportunity{" "}
                     {getTimeAgo(job?.createdAt || new Date().toISOString())}
                   </p>
@@ -148,20 +148,20 @@ const JobDetailsSlider: React.FC = () => {
               </div>
             </section>
 
-            <section className="border-b border-slate-200 pb-8">
-              <div className="rounded-[1.5rem] border border-primary-100 bg-primary-50/60 px-5 py-5">
+            <section className="border-b border-slate-200 dark:border-dark-outline-variant pb-8">
+              <div className="rounded-[1.5rem] border border-primary-100 dark:border-dark-outline-variant bg-primary-50/60 dark:bg-dark-surface-container px-5 py-5">
                 <div className="flex items-start gap-4">
-                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white text-primary-700 shadow-sm">
+                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white dark:bg-dark-surface text-primary-700 shadow-sm">
                     <CalendarDaysIcon className="h-6 w-6" />
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="text-xs font-semibold uppercase tracking-[0.22em] text-primary-700">
                       Event Date
                     </p>
-                    <h3 className="mt-2 text-2xl font-semibold text-slate-900">
+                    <h3 className="mt-2 text-2xl font-semibold text-slate-900 dark:text-dark-on-surface">
                       {formatEventDate(job?.eventDate)}
                     </h3>
-                    <p className="mt-2 text-sm leading-6 text-slate-600">
+                    <p className="mt-2 text-sm leading-6 text-slate-600 dark:text-dark-on-surface-variant">
                       Plan your availability around the actual event day before
                       sending your proposal.
                     </p>
@@ -170,19 +170,19 @@ const JobDetailsSlider: React.FC = () => {
               </div>
             </section>
 
-            <section className="grid grid-cols-1 gap-x-6 gap-y-5 border-b border-slate-200 pb-8 sm:grid-cols-2">
+            <section className="grid grid-cols-1 gap-x-6 gap-y-5 border-b border-slate-200 dark:border-dark-outline-variant pb-8 sm:grid-cols-2">
               {metaItems.map((item) => {
                 const Icon = item.icon;
                 return (
                   <div key={item.label} className="flex items-start gap-3">
-                    <div className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-600">
+                    <div className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-100 dark:bg-dark-surface-container text-slate-600 dark:text-dark-on-surface-variant">
                       <Icon className="h-5 w-5" />
                     </div>
                     <div className="min-w-0">
-                      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
+                      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400 dark:text-dark-on-surface-variant">
                         {item.label}
                       </p>
-                      <p className="mt-2 text-sm leading-6 text-slate-800">
+                      <p className="mt-2 text-sm leading-6 text-slate-800 dark:text-dark-on-surface">
                         {item.value}
                       </p>
                     </div>
@@ -191,29 +191,29 @@ const JobDetailsSlider: React.FC = () => {
               })}
             </section>
 
-            <section className="border-b border-slate-200 pb-8">
+            <section className="border-b border-slate-200 dark:border-dark-outline-variant pb-8">
               <div className="flex items-start gap-3">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-600">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-100 dark:bg-dark-surface-container text-slate-600 dark:text-dark-on-surface-variant">
                   <DocumentTextIcon className="h-5 w-5" />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <h3 className="text-lg font-semibold text-slate-900">
+                  <h3 className="text-lg font-semibold text-slate-900 dark:text-dark-on-surface">
                     Job Description
                   </h3>
-                  <p className="mt-4 whitespace-pre-line text-sm leading-7 text-slate-700">
+                  <p className="mt-4 whitespace-pre-line text-sm leading-7 text-slate-700 dark:text-dark-on-surface-variant">
                     {job?.description || "No description available."}
                   </p>
                 </div>
               </div>
             </section>
 
-            <section className="border-b border-slate-200 pb-8">
+            <section className="border-b border-slate-200 dark:border-dark-outline-variant pb-8">
               <div className="flex items-start gap-3">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-600">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-100 dark:bg-dark-surface-container text-slate-600 dark:text-dark-on-surface-variant">
                   <TagIcon className="h-5 w-5" />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <h3 className="text-lg font-semibold text-slate-900">
+                  <h3 className="text-lg font-semibold text-slate-900 dark:text-dark-on-surface">
                     Required Skills
                   </h3>
                   <div className="mt-4 flex flex-wrap gap-2.5">
@@ -221,13 +221,13 @@ const JobDetailsSlider: React.FC = () => {
                       job.tags.map((tag, index) => (
                         <span
                           key={index}
-                          className="rounded-full border border-slate-200 bg-slate-100 px-3 py-1.5 text-sm font-medium text-slate-700"
+                          className="rounded-full border border-slate-200 dark:border-dark-outline-variant bg-slate-100 dark:bg-dark-surface-container px-3 py-1.5 text-sm font-medium text-slate-700 dark:text-dark-on-surface-variant"
                         >
                           {tag}
                         </span>
                       ))
                     ) : (
-                      <p className="text-sm text-slate-500">
+                      <p className="text-sm text-slate-500 dark:text-dark-on-surface-variant">
                         No specific skills listed.
                       </p>
                     )}
@@ -236,19 +236,19 @@ const JobDetailsSlider: React.FC = () => {
               </div>
             </section>
 
-            <section className="grid grid-cols-1 gap-x-6 gap-y-8 border-b border-slate-200 pb-8 sm:grid-cols-2">
+            <section className="grid grid-cols-1 gap-x-6 gap-y-8 border-b border-slate-200 dark:border-dark-outline-variant pb-8 sm:grid-cols-2">
               <div className="flex items-start gap-3">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-600">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-100 dark:bg-dark-surface-container text-slate-600 dark:text-dark-on-surface-variant">
                   <UserGroupIcon className="h-5 w-5" />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <h3 className="text-lg font-semibold text-slate-900">
+                  <h3 className="text-lg font-semibold text-slate-900 dark:text-dark-on-surface">
                     Activity
                   </h3>
-                  <div className="mt-4 space-y-3 text-sm text-slate-700">
+                  <div className="mt-4 space-y-3 text-sm text-slate-700 dark:text-dark-on-surface-variant">
                     <div className="flex items-center justify-between">
                       <span>Proposals</span>
-                      <span className="font-semibold text-slate-900">
+                      <span className="font-semibold text-slate-900 dark:text-dark-on-surface">
                         {job?.proposalCount ?? 0}
                       </span>
                     </div>
@@ -257,11 +257,11 @@ const JobDetailsSlider: React.FC = () => {
               </div>
 
               <div className="flex items-start gap-3">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-600">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-100 dark:bg-dark-surface-container text-slate-600 dark:text-dark-on-surface-variant">
                   <FolderOpenIcon className="h-5 w-5" />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <h3 className="text-lg font-semibold text-slate-900">
+                  <h3 className="text-lg font-semibold text-slate-900 dark:text-dark-on-surface">
                     Attachments
                   </h3>
                   <div className="mt-4 space-y-3">
@@ -272,14 +272,14 @@ const JobDetailsSlider: React.FC = () => {
                           href={url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="flex items-center justify-between rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-700 transition hover:border-slate-300 hover:bg-slate-50"
+                          className="flex items-center justify-between rounded-xl border border-slate-200 dark:border-dark-outline-variant px-4 py-3 text-sm text-slate-700 dark:text-dark-on-surface-variant transition hover:border-slate-300 hover:bg-slate-50 dark:hover:bg-dark-surface-container"
                         >
                           <span>Attachment {index + 1}</span>
                           <DocumentTextIcon className="h-4 w-4" />
                         </Link>
                       ))
                     ) : (
-                      <p className="text-sm text-slate-500">
+                      <p className="text-sm text-slate-500 dark:text-dark-on-surface-variant">
                         No attachments available.
                       </p>
                     )}
@@ -290,11 +290,11 @@ const JobDetailsSlider: React.FC = () => {
 
             {jobDetailsVisible && (
               <section className="pb-2">
-                <div className="rounded-2xl bg-white">
-                  <h3 className="text-lg font-semibold text-slate-900">
+                <div className="rounded-2xl bg-white dark:bg-dark-surface">
+                  <h3 className="text-lg font-semibold text-slate-900 dark:text-dark-on-surface">
                     Apply for this gig
                   </h3>
-                  <p className="mt-2 text-sm leading-6 text-slate-500">
+                  <p className="mt-2 text-sm leading-6 text-slate-500 dark:text-dark-on-surface-variant">
                     If this listing feels right, send a clear and thoughtful
                     proposal.
                   </p>

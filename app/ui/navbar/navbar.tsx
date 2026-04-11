@@ -18,8 +18,8 @@ const NavBar = () => {
     : "/";
 
   return (
-    <nav className="border-b-2 ">
-      <div className="flex  max-w-[1980px] m-auto justify-between items-center  py-3 px-10">
+    <nav className="border-b-2 dark:border-dark-surface dark:bg-dark-surface">
+      <div className="flex  max-w-[1980px] m-auto justify-between items-center  py-3 px-10 dark:text-dark-on-surface">
         <div className="flex lg:hidden flex-col">
           <Suspense>
             <MenuBar />

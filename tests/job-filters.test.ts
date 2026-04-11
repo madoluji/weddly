@@ -44,12 +44,11 @@ const sampleJobs = [
   },
 ];
 
-test("applyServerFilters handles combined search, category, experience, budget, date and sorting", () => {
+test("applyServerFilters handles combined search, category, budget, date and sorting", () => {
   const filtered = applyServerFilters(sampleJobs, {
     search: "wedding",
     location: "IL",
     category: "Reception",
-    experiences: ["Expert"],
     minBudget: 700,
     maxBudget: 1300,
     eventDate: "2026-07-15",
@@ -65,7 +64,6 @@ test("applyServerFilters sorts by newest when sortBy is newest", () => {
     search: null,
     location: null,
     category: "All Categories",
-    experiences: [],
     minBudget: null,
     maxBudget: null,
     eventDate: null,

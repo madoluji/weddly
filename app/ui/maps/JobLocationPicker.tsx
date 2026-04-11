@@ -45,6 +45,14 @@ const buildSearchGeoUrl = (query: string): string =>
     query
   )}`;
 
+const buildStaticMapPreviewUrl = (center: LatLngLiteral): string => {
+  const centerParam = `${center.lat},${center.lng}`;
+  const markerParam = `${center.lat},${center.lng},lightblue1`;
+  return `https://staticmap.openstreetmap.de/staticmap.php?center=${encodeURIComponent(
+    centerParam
+  )}&zoom=13&size=1200x680&markers=${encodeURIComponent(markerParam)}`;
+};
+
 // Loose bounding box for Nepal to prevent fallback results outside Nepal.
 // (Search results can still include neighboring countries unless bounded/filtering is applied.)
 const NEPAL_BOUNDS = {
@@ -81,14 +89,41 @@ const MapEvents = ({
   return null;
 };
 
-const RecenterMap = ({ center }: { center: LatLngLiteral }) => {
+const RecenterMap = ({
+  center,
+  hasPinnedLocation,
+}: {
+  center: LatLngLiteral;
+  hasPinnedLocation: boolean;
+}) => {
   const map = useMap();
+  const previousCenterRef = useRef<LatLngLiteral | null>(null);
 
   useEffect(() => {
-    map.flyTo(center, 14, {
-      duration: 0.7,
-    });
-  }, [center, map]);
+    const previous = previousCenterRef.current;
+    const hasMeaningfulChange =
+      !previous ||
+      Math.abs(previous.lat - center.lat) > 0.00001 ||
+      Math.abs(previous.lng - center.lng) > 0.00001;
+
+    if (!hasMeaningfulChange) {
+      return;
+    }
+
+    // Do not force a broad zoom after selecting/searching a location.
+    // Keep user zoom if it is already closer, otherwise move to a practical close-up level.
+    const targetZoom = hasPinnedLocation ? Math.max(map.getZoom(), 16) : map.getZoom();
+
+    if (!previous) {
+      map.setView(center, targetZoom, { animate: false });
+    } else {
+      map.flyTo(center, targetZoom, {
+        duration: 0.45,
+      });
+    }
+
+    previousCenterRef.current = center;
+  }, [center.lat, center.lng, hasPinnedLocation, map]);
 
   return null;
 };
@@ -125,10 +160,12 @@ const JobLocationPicker = ({ value, onChange }: JobLocationPickerProps) => {
   const [searchFallbackResults, setSearchFallbackResults] = useState<JobLocation[]>(
     []
   );
-  const [pinVersion, setPinVersion] = useState(0);
   const [googleReady, setGoogleReady] = useState(false);
+  const [interactiveMapEnabled, setInteractiveMapEnabled] = useState(false);
   const mapMountKey = useId();
   const mapInstanceRef = useRef<LeafletMap | null>(null);
+  const reverseGeocodeAbortRef = useRef<AbortController | null>(null);
+  const addressLookupIdRef = useRef(0);
   const applyLocationRequestIdRef = useRef(0);
 
   const disposeMapInstance = useCallback((map: LeafletMap | null) => {
@@ -152,6 +189,7 @@ const JobLocationPicker = ({ value, onChange }: JobLocationPickerProps) => {
   useEffect(() => {
     return () => {
       disposeMapInstance(mapInstanceRef.current);
+      reverseGeocodeAbortRef.current?.abort();
       mapInstanceRef.current = null;
     };
   }, [disposeMapInstance]);
@@ -160,6 +198,38 @@ const JobLocationPicker = ({ value, onChange }: JobLocationPickerProps) => {
     () => parseJobLocation(value) ?? null,
     [value]
   );
+
+  useEffect(() => {
+    if (!interactiveMapEnabled) {
+      return;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      const map = mapInstanceRef.current;
+      if (!map) {
+        return;
+      }
+
+      map.invalidateSize();
+
+      if (activeLocation) {
+        map.setView(
+          { lat: activeLocation.lat, lng: activeLocation.lng },
+          Math.max(map.getZoom(), 16),
+          { animate: false }
+        );
+      }
+    }, 120);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, [
+    activeLocation?.lat,
+    activeLocation?.lng,
+    interactiveMapEnabled,
+  ]);
+
   const setMapInstanceRef = useCallback((map: LeafletMap) => {
     mapInstanceRef.current = map;
 
@@ -202,6 +272,10 @@ const JobLocationPicker = ({ value, onChange }: JobLocationPickerProps) => {
   const mapCenter = activeLocation
     ? { lat: activeLocation.lat, lng: activeLocation.lng }
     : DEFAULT_CENTER;
+  const staticMapPreviewUrl = useMemo(
+    () => buildStaticMapPreviewUrl(mapCenter),
+    [mapCenter]
+  );
 
   const {
     ready,
@@ -260,17 +334,24 @@ const JobLocationPicker = ({ value, onChange }: JobLocationPickerProps) => {
     lng: number,
     fallbackAddress?: string
   ) => {
+    const lookupId = ++addressLookupIdRef.current;
     setLoadingAddress(true);
+
+    reverseGeocodeAbortRef.current?.abort();
+    const abortController = new AbortController();
+    reverseGeocodeAbortRef.current = abortController;
+
     try {
       if (googleReady && process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY) {
         const endpoint = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}`;
-        const response = await fetch(endpoint);
+        const response = await fetch(endpoint, { signal: abortController.signal });
         const dataJson = await response.json();
         const address = dataJson?.results?.[0]?.formatted_address;
         return typeof address === "string" ? sanitizeAddress(address) : fallbackAddress;
       }
 
       const response = await fetch(buildReverseGeoUrl(lat, lng), {
+        signal: abortController.signal,
         headers: {
           "Accept-Language": "en",
         },
@@ -279,10 +360,18 @@ const JobLocationPicker = ({ value, onChange }: JobLocationPickerProps) => {
       return typeof dataJson?.display_name === "string"
         ? sanitizeAddress(dataJson.display_name)
         : fallbackAddress;
-    } catch {
+    } catch (error) {
+      if (error instanceof DOMException && error.name === "AbortError") {
+        return fallbackAddress;
+      }
       return fallbackAddress;
     } finally {
-      setLoadingAddress(false);
+      if (addressLookupIdRef.current === lookupId) {
+        setLoadingAddress(false);
+      }
+      if (reverseGeocodeAbortRef.current === abortController) {
+        reverseGeocodeAbortRef.current = null;
+      }
     }
   };
 
@@ -303,7 +392,6 @@ const JobLocationPicker = ({ value, onChange }: JobLocationPickerProps) => {
     );
 
     setSearchFallbackResults([]);
-    setPinVersion((prev) => prev + 1);
 
     const resolvedAddress = await resolveAddress(
       point.lat,
@@ -483,7 +571,7 @@ const JobLocationPicker = ({ value, onChange }: JobLocationPickerProps) => {
   }, [googleReady, ready, search, setSearchFallbackResults, setValue]);
 
   return (
-    <div className="space-y-3 rounded-xl border border-gray-200 p-4 bg-white shadow-sm">
+    <div className="space-y-4 rounded-2xl bg-surface-container-highest/90 p-4 sm:p-5">
       <div className="flex flex-col gap-2 sm:flex-row">
         <div className="flex-1 flex gap-2">
           <input
@@ -502,14 +590,14 @@ const JobLocationPicker = ({ value, onChange }: JobLocationPickerProps) => {
               }
             }}
             placeholder="Search places..."
-            className="flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+            className="h-11 flex-1 rounded-xl border-none bg-surface-container-low px-3 py-2 text-sm text-on-surface placeholder:text-on-surface-variant/80 transition-all focus:bg-surface-container-lowest focus:outline-none focus:ring-0 focus:shadow-[inset_0_-2px_0_0_#2f5f4a]"
           />
           <button
             type="button"
             onClick={() => {
               void onSearchSubmit();
             }}
-            className="rounded-md bg-primary-600 px-3 py-2 text-sm font-medium text-white hover:bg-primary-700"
+            className="h-11 rounded-xl bg-primary px-4 py-2 text-sm font-medium text-on-primary transition-colors hover:bg-primary-600"
           >
             Search
           </button>
@@ -518,19 +606,19 @@ const JobLocationPicker = ({ value, onChange }: JobLocationPickerProps) => {
         <button
           type="button"
           onClick={useCurrentLocation}
-          className="rounded-md border border-primary-500 px-3 py-2 text-sm font-medium text-primary-700 hover:bg-primary-50"
+          className="h-11 rounded-xl bg-secondary-container px-4 py-2 text-sm font-medium text-on-secondary-container transition-colors hover:bg-secondary-fixed"
         >
           Use My Location
         </button>
       </div>
 
       {status === "OK" && data.length > 0 && (
-        <div className="rounded-md border border-gray-200 bg-white p-2 max-h-40 overflow-auto">
+        <div className="max-h-40 overflow-auto rounded-xl bg-surface-container-low p-2">
           {data.map((suggestion) => (
             <button
               key={suggestion.place_id}
               type="button"
-              className="w-full rounded-md px-2 py-2 text-left text-sm hover:bg-primary-50"
+              className="w-full rounded-lg px-2 py-2 text-left text-sm text-on-surface transition-colors hover:bg-surface-container-lowest"
               onClick={async () => {
                 const description = suggestion.description;
                 setSearch(description);
@@ -549,17 +637,19 @@ const JobLocationPicker = ({ value, onChange }: JobLocationPickerProps) => {
       )}
 
       {searchFallbackResults.length > 0 && (
-        <div className="rounded-md border border-gray-200 bg-white p-2 max-h-40 overflow-auto">
+        <div className="max-h-40 overflow-auto rounded-xl bg-surface-container-low p-2">
           {searchFallbackResults.map((result, index) => (
             <button
               key={`${result.lat}-${result.lng}-${index}`}
               type="button"
-              className="w-full rounded-md px-2 py-2 text-left text-sm hover:bg-primary-50"
+              className="w-full rounded-lg px-2 py-2 text-left text-sm text-on-surface transition-colors hover:bg-surface-container-lowest"
               onClick={() => {
-                onChange(result);
+                void applyLocation(
+                  { lat: result.lat, lng: result.lng },
+                  result.address
+                );
                 setSearch(result.address || "");
                 setSearchFallbackResults([]);
-                setPinVersion((prev) => prev + 1);
               }}
             >
               {result.address || `${result.lat}, ${result.lng}`}
@@ -568,59 +658,81 @@ const JobLocationPicker = ({ value, onChange }: JobLocationPickerProps) => {
         </div>
       )}
 
-      <div className="h-[340px] overflow-hidden rounded-lg border border-gray-200">
-        <MapContainer
-          key={mapMountKey}
-          center={mapCenter}
-          zoom={13}
-          className="h-full w-full"
-          scrollWheelZoom
-        >
-          <MapLifecycle onReady={setMapInstanceRef} onDispose={clearMapInstanceRef} />
-          <TileLayer
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          />
-
-          <MapEvents onSelect={applyLocation} />
-          <RecenterMap center={mapCenter} />
-
-          {activeLocation && (
-            <Marker
-              key={`${activeLocation.lat}-${activeLocation.lng}-${pinVersion}`}
-              position={{ lat: activeLocation.lat, lng: activeLocation.lng }}
-              icon={markerIcon}
-              draggable
-              eventHandlers={{
-                dragend: (event) => {
-                  const marker = event.target;
-                  const point = marker.getLatLng();
-                  applyLocation({ lat: point.lat, lng: point.lng });
-                },
-              }}
+      <div className="h-[340px] overflow-hidden rounded-2xl bg-surface-container-low shadow-[0_12px_34px_rgba(27,28,26,0.05)]">
+        {!interactiveMapEnabled ? (
+          <div className="relative h-full w-full">
+            <img
+              src={staticMapPreviewUrl}
+              alt="Venue location preview"
+              className="h-full w-full object-cover"
+              loading="lazy"
             />
-          )}
-        </MapContainer>
+            <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent" />
+            <div className="absolute inset-x-0 bottom-0 flex items-center justify-between gap-3 px-4 py-3">
+              <p className="rounded-lg bg-black/50 px-3 py-1.5 text-xs text-white backdrop-blur-sm">
+                Lite preview mode for faster performance
+              </p>
+              <button
+                type="button"
+                onClick={() => setInteractiveMapEnabled(true)}
+                className="rounded-lg bg-primary px-3 py-2 text-xs font-semibold text-on-primary transition-colors hover:bg-primary-600"
+              >
+                Open Interactive Map
+              </button>
+            </div>
+          </div>
+        ) : (
+          <MapContainer
+            key={mapMountKey}
+            center={mapCenter}
+            zoom={13}
+            className="h-full w-full"
+            scrollWheelZoom
+          >
+            <MapLifecycle onReady={setMapInstanceRef} onDispose={clearMapInstanceRef} />
+            <TileLayer
+              attribution='&copy; OpenStreetMap contributors &copy; CARTO'
+              url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
+              subdomains="abcd"
+              maxZoom={20}
+              detectRetina
+            />
+
+            <MapEvents onSelect={applyLocation} />
+            <RecenterMap center={mapCenter} hasPinnedLocation={Boolean(activeLocation)} />
+
+            {activeLocation && (
+              <Marker
+                key={`${activeLocation.lat}-${activeLocation.lng}`}
+                position={{ lat: activeLocation.lat, lng: activeLocation.lng }}
+                icon={markerIcon}
+                draggable
+                eventHandlers={{
+                  dragend: (event) => {
+                    const marker = event.target;
+                    const point = marker.getLatLng();
+                    applyLocation({ lat: point.lat, lng: point.lng });
+                  },
+                }}
+              />
+            )}
+          </MapContainer>
+        )}
       </div>
 
-      <div className="rounded-md bg-gray-50 px-3 py-2 text-sm text-gray-700">
+      <div className="rounded-xl bg-surface-container-low px-4 py-3 text-sm text-on-surface-variant">
         {activeLocation ? (
-          <>
-            <p>
-              <span className="font-medium">Latitude:</span> {activeLocation.lat.toFixed(6)}
-            </p>
-            <p>
-              <span className="font-medium">Longitude:</span> {activeLocation.lng.toFixed(6)}
-            </p>
-            <p className="truncate">
-              <span className="font-medium">Address:</span>{" "}
-              {loadingAddress
-                ? "Resolving address..."
-                : activeLocation.address || "Not available"}
-            </p>
-          </>
+          <p className="truncate">
+            {loadingAddress
+              ? "Resolving venue address..."
+              : activeLocation.address
+                ? `Location confirmed: ${activeLocation.address}`
+                : "Location pinned on map. Drag the marker to fine-tune."}
+          </p>
         ) : (
-          "Click on the map to drop a pin and select a location."
+          interactiveMapEnabled
+            ? "Click on the map to drop a pin and select a location."
+            : "Open the interactive map to drop a pin and fine-tune your location."
         )}
       </div>
 
@@ -636,8 +748,8 @@ const JobLocationPicker = ({ value, onChange }: JobLocationPickerProps) => {
           height: 24px;
           border-radius: 9999px 9999px 9999px 0;
           transform: rotate(-45deg);
-          background: rgba(14, 165, 164, 0.95);
-          box-shadow: 0 10px 18px rgba(14, 165, 164, 0.35);
+          background: rgba(47, 95, 74, 0.96);
+          box-shadow: 0 12px 26px rgba(47, 95, 74, 0.35);
           border: 2px solid #ffffff;
         }
 

@@ -81,7 +81,6 @@ export async function GET(req: NextRequest) {
   const savedJobs = searchParams.get('savedJobs');
   const search = searchParams.get('search');
   const title = searchParams.get('title');
-  const experience = searchParams.get('experience') || searchParams.get('Experience');
   const location = searchParams.get('location');
   const category = searchParams.get('category');
   const minBudget = searchParams.get('minBudget');
@@ -112,13 +111,6 @@ export async function GET(req: NextRequest) {
     maxBudget !== null && maxBudget !== "" && Number.isFinite(Number(maxBudget))
       ? Number(maxBudget)
       : null;
-  const experienceFilters = experience
-    ? experience
-        .split(',')
-        .map((value) => value.trim())
-        .filter((value) => value.length > 0)
-    : [];
-
   const userId = session?.user.id;
 
   if (!session) {
@@ -247,7 +239,7 @@ export async function GET(req: NextRequest) {
               .filter((savedJob): savedJob is NonNullable<typeof savedJob> => !!savedJob)
           : [];
       }
-    } else if (!experience) {
+    } else {
       // Use text index search instead of regex to avoid regex-based DoS risk.
       if (!normalizedTitleSearch) {
         jobs = [];
@@ -255,22 +247,6 @@ export async function GET(req: NextRequest) {
         jobs = await Jobs.find(
           {
             userId: { $ne: userId },
-            $text: { $search: `"${normalizedTitleSearch}"` },
-          },
-          { score: { $meta: "textScore" } }
-        )
-          .sort({ score: { $meta: "textScore" }, createdAt: -1 })
-          .lean();
-      }
-    } else {
-      // Combine text-index search with experience filter.
-      if (!normalizedTitleSearch) {
-        jobs = [];
-      } else {
-        jobs = await Jobs.find(
-          {
-            userId: { $ne: userId },
-            experience: { $in: experience.split(",") },
             $text: { $search: `"${normalizedTitleSearch}"` },
           },
           { score: { $meta: "textScore" } }
@@ -358,7 +334,6 @@ export async function GET(req: NextRequest) {
       search: search || title,
       location,
       category,
-      experiences: experienceFilters,
       minBudget: minBudgetValue,
       maxBudget: maxBudgetValue,
       eventDate,

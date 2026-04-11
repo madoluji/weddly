@@ -152,6 +152,7 @@ const JobProposalModal: React.FC<JobProposalModalProps> = ({ proposal, onClose }
       const chatsRef = collection(db, "chats")
 
       const conversationExists = chatData?.find((chat: ChatData) => chat.rId === selectedUser)
+      let chatMessageId: string | undefined = conversationExists?.messageId
 
       if (conversationExists) {
         const eMessageId = conversationExists.messageId
@@ -220,6 +221,7 @@ const JobProposalModal: React.FC<JobProposalModalProps> = ({ proposal, onClose }
         }
       } else {
         const newMessageRef = doc(messagesRef)
+        chatMessageId = newMessageRef.id
         await setDoc(newMessageRef, {
           createAt: serverTimestamp(),
           messages: [
@@ -243,30 +245,52 @@ const JobProposalModal: React.FC<JobProposalModalProps> = ({ proposal, onClose }
         })
 
         // Update both users' chat collections
-        await updateDoc(doc(chatsRef, selectedUser), {
-          chatsData: arrayUnion({
-            messageId: newMessageRef.id,
-            lastMessage: message,
-            rId: userData?.id,
-            updateDoc: Date.now(),
-            messageSeen: false,
-            chatStatus: "open",
-            proposalArray: proposal?._id ? [proposal._id] : [],
-          }),
-        })
+        await setDoc(
+          doc(chatsRef, selectedUser),
+          {
+            chatsData: arrayUnion({
+              messageId: newMessageRef.id,
+              lastMessage: message,
+              rId: userData?.id,
+              updateDoc: Date.now(),
+              messageSeen: false,
+              chatStatus: "open",
+              proposalArray: proposal?._id ? [proposal._id] : [],
+            }),
+          },
+          { merge: true }
+        )
 
-        await updateDoc(doc(chatsRef, userData?.id), {
-          chatsData: arrayUnion({
-            messageId: newMessageRef.id,
-            lastMessage: message,
-            rId: selectedUser,
-            updateDoc: Date.now(),
-            messageSeen: true,
-            chatStatus: "open",
-            proposalArray: proposal?._id ? [proposal._id] : [],
-          }),
-        })
+        await setDoc(
+          doc(chatsRef, userData?.id),
+          {
+            chatsData: arrayUnion({
+              messageId: newMessageRef.id,
+              lastMessage: message,
+              rId: selectedUser,
+              updateDoc: Date.now(),
+              messageSeen: true,
+              chatStatus: "open",
+              proposalArray: proposal?._id ? [proposal._id] : [],
+            }),
+          },
+          { merge: true }
+        )
       }
+
+      await fetchWithAuth("/api/notifications/new-message", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          recipientId: selectedUser,
+          messageId: chatMessageId,
+          textPreview: message,
+          senderName: userData?.username || userData?.name || "Client",
+          senderAvatar: userData?.avatar || userData?.profilePicture,
+        }),
+      })
 
       setShowMessageInput(false)
       setMessage("")

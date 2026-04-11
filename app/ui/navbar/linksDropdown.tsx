@@ -19,23 +19,26 @@ interface Props {
 
 const LinksDropdown = ({ isDropdownVisible, isOpen, currentMode }: Props) => {
   const { session, status } = useAuth();
+  const clientSwitchHref = session?.user?.roles?.client ? "/client/best-matches" : "/signup/client";
+  const freelancerSwitchHref = session?.user?.roles?.freelancer ? "/user/best-matches" : "/signup/freelancer";
+  const venueSwitchHref = session?.user?.roles?.venue ? "/venue/dashboard" : "/signup/venue";
   return (
     <>
       {isDropdownVisible === 1 && (
-        <div className="absolute text-black  z-20 left-0 shadow-[0_0px_20px_rgba(228,228,228,1)] rounded-xl before:absolute before:-top-2 before:left-7 before:translateX-1/2 before:rotate-[135deg] before:z-10  before:bg-white before:border-white before:border-8 bg-white top-8 after:w-full after:h-6 after:absolute after:-top-5">
+        <div className="absolute text-black dark:text-dark-on-surface z-20 left-0 shadow-[0_0px_20px_rgba(228,228,228,1)] dark:shadow-[0_0px_20px_rgba(0,0,0,0.4)] rounded-xl before:absolute before:-top-2 before:left-7 before:translateX-1/2 before:rotate-[135deg] before:z-10 before:bg-white dark:before:bg-dark-surface before:border-white dark:before:border-dark-surface before:border-8 bg-white dark:bg-dark-surface top-8 after:w-full after:h-6 after:absolute after:-top-5">
           <ul className="flex flex-col  py-5 w-72">
             {(currentMode?.startsWith("/user") ||
               currentMode?.startsWith("/search/jobs")) && (
               <>
                 <li>
                   <Link href={"/user/best-matches"}>
-                    <p className=" p-3 hover:bg-slate-100">Wedding Gigs</p>
+                    <p className=" p-3 hover:bg-slate-100 dark:hover:bg-dark-surface-container">Wedding Gigs</p>
                   </Link>
                 </li>
 
                 <li>
                   <Link href={"/user/saved-jobs"}>
-                    <p className=" p-3 hover:bg-slate-100">
+                    <p className=" p-3 hover:bg-slate-100 dark:hover:bg-dark-surface-container">
                       {" "}
                       Saved Wedding Gigs
                     </p>
@@ -48,7 +51,7 @@ const LinksDropdown = ({ isDropdownVisible, isOpen, currentMode }: Props) => {
               <>
                 <Link href={"/client/post-job"}>
                   <li>
-                    <p className=" p-3 hover:bg-slate-100">
+                    <p className=" p-3 hover:bg-slate-100 dark:hover:bg-dark-surface-container">
                       Post Wedding Gig
                     </p>
                   </li>
@@ -56,13 +59,13 @@ const LinksDropdown = ({ isDropdownVisible, isOpen, currentMode }: Props) => {
 
                 <Link href={"/client/your-contracts"}>
                   <li>
-                    <p className=" p-3 hover:bg-slate-100">All Contracts</p>
+                    <p className=" p-3 hover:bg-slate-100 dark:hover:bg-dark-surface-container">All Contracts</p>
                   </li>
                 </Link>
 
                 <Link href={`/client/your-jobs/${session?.user.id}`}>
                   <li>
-                    <p className=" p-3 hover:bg-slate-100">
+                    <p className=" p-3 hover:bg-slate-100 dark:hover:bg-dark-surface-container">
                       All Wedding Gig Posts
                     </p>
                   </li>
@@ -73,20 +76,20 @@ const LinksDropdown = ({ isDropdownVisible, isOpen, currentMode }: Props) => {
         </div>
       )}
       {isDropdownVisible === 2 && (
-        <div className="absolute text-black  left-0 shadow-[0_0px_20px_rgba(228,228,228,1)] rounded-xl before:absolute before:-top-2 before:left-7 before:translateX-1/2 before:rotate-[135deg] before:z-10  before:bg-white before:border-white before:border-8 bg-white top-8 z-20 after:w-full after:h-6 after:absolute after:-top-5">
+        <div className="absolute text-black dark:text-dark-on-surface left-0 shadow-[0_0px_20px_rgba(228,228,228,1)] dark:shadow-[0_0px_20px_rgba(0,0,0,0.4)] rounded-xl before:absolute before:-top-2 before:left-7 before:translateX-1/2 before:rotate-[135deg] before:z-10 before:bg-white dark:before:bg-dark-surface before:border-white dark:before:border-dark-surface before:border-8 bg-white dark:bg-dark-surface top-8 z-20 after:w-full after:h-6 after:absolute after:-top-5">
           <ul className="flex flex-col gap-3 py-5 w-72">
             {(currentMode?.startsWith("/user") ||
               currentMode?.startsWith("/search/jobs")) && (
               <>
                 <li>
                   <Link href={"/user/your-contracts?tab=active-contracts"}>
-                    <p className=" ml-2 p-2 hover:bg-slate-100">Your Contracts</p>
+                    <p className=" ml-2 p-2 hover:bg-slate-100 dark:hover:bg-dark-surface-container">Your Contracts</p>
                   </Link>
                 </li>
                 
                 <li>
                   <Link href={"/user/business/transaction"}>
-                    <p className=" ml-2 p-2 hover:bg-slate-100">Transactions</p>
+                    <p className=" ml-2 p-2 hover:bg-slate-100 dark:hover:bg-dark-surface-container">Transactions</p>
                   </Link>
                 </li>
               </>
@@ -96,15 +99,15 @@ const LinksDropdown = ({ isDropdownVisible, isOpen, currentMode }: Props) => {
               currentMode?.startsWith("/search/talent")) && (
               <>
                 <Link href={"/search/talent"}>
-                  <li className=" p-3 hover:bg-slate-100">
+                  <li className=" p-3 hover:bg-slate-100 dark:hover:bg-dark-surface-container">
                     Discover Venues & Vendors
                   </li>
                 </Link>
                 <Link href={"/client/your-contracts"}>
-                  <li className=" p-3 hover:bg-slate-100">Your Hires </li>
+                  <li className=" p-3 hover:bg-slate-100 dark:hover:bg-dark-surface-container">Your Hires </li>
                 </Link>
                 <Link href={"/client/saved-talents"}>
-                  <li className=" p-3 hover:bg-slate-100">
+                  <li className=" p-3 hover:bg-slate-100 dark:hover:bg-dark-surface-container">
                     Saved Wedding Planners
                   </li>
                 </Link>
@@ -114,7 +117,7 @@ const LinksDropdown = ({ isDropdownVisible, isOpen, currentMode }: Props) => {
         </div>
       )}
       {isDropdownVisible === 3 && (
-        <div className="absolute rounded-xl  p-2 bg-white text-xm right-0 top-10 shadow-[0_0px_20px_rgba(228,228,228,1)] before:absolute before:-top-1 before:right-2 before:translateX-1/2 before:rotate-[135deg] before:z-10  before:bg-white before:border-white before:border-8  z-20 after:right-0 after:h-6 after:absolute after:-top-5">
+        <div className="absolute rounded-xl p-2 bg-white dark:bg-dark-surface text-xm right-0 top-10 shadow-[0_0px_20px_rgba(228,228,228,1)] dark:shadow-[0_0px_20px_rgba(0,0,0,0.4)] before:absolute before:-top-1 before:right-2 before:translateX-1/2 before:rotate-[135deg] before:z-10 before:bg-white dark:before:bg-dark-surface before:border-white dark:before:border-dark-surface before:border-8 z-20 after:right-0 after:h-6 after:absolute after:-top-5">
           Help
         </div>
       )}
@@ -124,33 +127,28 @@ const LinksDropdown = ({ isDropdownVisible, isOpen, currentMode }: Props) => {
         </div>
       )}
       {isDropdownVisible === 6 && !isOpen && (
-        <div className="absolute rounded-xl w-[160px] p-2 bg-white text-xm right-0 top-10 shadow-[0_0px_20px_rgba(228,228,228,1)] before:absolute before:-top-1 before:right-2 before:translateX-1/2 before:rotate-[135deg] before:z-10  before:bg-white before:border-white before:border-8  z-20 after:w-full after:h-6 after:absolute after:-top-5">
+        <div className="absolute rounded-xl w-[160px] p-2 bg-white dark:bg-dark-surface dark:text-dark-on-surface text-xm right-0 top-10 shadow-[0_0px_20px_rgba(228,228,228,1)] dark:shadow-[0_0px_20px_rgba(0,0,0,0.4)] before:absolute before:-top-1 before:right-2 before:translateX-1/2 before:rotate-[135deg] before:z-10 before:bg-white dark:before:bg-dark-surface before:border-white dark:before:border-dark-surface before:border-8 z-20 after:w-full after:h-6 after:absolute after:-top-5">
           Account Settings
         </div>
       )}
       {isOpen && (
         <>
-          <div className="p-3 flex   flex-col relative overflow-hidden  align-middle items-center ">
-            <div
-              className="  rounded-full
-                            
-                     h-24 w-24"
-            >
+          <div className="p-3 flex flex-col relative overflow-hidden align-middle items-center">
+            <div className="rounded-full h-24 w-24">
               <SafeImage
               src={session?.user?.profilePicture || "/images/image.png"}
               alt="profile"
               width={96}
               height={96}
               className="object-cover rounded-full h-full w-full"
-               
               />
             </div>
 
-            <div className=" text-center pt-1 ">
-              <h2 className="text-2xl  font-medium ">
+            <div className="text-center pt-1">
+              <h2 className="text-2xl font-medium dark:text-dark-on-surface">
                 {session?.user?.name}{session?.user?.lastName ? ` ${session.user.lastName}` : ""}
               </h2>
-              <p className="text-xs  text-gray-400">
+              <p className="text-xs text-gray-400 dark:text-dark-on-surface-variant">
                 {(currentMode?.startsWith("/user") ||
                   currentMode?.startsWith("/search/jobs")) && <>Freelancer</>}
                 {(currentMode?.startsWith("/client") ||
@@ -163,13 +161,13 @@ const LinksDropdown = ({ isDropdownVisible, isOpen, currentMode }: Props) => {
           {/* --- Role Switch Toggles --- */}
           {/* Show Client switch when NOT on client paths */}
           {!(currentMode?.startsWith("/client") || currentMode?.startsWith("/search/talent")) && (
-            <div className="hover:bg-slate-200 p-1">
-              <Link href={"/client/best-matches"}>
+            <div className="hover:bg-slate-200 dark:hover:bg-dark-surface-container p-1">
+              <Link href={clientSwitchHref}>
                 <span className="flex items-center gap-1">
                   <UserCircleIcon className="size-8" />
                   <span className="flex flex-col ">
                     {session?.user?.name}{session?.user?.lastName ? ` ${session.user.lastName}` : ""}
-                    <p className="text-xs text-gray-400">Client</p>
+                    <p className="text-xs text-gray-400 dark:text-dark-on-surface-variant">Client</p>
                   </span>
                 </span>
               </Link>
@@ -178,13 +176,13 @@ const LinksDropdown = ({ isDropdownVisible, isOpen, currentMode }: Props) => {
 
           {/* Show Freelancer switch when NOT on freelancer paths */}
           {!(currentMode?.startsWith("/user") || currentMode?.startsWith("/search/jobs")) && (
-            <div className="hover:bg-slate-200 p-1">
-              <Link href={"/user/best-matches"}>
+            <div className="hover:bg-slate-200 dark:hover:bg-dark-surface-container p-1">
+              <Link href={freelancerSwitchHref}>
                 <span className="flex items-center gap-1">
                   <UserCircleIcon className="size-8" />
                   <span className="flex flex-col ">
                     {session?.user?.name}{session?.user?.lastName ? ` ${session.user.lastName}` : ""}
-                    <p className="text-xs text-gray-400">Freelancer</p>
+                    <p className="text-xs text-gray-400 dark:text-dark-on-surface-variant">Freelancer</p>
                   </span>
                 </span>
               </Link>
@@ -193,20 +191,20 @@ const LinksDropdown = ({ isDropdownVisible, isOpen, currentMode }: Props) => {
 
           {/* Show Venue switch when NOT on venue paths */}
           {!currentMode?.startsWith("/venue") && (
-            <div className="hover:bg-slate-200 p-1">
-              <Link href={"/venue/dashboard"}>
+            <div className="hover:bg-slate-200 dark:hover:bg-dark-surface-container p-1">
+              <Link href={venueSwitchHref}>
                 <span className="flex items-center gap-1">
                   <UserCircleIcon className="size-8" />
                   <span className="flex flex-col ">
                     {session?.user?.name}{session?.user?.lastName ? ` ${session.user.lastName}` : ""}
-                    <p className="text-xs text-gray-400">Venue Manager</p>
+                    <p className="text-xs text-gray-400 dark:text-dark-on-surface-variant">Venue Manager</p>
                   </span>
                 </span>
               </Link>
             </div>
           )}
 
-          <div className="hover:bg-slate-200 p-1">
+          <div className="hover:bg-slate-200 dark:hover:bg-dark-surface-container p-1">
             {currentMode?.startsWith("/client") ||
             currentMode?.startsWith("/search/talent") ? (
               <Link href={"/client/profile"}>
@@ -229,7 +227,7 @@ const LinksDropdown = ({ isDropdownVisible, isOpen, currentMode }: Props) => {
             )}
           </div>
 
-          <div className="hover:bg-slate-200 p-1">
+          <div className="hover:bg-slate-200 dark:hover:bg-dark-surface-container p-1">
             {currentMode?.startsWith("/client") ||
             currentMode?.startsWith("/search/talent") ? (
               <Link href={"/client/setting"}>
@@ -253,7 +251,7 @@ const LinksDropdown = ({ isDropdownVisible, isOpen, currentMode }: Props) => {
           </div>
           <button
             onClick={() => signOut()}
-            className="hover:bg-slate-200 p-1 w-full flex items-center gap-1 text-left"
+            className="hover:bg-slate-200 dark:hover:bg-dark-surface-container p-1 w-full flex items-center gap-1 text-left"
           >
             <ArrowLeftStartOnRectangleIcon className="size-8" />
             <span className="flex flex-col">

@@ -29,7 +29,7 @@ interface ClientFormData {
 const ClientForm = () => {
   const router = useRouter();
   const params = useParams();
-  const { session } = useAuth();
+  const { session, update: updateSession } = useAuth();
   const [mounted, setMounted] = useState(false);
 
   const initialFormData: ClientFormData = {
@@ -57,13 +57,13 @@ const ClientForm = () => {
       const dateParam = searchParams.get("date") || "";
       const budgetParam = searchParams.get("budget") || "";
 
-      // Map budget range string to a numeric value
+      // Map budget range string to a numeric value (in Nepali Rupees)
       const budgetMap: Record<string, number> = {
-        "Under $10,000": 10000,
-        "$10,000 – $25,000": 25000,
-        "$25,000 – $50,000": 50000,
-        "$50,000 – $100,000": 100000,
-        "$100,000+": 150000,
+        "Under Rs 10,00,000": 1000000,
+        "Rs 10,00,000 – Rs 25,00,000": 2500000,
+        "Rs 25,00,000 – Rs 50,00,000": 5000000,
+        "Rs 50,00,000 – Rs 1,00,00,000": 10000000,
+        "Rs 1,00,00,000+": 15000000,
       };
 
       setFormData((prev) => ({
@@ -109,6 +109,14 @@ const ClientForm = () => {
       });
 
       if (response.ok) {
+        await updateSession({
+          user: {
+            roles: {
+              ...session?.user?.roles,
+              client: true,
+            },
+          },
+        });
         router.push(`/client/best-matches`);
       } else {
         alert("Error submitting client details.");
@@ -177,24 +185,6 @@ const ClientForm = () => {
             className="w-full border border-gray-300 rounded-lg p-2.5 shadow-sm focus:ring-primary-500 focus:border-primary-500 transition-colors"
             required
           />
-        </div>
-
-        {/* Wedding Planner Checkbox */}
-        <div className="flex items-center gap-3 p-3 bg-primary-100 rounded-lg">
-          <input
-            type="checkbox"
-            id="isWeddingPlanner"
-            name="isWeddingPlanner"
-            checked={formData.isWeddingPlanner}
-            onChange={handleChange}
-            className="w-4 h-4 rounded border-gray-300 text-primary-500 focus:ring-primary-500"
-          />
-          <label
-            htmlFor="isWeddingPlanner"
-            className="text-sm font-medium text-gray-700 select-none cursor-pointer"
-          >
-            Planning on behalf of a couple (Wedding Planner)
-          </label>
         </div>
 
         {/* Wedding Style */}

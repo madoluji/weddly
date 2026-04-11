@@ -207,7 +207,7 @@ export default function DisplayClientProfile() {
 
         if (jobsRes.ok) {
           const jobsData = await jobsRes.json();
-          setJobs(jobsData?.jobs || []);
+          setJobs(Array.isArray(jobsData?.jobs) ? jobsData.jobs : []);
         } else {
           setJobs([]);
         }

@@ -1,7 +1,8 @@
 "use client";
 
-import React, { Suspense, useEffect, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import React, { Suspense, useEffect, useRef, useState } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import { motion } from "framer-motion";
 import { CheckCircleIcon, XCircleIcon } from "@heroicons/react/24/solid";
 import { fetchWithAuth } from "../lib/fetchWIthAuth";
@@ -18,7 +19,10 @@ const LoadingSpinner = () => (
 );
 
 const VerifyEmail = () => {
+  const router = useRouter();
+  const { update: updateSession } = useSession();
   const searchParams = useSearchParams();
+  const processedTokenRef = useRef<string | null>(null);
   const [message, setMessage] = useState("Verifying...");
   const [status, setStatus] = useState<"loading" | "success" | "error">(
     "loading"
@@ -27,12 +31,19 @@ const VerifyEmail = () => {
   useEffect(() => {
     const verifyEmail = async () => {
       const token = searchParams.get("token");
+      const redirect = searchParams.get("redirect");
 
       if (!token) {
         setMessage("Invalid or missing token");
         setStatus("error");
         return;
       }
+
+      // Prevent duplicate verification calls for the same token
+      if (processedTokenRef.current === token) {
+        return;
+      }
+      processedTokenRef.current = token;
 
       try {
         const res = await fetchWithAuth(
@@ -48,6 +59,42 @@ const VerifyEmail = () => {
 
         setMessage("Email verified successfully! 🎉");
         setStatus("success");
+
+        // Refresh the session to update emailVerified status
+        try {
+          await updateSession();
+          console.log("✅ Session refreshed after email verification");
+        } catch (sessionError) {
+          console.warn("Session update warning:", sessionError);
+        }
+
+        // Clear any cached verification status
+        if (typeof window !== "undefined") {
+          localStorage.removeItem("verificationStatus");
+          sessionStorage.removeItem("verificationStatus");
+          // Add timestamp to bust cache
+          const cacheTime = new Date().getTime().toString();
+          localStorage.setItem("verificationStatusTime", cacheTime);
+          sessionStorage.setItem("verificationStatusTime", cacheTime);
+        }
+
+        // Get redirect URL from query parameter (passed through email link)
+        let redirectUrl = "/user/best-matches";
+        if (redirect) {
+          redirectUrl = decodeURIComponent(redirect);
+          console.log("✅ Redirecting to URL from email link:", redirectUrl);
+        } else {
+          console.log("⚠️ No redirect URL in email link, using default:", redirectUrl);
+        }
+
+        // Redirect after 2 seconds
+        setTimeout(() => {
+          // Add cache busting parameter to the redirectUrl if it doesn't already have one
+          const separator = redirectUrl.includes("?") ? "&" : "?";
+          const urlWithBustCache = redirectUrl + separator + "t=" + Date.now();
+          console.log("🔄 Final redirect URL:", urlWithBustCache);
+          router.push(urlWithBustCache);
+        }, 2000);
       } catch (error) {
         console.error("Error verifying email:", error);
         setMessage("An unexpected error occurred. Please try again.");
@@ -56,7 +103,7 @@ const VerifyEmail = () => {
     };
 
     verifyEmail();
-  }, [searchParams]);
+  }, [searchParams, router, updateSession]);
 
   return (
     <motion.div
@@ -117,6 +164,18 @@ const VerifyEmail = () => {
           >
             <XCircleIcon className="w-16 h-16 text-red-500" />
           </motion.div>
+        )}
+
+        {status === "error" && (
+          <motion.button
+            onClick={() => router.push("/email-required")}
+            className="mt-6 px-6 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+          >
+            Request New Verification Link
+          </motion.button>
         )}
       </motion.div>
     </motion.div>

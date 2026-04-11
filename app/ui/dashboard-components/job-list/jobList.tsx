@@ -30,7 +30,6 @@ export interface Job {
   title: string;
   time: string;
   type: string;
-  experience: string;
   budget: number; // Changed from string to number to match the provided data structure
   description: string;
   tags: string[];
@@ -113,7 +112,8 @@ const JobList = ({ bestMatches, mostRecent, savedJobs, query }: Props) => {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
 
-        const { jobs } = await response.json();
+        const payload = await response.json();
+        const jobs = Array.isArray(payload?.jobs) ? payload.jobs : [];
         setData(jobs);
       } catch (error) {
         // Log any errors that occur during the fetch
@@ -162,7 +162,7 @@ const JobList = ({ bestMatches, mostRecent, savedJobs, query }: Props) => {
         data.map((job, index) => (
           <div key={index} className="relative">
             <div
-              className={`flex flex-col gap-2 p-6 border border-primary-300/70 rounded-3xl bg-white shadow-[0_10px_30px_rgba(31,47,39,0.08)] group mb-5 hover:shadow-[0_14px_40px_rgba(31,47,39,0.12)] transition-all duration-300`}
+              className={`flex flex-col gap-2 p-6 border border-primary-300/70 dark:border-dark-outline-variant rounded-3xl bg-white dark:bg-dark-surface shadow-[0_10px_30px_rgba(31,47,39,0.08)] group mb-5 hover:shadow-[0_14px_40px_rgba(31,47,39,0.12)] transition-all duration-300`}
               onClick={() => loadJobDetails(job)}
             >
               <div className="flex items-center gap-4 mb-2">
@@ -174,8 +174,8 @@ const JobList = ({ bestMatches, mostRecent, savedJobs, query }: Props) => {
                   className="rounded-full object-cover w-12 h-12"
                 />
                 <div className="flex-1">
-                  <p className="text-sm font-medium text-gray-700">{job.fullName}</p>
-                  <p className="text-xs text-success-600/60">
+                  <p className="text-sm font-medium text-gray-700 dark:text-dark-on-surface-variant">{job.fullName}</p>
+                  <p className="text-xs text-success-600/60 dark:text-dark-on-surface-variant">
                     Posted {getTimeAgo(job.createdAt)}
                   </p>
                 </div>
@@ -191,14 +191,14 @@ const JobList = ({ bestMatches, mostRecent, savedJobs, query }: Props) => {
                 <Unliked className="w-6 h-6  " />
               )} */}
               </div>
-              <div className="mt-2 inline-flex w-fit items-center gap-2 rounded-full border border-primary-200 bg-primary-50 px-4 py-2 text-sm font-semibold text-primary-700">
+              <div className="mt-2 inline-flex w-fit items-center gap-2 rounded-full border border-primary-200 dark:border-dark-outline-variant bg-primary-50 dark:bg-dark-surface-container px-4 py-2 text-sm font-semibold text-primary-700">
                 <CalendarDaysIcon className="h-4 w-4" />
                 Event Date: {formatEventDate(job.eventDate)}
               </div>
-              <p className="text-sm mt-1 text-success-600/75">
-                {job.type || "General"} • {job.experience || "Any experience"} • Booking Fee / Rate: ${job.budget}
+              <p className="text-sm mt-1 text-success-600/75 dark:text-dark-on-surface-variant">
+                {job.type || "General"} • Booking Fee / Rate: ${job.budget}
               </p>
-              <p className="text-success-600 my-4 leading-7 ">
+              <p className="text-success-600 dark:text-dark-on-surface-variant my-4 leading-7 ">
                 {truncateString(job.description, 400)}
                 {job.description.length > 400 ? (
                   <button className="text-primary-700 hover:text-primary-500">
@@ -210,14 +210,14 @@ const JobList = ({ bestMatches, mostRecent, savedJobs, query }: Props) => {
                 {job.tags.map((tag, index) => (
                   <div
                     key={index}
-                    className="bg-primary-100 text-success-600 px-4 py-2 text-sm flex flex-wrap justify-center items-center rounded-full border border-primary-300/70"
+                    className="bg-primary-100 dark:bg-dark-surface-container text-success-600 dark:text-dark-on-surface-variant px-4 py-2 text-sm flex flex-wrap justify-center items-center rounded-full border border-primary-300/70 dark:border-dark-outline-variant"
                   >
                     {tag}
                   </div>
                 ))}
               </div>
               <div className="flex justify-between items-center mt-5">
-                <p className="text-sm mt-3 flex items-center gap-1 font-medium text-success-600">
+                <p className="text-sm mt-3 flex items-center gap-1 font-medium text-success-600 dark:text-dark-on-surface-variant">
                   <BuildingLibraryIcon className="w-5 h-5" /> {job.location}
                 </p>
                 {job.status !== "active" && (

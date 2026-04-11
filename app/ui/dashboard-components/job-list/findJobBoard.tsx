@@ -25,7 +25,6 @@ interface FindJob {
   jobId: string;
   title: string;
   type: string;
-  experience: string;
   budget: string | number;
   description: string;
   tags: string[];
@@ -98,7 +97,6 @@ const FindJobBoard = ({ initialFilters }: Props) => {
   const mergedInitialFilters: FindJobFilters = {
     ...defaultFindJobFilters,
     ...initialFilters,
-    experienceFilters: initialFilters?.experienceFilters || [],
     sortBy: initialFilters?.sortBy === "budget" ? "budget" : "newest",
   };
 
@@ -108,9 +106,6 @@ const FindJobBoard = ({ initialFilters }: Props) => {
   const [titleSearch, setTitleSearch] = useState(mergedInitialFilters.search);
   const [locationSearch, setLocationSearch] = useState(mergedInitialFilters.location);
   const [selectedCategory, setSelectedCategory] = useState(mergedInitialFilters.category);
-  const [experienceFilters, setExperienceFilters] = useState<string[]>(
-    mergedInitialFilters.experienceFilters
-  );
   const [budgetMin, setBudgetMin] = useState(mergedInitialFilters.minBudget);
   const [budgetMax, setBudgetMax] = useState(mergedInitialFilters.maxBudget);
   const [eventDateFilter, setEventDateFilter] = useState(mergedInitialFilters.eventDate);
@@ -150,7 +145,6 @@ const FindJobBoard = ({ initialFilters }: Props) => {
     search: titleSearch,
     location: locationSearch,
     category: selectedCategory,
-    experienceFilters,
     minBudget: budgetMin,
     maxBudget: budgetMax,
     eventDate: eventDateFilter,
@@ -170,7 +164,6 @@ const FindJobBoard = ({ initialFilters }: Props) => {
     titleSearch,
     locationSearch,
     selectedCategory,
-    experienceFilters,
     budgetMin,
     budgetMax,
     eventDateFilter,
@@ -260,7 +253,6 @@ const FindJobBoard = ({ initialFilters }: Props) => {
     titleSearch,
     locationSearch,
     selectedCategory,
-    experienceFilters,
     budgetMin,
     budgetMax,
     eventDateFilter,
@@ -274,7 +266,6 @@ const FindJobBoard = ({ initialFilters }: Props) => {
 
   const resetFilters = () => {
     setSelectedCategory("All Categories");
-    setExperienceFilters([]);
     setBudgetMin("");
     setBudgetMax("");
     setEventDateFilter("");
@@ -282,15 +273,6 @@ const FindJobBoard = ({ initialFilters }: Props) => {
     setTitleSearch("");
     setSortBy("newest");
     setPage(1);
-  };
-
-  const toggleExperienceFilter = (experience: string) => {
-    setPage(1);
-    setExperienceFilters((current) =>
-      current.includes(experience)
-        ? current.filter((entry) => entry !== experience)
-        : [...current, experience]
-    );
   };
 
   if (loading) {
@@ -384,26 +366,6 @@ const FindJobBoard = ({ initialFilters }: Props) => {
               ))}
             </div>
           </div>
-
-          <hr className="my-5 border-[#e7efeb]" />
-
-          <div>
-            <h3 className="mb-3 text-sm font-semibold text-[#2c4639]">Experience Level</h3>
-            <div className="space-y-2">
-              {["Entry", "Intermediate", "Expert"].map((experience) => (
-                <label key={experience} className="flex items-center gap-3 text-sm text-[#415e50]">
-                  <input
-                    type="checkbox"
-                    checked={experienceFilters.includes(experience)}
-                    onChange={() => toggleExperienceFilter(experience)}
-                    className="h-4 w-4 rounded border-[#b8cbbf] text-[#2f5f4a] focus:ring-[#2f5f4a]"
-                  />
-                  <span>{experience}</span>
-                </label>
-              ))}
-            </div>
-          </div>
-
           <hr className="my-5 border-[#e7efeb]" />
 
           <div>

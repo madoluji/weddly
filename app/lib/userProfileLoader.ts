@@ -11,7 +11,13 @@ const UserProfileLoader: React.FC = () => {
 
   useEffect(() => {
     if (session?.user?.id) {
-      loadUserData(session.user.id);
+      loadUserData(session.user.id, {
+        name: session.user.name,
+        username: session.user.name,
+        email: session.user.email,
+        profilePicture: session.user.profilePicture,
+        avatar: session.user.profilePicture,
+      });
     }
 
   }, [session?.user?.id, loadUserData]);

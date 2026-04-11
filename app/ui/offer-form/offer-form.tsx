@@ -92,29 +92,37 @@ const OfferForm = ({ jobId, freelancerId }: OfferFormProps) => {
         });
 
         chatId = newMessageRef.id;
-        await updateDoc(doc(chatsRef, userData?.id), {
-          chatsData: arrayUnion({
-            messageId: chatId,
-            lastMessage: initialMessage,
-            rId: freelancerId,
-            updateDoc: Date.now(),
-            messageSeen: false,
-            // contractArray: [proposal._id],
-            chatStatus: "open",
-          }),
-        });
+        await setDoc(
+          doc(chatsRef, userData?.id),
+          {
+            chatsData: arrayUnion({
+              messageId: chatId,
+              lastMessage: initialMessage,
+              rId: freelancerId,
+              updateDoc: Date.now(),
+              messageSeen: false,
+              // contractArray: [proposal._id],
+              chatStatus: "open",
+            }),
+          },
+          { merge: true }
+        );
 
-        await updateDoc(doc(chatsRef, freelancerId), {
-          chatsData: arrayUnion({
-            messageId: chatId,
-            lastMessage: initialMessage,
-            rId: userData?.id,
-            updateDoc: Date.now(),
-            messageSeen: false,
-            chatStatus: "open",
-            // contractArray: [proposal._id],
-          }),
-        });
+        await setDoc(
+          doc(chatsRef, freelancerId),
+          {
+            chatsData: arrayUnion({
+              messageId: chatId,
+              lastMessage: initialMessage,
+              rId: userData?.id,
+              updateDoc: Date.now(),
+              messageSeen: false,
+              chatStatus: "open",
+              // contractArray: [proposal._id],
+            }),
+          },
+          { merge: true }
+        );
       } // Send contract details to the chat
       else {
         await updateDoc(doc(db, "messages", chatId), {
@@ -178,6 +186,20 @@ const OfferForm = ({ jobId, freelancerId }: OfferFormProps) => {
           }
         });
       }
+
+      await fetchWithAuth("/api/notifications/new-message", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          recipientId: freelancerId,
+          messageId: chatId,
+          textPreview: initialMessage,
+          senderName: userData?.username || userData?.name || "Client",
+          senderAvatar: userData?.avatar || userData?.profilePicture,
+        }),
+      });
 
       console.log(`Contract sent to chat ${chatId}`);
     } catch (error) {

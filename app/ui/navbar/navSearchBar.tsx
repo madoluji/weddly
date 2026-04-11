@@ -35,7 +35,7 @@ const SearchInput = () => {
           type="search"
           name="search"
           placeholder="Find your next Wedding Gig"
-          className="w-full border border-primary-300 block bg-white rounded-2xl py-[10px] pl-11 pr-4 outline-none text-success-600 placeholder:text-success-600/60 focus:ring-2 focus:ring-primary-400/70 focus:border-primary-500"
+          className="w-full border border-primary-300 dark:border-dark-outline-variant block bg-white dark:bg-dark-surface rounded-2xl py-[10px] pl-11 pr-4 outline-none text-success-600 dark:text-dark-on-surface placeholder:text-success-600/60 dark:placeholder:text-dark-on-surface-variant focus:ring-2 focus:ring-primary-400/70 focus:border-primary-500"
           onChange={(e) => {
             handleSearch(e.target.value); // Trigger search when input changes
           }}

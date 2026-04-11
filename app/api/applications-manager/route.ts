@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/app/lib/auth";
-import { connectMongoDB } from "@/app/lib/mongodb.js";
+import { connectMongoDB } from "@/app/lib/mongodb";
 import Jobs from "@/models/jobs";
 import Proposal from "@/models/proposal";
 import FreelancerInfo from "@/models/freelancerInfo";

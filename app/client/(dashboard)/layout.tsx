@@ -38,7 +38,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         </DashboardCardsProvider>
         <div
           className="w-full
-        bg-white
+        bg-white dark:bg-dark-background
          gap-12
          2xl:grid
          2xl:grid-cols-5 "
@@ -50,41 +50,38 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             </Suspense>
           </div>
           <div className="wedding-gigs-panel mt-5 w-full col-span-4">
-            <div className="flex justify-between">
-              <span className="text-2xl flex w-full flex-wrap items-center hid ">
-                {" "}
-                Your Wedding Gigs
-                <span className="h-5 w-5 mx-1 info relative">
-                  <InformationCircleIcon />
-                  <p className="hide absolute rounded-xl  p-3 bg-white text-sm  shadow-[0_0px_20px_rgba(228,228,228,1)] before:absolute before:top-10 before:-left-1 before:translateX-1/2 before:rotate-[135deg] before:z-10  before:bg-white before:border-white before:border-8 after:right-0  z-10 -top-9 w-64  h-24  left-7 text-slate-500    ">
-                    {" "}
-                    Manage your wedding gigs and contracts efficiently: items
-                    needing urgent attention are displayed first
-                  </p>
+            <div className="mx-auto w-full max-w-7xl">
+              <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                <span className="text-2xl flex flex-wrap items-center">
+                  Your Wedding Gigs
+                  <span className="h-5 w-5 mx-1 info relative">
+                    <InformationCircleIcon />
+                    <p className="hide absolute rounded-xl p-3 bg-white dark:bg-dark-surface text-sm shadow-[0_0px_20px_rgba(228,228,228,1)] dark:shadow-[0_0px_20px_rgba(0,0,0,0.4)] before:absolute before:top-10 before:-left-1 before:translateX-1/2 before:rotate-[135deg] before:z-10 before:bg-white dark:before:bg-dark-surface before:border-white dark:before:border-dark-surface before:border-8 after:right-0 z-10 -top-9 w-64 h-24 left-7 text-slate-500 dark:text-dark-on-surface-variant">
+                      Manage your wedding gigs and contracts efficiently: items
+                      needing urgent attention are displayed first
+                    </p>
+                  </span>
                 </span>
-              </span>{" "}
-              <Link href={"/client/post-job"}>
-                <div className="btn btn-primary text-white flex p-3 text-nowrap items-center bg-primary-700 rounded-xl ">
-                  <PlusIcon className="h-6 w-6 m-1" />
-                  Post a Wedding Gig
-                </div>
-              </Link>
+                <Link href={"/client/post-job"} className="self-start md:self-auto">
+                  <div className="btn btn-primary text-white flex p-3 text-nowrap items-center bg-primary-700 rounded-xl">
+                    <PlusIcon className="h-6 w-6 m-1" />
+                    Post a Wedding Gig
+                  </div>
+                </Link>
+              </div>
             </div>
             <Suspense fallback={<CardSkeleton />}>
               <ProjectCarousel />
             </Suspense>
-            <div>
-              <div className="sticky top-[75px] z-[2]  pt-5  bg-white">
+            <div className="mx-auto w-full max-w-7xl">
+              <div className="sticky top-[75px] z-[2] pt-5 bg-white dark:bg-dark-background">
                 <Suspense>
                   <SearchBar />
                 </Suspense>
                 <TalentNavBar />
               </div>
-              {/* wedding gig listing space */}
-              <div className="w-full col-span-4 ">
-                <div className="2xl:w-[75%] w-[90%]">{children}</div>
-              </div>
-            </div>{" "}
+              <div className="w-full">{children}</div>
+            </div>
           </div>
         </div>
       </div>

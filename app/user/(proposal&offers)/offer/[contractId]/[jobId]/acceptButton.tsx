@@ -12,6 +12,8 @@ import {
   doc,
   arrayUnion,
   getDoc,
+  setDoc,
+  serverTimestamp,
 } from "firebase/firestore";
 import React, { useContext, useState } from "react";
 
@@ -43,67 +45,129 @@ const AcceptButton = ({ jobId, freelancerId, contractId }: Props) => {
 
       // retrive chat id
       const chatExists = chatData?.find((chat) => chat.rId === clientId);
+      let chatMessageId = chatExists?.messageId;
 
       const initialMessage = "Looking forward to work with you";
 
-      await updateDoc(doc(db, "messages", chatExists?.messageId), {
-        messages: arrayUnion(
-          {
-            sId: userData?.id,
-            text: initialMessage,
-            createdAt: new Date(),
-          },
-          {
-            sId: userData?.id,
-            text: `Contract details:\nPrice: $${paymentType}\nDeadline: ${deadline}`,
-            attachment: {
-              type: "activeContract",
-              data: contract,
+      if (!chatMessageId) {
+        const newMessageRef = doc(collection(db, "messages"));
+        chatMessageId = newMessageRef.id;
+
+        await setDoc(newMessageRef, {
+          createdAt: serverTimestamp(),
+          messages: [
+            {
+              sId: userData?.id,
+              text: initialMessage,
+              createdAt: Date.now(),
             },
-            createdAt: new Date(),
+            {
+              sId: userData?.id,
+              text: `Contract details:\nPrice: $${paymentType}\nDeadline: ${deadline}`,
+              attachment: {
+                type: "activeContract",
+                data: contract,
+              },
+              createdAt: Date.now(),
+            },
+          ],
+        });
+
+        await setDoc(
+          doc(chatsRef, clientId),
+          {
+            chatsData: arrayUnion({
+              messageId: chatMessageId,
+              lastMessage: initialMessage,
+              rId: userData?.id,
+              updatedAt: Date.now(),
+              messageSeen: false,
+              chatStatus: "open",
+              ContractArray: contract?._id ? [contract._id] : [],
+            }),
+          },
+          { merge: true }
+        );
+
+        await setDoc(
+          doc(chatsRef, userData?.id),
+          {
+            chatsData: arrayUnion({
+              messageId: chatMessageId,
+              lastMessage: initialMessage,
+              rId: clientId,
+              updatedAt: Date.now(),
+              messageSeen: true,
+              chatStatus: "open",
+              ContractArray: contract?._id ? [contract._id] : [],
+            }),
+          },
+          { merge: true }
+        );
+      } else {
+        await updateDoc(doc(db, "messages", chatMessageId), {
+          messages: arrayUnion(
+            {
+              sId: userData?.id,
+              text: initialMessage,
+              createdAt: new Date(),
+            },
+            {
+              sId: userData?.id,
+              text: `Contract details:\nPrice: $${paymentType}\nDeadline: ${deadline}`,
+              attachment: {
+                type: "activeContract",
+                data: contract,
+              },
+              createdAt: new Date(),
+            }
+          ),
+        });
+
+        // add active contract id in existing chatData
+        const userIDs = [clientId, userData?.id];
+
+        userIDs.forEach(async (id) => {
+          const selectedUserChatRef = doc(chatsRef, id);
+          const UserChatSnap = await getDoc(selectedUserChatRef);
+
+          if (UserChatSnap.exists()) {
+            const UserChatData = UserChatSnap.data();
+            const chatIndex = UserChatData.chatsData.findIndex(
+              (c: any) => c.messageId === chatMessageId
+            );
+
+            if (chatIndex !== -1) {
+              const updatedChatsData = [...UserChatData.chatsData];
+
+              updatedChatsData[chatIndex].ContractArray = [
+                ...(updatedChatsData[chatIndex].ContractArray || []),
+                contract?._id,
+              ];
+              updatedChatsData[chatIndex].updatedAt = Date.now();
+              updatedChatsData[chatIndex].messageSeen = false;
+              updatedChatsData[chatIndex].lastMessage = initialMessage;
+
+              await updateDoc(selectedUserChatRef, {
+                chatsData: updatedChatsData,
+              });
+            }
           }
-        ),
-      });
+        });
+      }
 
-      //add active contractid in the chatData
-      const userIDs = [clientId, userData?.id];
-
-      userIDs.forEach(async (id) => {
-        // Reference to the chat document
-        const selectedUserChatRef = doc(chatsRef, id);
-
-        // Fetch the existing chat document
-        const UserChatSnap = await getDoc(selectedUserChatRef);
-
-        if (UserChatSnap.exists()) {
-          const UserChatData = UserChatSnap.data();
-
-          // Find the chat with matching messageId
-          const chatIndex = UserChatData.chatsData.findIndex(
-            (c: any) => c.messageId === chatExists?.messageId
-          );
-
-          if (chatIndex !== -1) {
-            // Clone the chatsData array to avoid direct mutation
-            const updatedChatsData = [...UserChatData.chatsData];
-
-            // Ensure contractArray exists, then push the new contract ID
-            updatedChatsData[chatIndex].ContractArray = [
-              ...(updatedChatsData[chatIndex].ContractArray || []), // Default to empty array if it doesn't exist
-              contract?._id,
-            ];
-
-            // Update other fields
-            updatedChatsData[chatIndex].updatedAt = Date.now();
-            updatedChatsData[chatIndex].messageSeen = false;
-            updatedChatsData[chatIndex].lastMessage = initialMessage;
-
-            // Save back to Firestore
-            await updateDoc(selectedUserChatRef, {
-              chatsData: updatedChatsData,
-            });
-          }
-        }
+      await fetchWithAuth("/api/notifications/new-message", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          recipientId: clientId,
+          messageId: chatMessageId,
+          textPreview: initialMessage,
+          senderName: userData?.username || userData?.name || "Freelancer",
+          senderAvatar: userData?.avatar || userData?.profilePicture,
+        }),
       });
     } catch (error) {
       console.error("Error sending contract to chat:", error);

@@ -44,6 +44,7 @@ export default async function LoginPage() {
               src="/images/weddly-login-hero.webp"
               alt="Elegant Wedding"
               fill
+              priority
               className="absolute inset-0 h-full w-full object-cover"
               sizes="(min-width: 1024px) 50vw, 0vw"
             />

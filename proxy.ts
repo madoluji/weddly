@@ -5,8 +5,9 @@ import {createClient, RedisClientType} from "redis";
 
 const REGISTER_LIMIT = 5;
 const REGISTER_WINDOW_SECONDS = 15 * 60;
-const GENERAL_LIMIT = 120;
+const GENERAL_LIMIT = 300;
 const GENERAL_WINDOW_SECONDS = 60;
+const SHOULD_RATE_LIMIT = process.env.NODE_ENV === "production";
 
 const redisUrl = process.env.REDIS_URL || process.env.REDIS_HOST ?
   process.env.REDIS_URL || `redis://${process.env.REDIS_HOST}:${process.env.REDIS_PORT || 6379}` :
@@ -129,24 +130,48 @@ export async function proxy(req: NextRequest) {
   const roles = token?.roles as
     | { client?: boolean; freelancer?: boolean; venue?: boolean }
     | undefined;
+  const normalizedRoles = {
+    client: Boolean(roles?.client),
+    freelancer: Boolean(roles?.freelancer),
+    venue: Boolean(roles?.venue),
+  };
+  const hasAnyUserRole =
+    normalizedRoles.client || normalizedRoles.freelancer || normalizedRoles.venue;
 
   if (token) {
-    if (pathname.startsWith("/client") && !roles?.client) {
+    if (pathname.startsWith("/client") && !normalizedRoles.client) {
+      if (!hasAnyUserRole) {
+        return NextResponse.redirect(new URL("/signup/profile-upload", req.url));
+      }
       return NextResponse.redirect(new URL("/unauthorized", req.url));
     }
 
-    if (pathname.startsWith("/user") && !roles?.freelancer) {
+    if (pathname.startsWith("/user") && !normalizedRoles.freelancer) {
+      if (!hasAnyUserRole) {
+        return NextResponse.redirect(new URL("/signup/profile-upload", req.url));
+      }
+      return NextResponse.redirect(new URL("/unauthorized", req.url));
+    }
+
+    if (pathname.startsWith("/venue") && !normalizedRoles.venue) {
+      if (!hasAnyUserRole) {
+        return NextResponse.redirect(new URL("/signup/profile-upload", req.url));
+      }
       return NextResponse.redirect(new URL("/unauthorized", req.url));
     }
   }
 
-  const isAuthPage =
+  const isSignupPage = pathname.startsWith("/signup");
+  const isVerifyPage = pathname.startsWith("/verify");
+  const isNonSignupAuthPage =
     pathname === "/login" ||
-    pathname === "/signup" ||
     isE2EPage;
+  const isAuthPage = isSignupPage || isVerifyPage || isNonSignupAuthPage;
 
   const isAuthApiRoute =
-    pathname.startsWith("/api/auth") || pathname === "/api/register";
+    pathname.startsWith("/api/auth") ||
+    pathname === "/api/register" ||
+    pathname === "/api/email-verification";
 
   const isAdminAuthPage =
     pathname === "/admin/login" || pathname === "/api/admin/register";
@@ -168,16 +193,22 @@ export async function proxy(req: NextRequest) {
   let rateLimitLimit = GENERAL_LIMIT;
 
   if (pathname.startsWith("/api/")) {
+    if (!SHOULD_RATE_LIMIT) {
+      rateLimitResult = null;
+    } else {
     const ip = getClientIp(req);
     const isAuthApi = pathname.startsWith("/api/auth") || pathname === "/api/register";
     const windowSeconds = isAuthApi ? REGISTER_WINDOW_SECONDS : GENERAL_WINDOW_SECONDS;
-    const key = isAuthApi ? `ratelimit:auth:${ip}` : `ratelimit:api:${ip}`;
-    const limit = isAuthApi ? GENERAL_LIMIT : GENERAL_LIMIT;
+    const rateLimitIdentity = typeof token?.id === "string" && token.id.length > 0 ? token.id : ip;
+    const key = isAuthApi ? `ratelimit:auth:${rateLimitIdentity}` : `ratelimit:api:${rateLimitIdentity}`;
+    const limit = isAuthApi ? REGISTER_LIMIT : GENERAL_LIMIT;
 
     // Allow NextAuth endpoints to be used normally without an extremely low auth limit.
     rateLimitResult = await checkRateLimit(key, limit, windowSeconds);
+    rateLimitLimit = limit;
     if (!rateLimitResult.allowed) {
       return toRateLimitResponse(limit, rateLimitResult.remaining, rateLimitResult.resetAt);
+    }
     }
   }
 
@@ -233,7 +264,7 @@ export async function proxy(req: NextRequest) {
     return response;
   }
 
-  if ((isAuthPage || isAdminAuthPage) && token) {
+  if ((isNonSignupAuthPage || isAdminAuthPage) && token) {
     if (role === "admin") {
       return NextResponse.redirect(new URL("/admin", req.url));
     }

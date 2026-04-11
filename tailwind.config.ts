@@ -2,6 +2,7 @@ import type { Config } from 'tailwindcss';
 import forms from '@tailwindcss/forms';
 
 const config: Config = {
+  darkMode: 'class',
   content: [
     './pages/**/*.{js,ts,jsx,tsx,mdx}',
     './components/**/*.{js,ts,jsx,tsx,mdx}',
@@ -98,6 +99,18 @@ const config: Config = {
         'surface-tint': '#2f5f4a',
         'on-error': '#ffffff',
         background: '#fcf9f6',
+        dark: {
+          background: '#0f1410',
+          surface: '#1a1f1c',
+          'surface-container': '#1f2520',
+          'surface-container-high': '#252b27',
+          'surface-container-highest': '#2c332e',
+          'on-surface': '#e3e3e0',
+          'on-surface-variant': '#c1c9c2',
+          'outline-variant': '#3a4240',
+          'inverse-surface': '#e5e2df',
+          'inverse-on-surface': '#31302f',
+        },
       },
       keyframes: {
         shimmer: {

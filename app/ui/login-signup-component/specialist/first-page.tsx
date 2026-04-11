@@ -23,7 +23,7 @@ const SpecialistWelcome = () => {
     fetchWithAuth("/api/user?fields=roles")
       .then((res) => res.json())
       .then((data) => {
-        if (data.roles.freelancer) router.push(`/`);
+        if (data.roles.freelancer) router.push(`/user/best-matches`);
       })
       .catch((err) => console.error("Error fetching roles:", err));
   }, [status, session, router]);

@@ -168,7 +168,7 @@ const TalentDetailsSlider: React.FC = () => {
             onClick={onClose}
           />
           <motion.div
-            className="relative h-full w-full max-w-4xl overflow-y-auto rounded-l-2xl bg-slate-50 p-6 shadow-xl"
+            className="relative h-full w-full max-w-4xl overflow-y-auto rounded-l-2xl bg-slate-50 dark:bg-dark-surface-container p-6 shadow-xl"
             variants={sliderVariants}
             initial="hidden"
             animate="visible"
@@ -214,9 +214,9 @@ const TalentDetailsSlider: React.FC = () => {
                 </div>
               </div>
             ) : (
-              <div className="rounded-2xl bg-white p-6 shadow-[0_16px_36px_rgba(26,44,35,0.08)]">
-                        <div className="flex flex-row items-center gap-8 border-b border-slate-200 pb-5">
-                          <div className="flex h-32 w-32 items-center justify-center overflow-hidden rounded-full bg-slate-100">
+              <div className="rounded-2xl bg-white dark:bg-dark-surface p-6 shadow-[0_16px_36px_rgba(26,44,35,0.08)]">
+                        <div className="flex flex-row items-center gap-8 border-b border-slate-200 dark:border-dark-outline-variant pb-5">
+                          <div className="flex h-32 w-32 items-center justify-center overflow-hidden rounded-full bg-slate-100 dark:bg-dark-surface-container">
                             <SafeImage
                               src={freelancer.profilePicture || "/placeholder.svg"}
                               width={140}
@@ -226,10 +226,10 @@ const TalentDetailsSlider: React.FC = () => {
                             />
                           </div>
                           <span className="flex flex-col gap-3">
-                            <h2 className="font-headline text-5xl font-medium leading-tight text-slate-900">
+                            <h2 className="font-headline text-5xl font-medium leading-tight text-slate-900 dark:text-dark-on-surface">
                               {freelancer.fullName || "Freelancer"}
                             </h2>
-                            <div className="flex flex-wrap gap-5 text-sm text-slate-600">
+                            <div className="flex flex-wrap gap-5 text-sm text-slate-600 dark:text-dark-on-surface-variant">
                               <div className="flex items-center">
                                 <BuildingLibraryIcon className="mr-2 h-4 w-4" />
                                 <p>{freelancer.location || "Location not specified"}</p>
@@ -242,41 +242,41 @@ const TalentDetailsSlider: React.FC = () => {
                           </span>
                         </div>
 
-                        <div className="mt-5 border-b border-slate-200 pb-5">
-                          <h3 className="mb-2 font-headline text-3xl font-medium text-slate-900">About Me</h3>
-                          <p className="text-slate-700 text-md leading-7">{freelancer.bio || "No bio provided."}</p>
+                        <div className="mt-5 border-b border-slate-200 dark:border-dark-outline-variant pb-5">
+                          <h3 className="mb-2 font-headline text-3xl font-medium text-slate-900 dark:text-dark-on-surface">About Me</h3>
+                          <p className="text-slate-700 dark:text-dark-on-surface-variant text-md leading-7">{freelancer.bio || "No bio provided."}</p>
                         </div>
 
-                        <div className="mt-5 border-b border-slate-200 pb-5">
-                          <h3 className="mb-3 font-headline text-3xl font-medium text-slate-900">Skills</h3>
+                        <div className="mt-5 border-b border-slate-200 dark:border-dark-outline-variant pb-5">
+                          <h3 className="mb-3 font-headline text-3xl font-medium text-slate-900 dark:text-dark-on-surface">Skills</h3>
                           <div className="flex flex-wrap gap-2">
                             {freelancer.skills?.length ? (
                               freelancer.skills.map((skill, index) => (
                                 <span
                                   key={index}
-                                  className="flex items-center rounded-full bg-primary-50 px-3 py-1 text-sm text-primary-800"
+                                  className="flex items-center rounded-full bg-primary-50 dark:bg-dark-surface-container px-3 py-1 text-sm text-primary-800 dark:text-primary-300"
                                 >
                                   <TagIcon className="mr-1 h-4 w-4" />
                                   {skill}
                                 </span>
                               ))
                             ) : (
-                              <p className="text-sm text-slate-500">No skills listed.</p>
+                              <p className="text-sm text-slate-500 dark:text-dark-on-surface-variant">No skills listed.</p>
                             )}
                           </div>
                         </div>
 
                         {freelancer.workExperience?.length ? (
-                          <div className="mt-5 border-b border-slate-200 pb-5">
-                            <h3 className="mb-4 flex items-center font-headline text-3xl font-medium text-slate-900">
+                          <div className="mt-5 border-b border-slate-200 dark:border-dark-outline-variant pb-5">
+                            <h3 className="mb-4 flex items-center font-headline text-3xl font-medium text-slate-900 dark:text-dark-on-surface">
                               <SparklesIcon className="mr-2 h-6 w-6" /> Wedding Experience
                             </h3>
                             <div className="space-y-4">
                               {freelancer.workExperience.map((job) => (
-                                <div key={job._id} className="rounded-xl bg-slate-50 p-4">
-                                  <h4 className="text-xl font-semibold text-slate-900">{job.jobTitle}</h4>
-                                  <p className="mt-1 text-slate-600">{job.company}</p>
-                                  <p className="mt-1 text-sm text-slate-500">
+                                <div key={job._id} className="rounded-xl bg-slate-50 dark:bg-dark-surface-container p-4">
+                                  <h4 className="text-xl font-semibold text-slate-900 dark:text-dark-on-surface">{job.jobTitle}</h4>
+                                  <p className="mt-1 text-slate-600 dark:text-dark-on-surface-variant">{job.company}</p>
+                                  <p className="mt-1 text-sm text-slate-500 dark:text-dark-on-surface-variant">
                                     {formatDate(job.startDate)} - {formatDate(job.endDate)}
                                   </p>
                                 </div>
@@ -286,20 +286,20 @@ const TalentDetailsSlider: React.FC = () => {
                         ) : null}
 
                         {freelancer.education?.length ? (
-                          <div className="mt-5 border-b border-slate-200 pb-5">
-                            <h3 className="mb-4 flex items-center font-headline text-3xl font-medium text-slate-900">
+                          <div className="mt-5 border-b border-slate-200 dark:border-dark-outline-variant pb-5">
+                            <h3 className="mb-4 flex items-center font-headline text-3xl font-medium text-slate-900 dark:text-dark-on-surface">
                               <AcademicCapIcon className="mr-2 h-6 w-6" /> Education
                             </h3>
                             <div className="space-y-4">
                               {freelancer.education.map((edu) => (
-                                <div key={edu._id} className="rounded-xl bg-slate-50 p-4">
+                                <div key={edu._id} className="rounded-xl bg-slate-50 dark:bg-dark-surface-container p-4">
                                   <div className="flex flex-wrap items-start justify-between gap-3">
-                                    <h4 className="text-xl font-semibold text-slate-900">{edu.degree}</h4>
-                                    <p className="text-sm text-slate-500">
+                                    <h4 className="text-xl font-semibold text-slate-900 dark:text-dark-on-surface">{edu.degree}</h4>
+                                    <p className="text-sm text-slate-500 dark:text-dark-on-surface-variant">
                                       {formatDate(edu.startDate)} - {formatDate(edu.endDate)}
                                     </p>
                                   </div>
-                                  <p className="mt-1 text-slate-600">{edu.institution}</p>
+                                  <p className="mt-1 text-slate-600 dark:text-dark-on-surface-variant">{edu.institution}</p>
                                 </div>
                               ))}
                             </div>
@@ -308,7 +308,7 @@ const TalentDetailsSlider: React.FC = () => {
 
                         {freelancer.projectPortfolio?.length ? (
                           <div className="mt-5 pb-2">
-                            <h3 className="mb-4 font-headline text-3xl font-medium text-slate-900">Project Portfolio</h3>
+                            <h3 className="mb-4 font-headline text-3xl font-medium text-slate-900 dark:text-dark-on-surface">Project Portfolio</h3>
                             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                               {freelancer.projectPortfolio.map((project, index) => {
                                 const firstImage = project.portfolioFiles.find((file) => imageRegex.test(file));
@@ -316,7 +316,7 @@ const TalentDetailsSlider: React.FC = () => {
                                   <button
                                     key={index}
                                     type="button"
-                                    className="group overflow-hidden rounded-xl border border-slate-200 bg-white text-left transition hover:shadow-[0_10px_28px_rgba(26,44,35,0.12)]"
+                                    className="group overflow-hidden rounded-xl border border-slate-200 dark:border-dark-outline-variant bg-white dark:bg-dark-surface text-left transition hover:shadow-[0_10px_28px_rgba(26,44,35,0.12)]"
                                     onClick={() => handleImageClick(project)}
                                   >
                                     {firstImage ? (
@@ -328,15 +328,15 @@ const TalentDetailsSlider: React.FC = () => {
                                         className="h-48 w-full object-cover transition duration-300 group-hover:scale-[1.02]"
                                       />
                                     ) : (
-                                      <div className="flex h-48 w-full items-center justify-center bg-slate-100 text-sm text-slate-500">
+                                      <div className="flex h-48 w-full items-center justify-center bg-slate-100 dark:bg-dark-surface-container text-sm text-slate-500 dark:text-dark-on-surface-variant">
                                         No preview image
                                       </div>
                                     )}
                                     <div className="p-4">
-                                      <p className="text-base font-semibold text-slate-900">
+                                      <p className="text-base font-semibold text-slate-900 dark:text-dark-on-surface">
                                         {project.projectTitle || `Project ${index + 1}`}
                                       </p>
-                                      <p className="mt-1 text-sm text-slate-600 line-clamp-2">
+                                      <p className="mt-1 text-sm text-slate-600 dark:text-dark-on-surface-variant line-clamp-2">
                                         {project.projectDescription || "No description provided."}
                                       </p>
                                     </div>
@@ -359,7 +359,7 @@ const TalentDetailsSlider: React.FC = () => {
               onClick={closeProjectPopup}
             >
               <motion.div
-                className="relative max-h-[88vh] w-[92%] max-w-screen-xl overflow-y-auto rounded-2xl bg-white p-10 shadow-lg"
+                className="relative max-h-[88vh] w-[92%] max-w-screen-xl overflow-y-auto rounded-2xl bg-white dark:bg-dark-surface p-10 shadow-lg"
                 variants={popupVariants}
                 initial="hidden"
                 animate="visible"
@@ -374,16 +374,16 @@ const TalentDetailsSlider: React.FC = () => {
                 </button>
                 <div className="flex flex-row gap-4">
                   <div className="w-1/2 h-full overflow-y-auto">
-                    <h3 className="text-4xl font-semibold mb-4">
+                    <h3 className="text-4xl font-semibold mb-4 dark:text-dark-on-surface">
                       {selectedProject.projectTitle}
                     </h3>
-                    <p className="text-gray-600 mb-4 mt-10">
+                    <p className="text-gray-600 dark:text-dark-on-surface-variant mb-4 mt-10">
                       Project Description
                     </p>
-                    <p className="text-gray-800 mb-4">
+                    <p className="text-gray-800 dark:text-dark-on-surface mb-4">
                       {selectedProject.projectDescription}
                     </p>
-                    <p className="text-gray-600 mb-5 mt-10">
+                    <p className="text-gray-600 dark:text-dark-on-surface-variant mb-5 mt-10">
                       Technologies Used
                     </p>
                     <div className="flex flex-wrap gap-4 mb-4">
@@ -391,7 +391,7 @@ const TalentDetailsSlider: React.FC = () => {
                         (tech: string, index: number) => (
                           <span
                             key={index}
-                            className="bg-gray-200 text-gray-800 px-2 py-1 rounded text-sm"
+                            className="bg-gray-200 dark:bg-dark-surface-container text-gray-800 dark:text-dark-on-surface px-2 py-1 rounded text-sm"
                           >
                             {tech}
                           </span>

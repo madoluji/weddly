@@ -71,10 +71,21 @@ const ProjectCarousel: React.FC = () => {
           const response = await fetchWithAuth(
             `/api/fetchJobs?userId=${session?.user.id}`
           );
+
+          if (response.status === 429) {
+            setJobs([]);
+            return;
+          }
+
+          if (!response.ok) {
+            throw new Error(`Failed to fetch jobs: ${response.status}`);
+          }
+
           const data = await response.json();
+          const jobsList = Array.isArray(data?.jobs) ? data.jobs : [];
 
           // Filter jobs with status 'active' and sort by creation date in descending order
-          const activeJobs = data.jobs
+          const activeJobs = jobsList
             .filter((job: Job) => job.status === "active")
             .sort(
               (a: Job, b: Job) =>
@@ -146,20 +157,22 @@ const ProjectCarousel: React.FC = () => {
   }
 
   return (
-    <div className="w-full">
+    <div className="mx-auto mt-6 w-full max-w-7xl">
       {jobs.length === 0 ? (
-        <div className="bg-background rounded-lg border border-border p-8 text-center">
-          <SparklesIcon className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
-          <h3 className="text-xl font-medium mb-2">No wedding gigs yet</h3>
-          <p className="text-muted-foreground mb-4">
-            You haven&apos;t posted any wedding gigs yet.
-          </p>
-          <Link
-            href="/client/post-job"
-            className="inline-flex bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-2 rounded-md transition-colors"
-          >
-            Create your first wedding gig
-          </Link>
+        <div className="rounded-2xl border border-border bg-background px-6 py-14 text-center md:px-10">
+          <div className="mx-auto flex max-w-2xl flex-col items-center">
+            <SparklesIcon className="mb-4 h-16 w-16 text-muted-foreground" />
+            <h3 className="mb-2 text-4xl font-semibold">No wedding gigs yet</h3>
+            <p className="mb-6 text-muted-foreground">
+              You haven&apos;t posted any wedding gigs yet.
+            </p>
+            <Link
+              href="/client/post-job"
+              className="inline-flex items-center justify-center rounded-md bg-primary px-6 py-3 text-white transition-colors hover:bg-primary/90"
+            >
+              Create your first wedding gig
+            </Link>
+          </div>
         </div>
       ) : (
         <div className="relative">

@@ -1,7 +1,7 @@
 import "dotenv/config";
 import bcrypt from "bcryptjs";
 import mongoose from "mongoose";
-import { connectMongoDB } from "../app/lib/mongodb.js";
+import { connectMongoDB } from "../app/lib/mongodb";
 import Admin from "../models/admin";
 
 const requireEnv = (name: string): string => {

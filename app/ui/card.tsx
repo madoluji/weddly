@@ -10,7 +10,7 @@ const Card = ({ children, className }: CardProps) => {
   return (
     <>
       <div
-        className={`w-full border border-primary-500 p-6 rounded-lg ${className}`}
+        className={`w-full border border-primary-500 dark:border-dark-outline-variant dark:bg-dark-surface p-6 rounded-lg ${className}`}
       >
         {children}
       </div>

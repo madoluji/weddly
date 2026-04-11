@@ -5,6 +5,7 @@ export interface IVerificationToken extends Document {
     email: string;
     token: string;
     createdAt: Date;
+    expiresAt: Date;
 }
 
 // Define Schema
@@ -13,6 +14,8 @@ const verificationTokenSchema = new Schema<IVerificationToken>(
         email: {
             type: String,
             required: true,
+            lowercase: true,
+            trim: true,
         },
         token: {
             type: String,
@@ -21,11 +24,23 @@ const verificationTokenSchema = new Schema<IVerificationToken>(
         createdAt: {
             type: Date,
             default: Date.now,
-            expires: 86400, // 24 hours (MongoDB TTL Index)
+        },
+        expiresAt: {
+            type: Date,
+            default: () => new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours from now
         },
     },
-    { timestamps: true }
+    { timestamps: false }
 );
+
+// Create TTL index on expiresAt field
+verificationTokenSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
+
+// Create index on token field for faster queries
+verificationTokenSchema.index({ token: 1 }, { unique: true });
+
+// Create index on email field for faster queries
+verificationTokenSchema.index({ email: 1 });
 
 // Create & Export Model
 const VerificationToken =

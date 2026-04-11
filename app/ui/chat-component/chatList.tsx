@@ -150,14 +150,14 @@ const ChatList: React.FC<ChatListProps> = ({ density = "comfortable" }) => {
   };
 
   return (
-    <div className="relative h-full overflow-hidden rounded-2xl bg-white">
+    <div className="relative h-full overflow-hidden rounded-2xl bg-white dark:bg-dark-surface">
       {/* Search component */}
-      <div className={`border-b border-slate-200 bg-slate-50 ${density === "compact" ? "px-2.5 py-2.5" : "px-3 py-3"}`}>
+      <div className={`border-b border-slate-200 dark:border-dark-outline-variant bg-slate-50 dark:bg-dark-surface-container ${density === "compact" ? "px-2.5 py-2.5" : "px-3 py-3"}`}>
         <input
           onChange={inputHandler}
           type="text"
           placeholder="Search conversations"
-          className={`w-full rounded-xl border border-slate-200 bg-white text-sm text-slate-700 outline-none transition focus:border-primary-300 ${density === "compact" ? "px-2.5 py-2" : "px-3 py-2.5"}`}
+          className={`w-full rounded-xl border border-slate-200 dark:border-dark-outline-variant bg-white dark:bg-dark-surface text-sm text-slate-700 dark:text-dark-on-surface placeholder:text-slate-400 dark:placeholder:text-dark-on-surface-variant outline-none transition focus:border-primary-300 ${density === "compact" ? "px-2.5 py-2" : "px-3 py-2.5"}`}
         />
       </div>
 
@@ -169,7 +169,7 @@ const ChatList: React.FC<ChatListProps> = ({ density = "comfortable" }) => {
                 <div
                   key={index}
                   onClick={() => setChat(item)}
-                  className={`flex items-center gap-3 border-b border-slate-100 transition hover:bg-slate-50 ${density === "compact" ? "px-2.5 py-2.5" : "px-3 py-3"}`}
+                  className={`flex items-center gap-3 border-b border-slate-100 dark:border-dark-outline-variant transition hover:bg-slate-50 dark:hover:bg-dark-surface-container ${density === "compact" ? "px-2.5 py-2.5" : "px-3 py-3"}`}
                 >
                   <SafeImage
                     src={getAvatar(item.userData)}
@@ -179,7 +179,7 @@ const ChatList: React.FC<ChatListProps> = ({ density = "comfortable" }) => {
                     height={density === "compact" ? 40 : 48}
                   />
                   <div className="relative min-w-0 flex-1">
-                    <div className="truncate text-sm font-semibold text-slate-900">
+                    <div className="truncate text-sm font-semibold text-slate-900 dark:text-dark-on-surface">
                       {getDisplayName(item.userData)}
                     </div>
                   </div>
@@ -188,7 +188,7 @@ const ChatList: React.FC<ChatListProps> = ({ density = "comfortable" }) => {
             : chatData?.map((item: ChatDataItem, index: number) => (
                 <div
                   key={index}
-                  className={`flex items-center gap-3 border-b border-slate-100 transition hover:bg-slate-50 ${density === "compact" ? "px-2.5 py-2.5" : "px-3 py-3"}`}
+                  className={`flex items-center gap-3 border-b border-slate-100 dark:border-dark-outline-variant transition hover:bg-slate-50 dark:hover:bg-dark-surface-container ${density === "compact" ? "px-2.5 py-2.5" : "px-3 py-3"}`}
                   onClick={() => setChat(item)}
                 >
                   <SafeImage
@@ -199,7 +199,7 @@ const ChatList: React.FC<ChatListProps> = ({ density = "comfortable" }) => {
                     height={density === "compact" ? 40 : 48}
                   />
                   <div className="relative min-w-0 flex-1">
-                    <div className="truncate text-sm font-semibold text-slate-900">
+                    <div className="truncate text-sm font-semibold text-slate-900 dark:text-dark-on-surface">
                       {getDisplayName(item.userData)}
                       {!item.messageSeen &&
                         item.rId === item.lastMessageSender && (
@@ -209,7 +209,7 @@ const ChatList: React.FC<ChatListProps> = ({ density = "comfortable" }) => {
                         )}
                     </div>
                     <div
-                      className={`truncate text-xs text-slate-500 ${!item.messageSeen ? "font-semibold text-slate-700" : ""}`}
+                      className={`truncate text-xs text-slate-500 dark:text-dark-on-surface-variant ${!item.messageSeen ? "font-semibold text-slate-700 dark:text-dark-on-surface" : ""}`}
                     >
                       {item.rId === item.lastMessageSender ? "" : "You: "}
                       {item.lastMessage}

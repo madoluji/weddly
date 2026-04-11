@@ -246,11 +246,23 @@ export const authOptions: NextAuthOptions = {
           email?: string;
           lastName?: string;
           profilePicture?: string;
+          role?: string;
+          roles?: {
+            client?: boolean;
+            freelancer?: boolean;
+            venue?: boolean;
+          };
           user?: {
             name?: string;
             email?: string;
             lastName?: string;
             profilePicture?: string;
+            role?: string;
+            roles?: {
+              client?: boolean;
+              freelancer?: boolean;
+              venue?: boolean;
+            };
           };
         };
 
@@ -261,6 +273,8 @@ export const authOptions: NextAuthOptions = {
           lastName: updated.lastName ?? updated.user?.lastName ?? token.lastName,
           profilePicture:
             updated.profilePicture ?? updated.user?.profilePicture ?? token.profilePicture,
+          role: updated.role ?? updated.user?.role ?? token.role,
+          roles: updated.roles ?? updated.user?.roles ?? token.roles,
         };
       }
 

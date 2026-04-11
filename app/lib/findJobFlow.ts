@@ -4,7 +4,6 @@ export interface FindJobFilters {
   search: string;
   location: string;
   category: string;
-  experienceFilters: string[];
   minBudget: string;
   maxBudget: string;
   eventDate: string;
@@ -16,7 +15,6 @@ export interface FindJobInitialParams {
   title?: string;
   location?: string;
   category?: string;
-  experience?: string;
   minBudget?: string;
   maxBudget?: string;
   eventDate?: string;
@@ -27,7 +25,6 @@ export const defaultFindJobFilters: FindJobFilters = {
   search: "",
   location: "",
   category: "All Categories",
-  experienceFilters: [],
   minBudget: "",
   maxBudget: "",
   eventDate: "",
@@ -42,24 +39,12 @@ const normalizeSortBy = (sortBy?: string): SortBy => {
   return "newest";
 };
 
-const parseExperienceFilters = (value?: string): string[] => {
-  if (!value) {
-    return [];
-  }
-
-  return value
-    .split(",")
-    .map((item) => item.trim())
-    .filter((item) => item.length > 0);
-};
-
 export const toInitialFindJobFilters = (
   params?: FindJobInitialParams
 ): FindJobFilters => ({
   search: (params?.search || params?.title || "").trim(),
   location: (params?.location || "").trim(),
   category: (params?.category || "All Categories").trim() || "All Categories",
-  experienceFilters: parseExperienceFilters(params?.experience),
   minBudget: (params?.minBudget || "").trim(),
   maxBudget: (params?.maxBudget || "").trim(),
   eventDate: (params?.eventDate || "").trim(),
@@ -79,10 +64,6 @@ export const buildFindJobQueryParams = (filters: FindJobFilters): URLSearchParam
 
   if (filters.category !== "All Categories") {
     params.set("category", filters.category);
-  }
-
-  if (filters.experienceFilters.length > 0) {
-    params.set("experience", filters.experienceFilters.join(","));
   }
 
   if (filters.minBudget.trim().length > 0) {

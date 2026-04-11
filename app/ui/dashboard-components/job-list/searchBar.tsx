@@ -35,7 +35,7 @@ const SearchInput = () => {
           type="search"
           name="search"
           placeholder="Search wedding gigs by role, service, or style"
-          className="w-full border border-primary-300 block bg-white rounded-2xl py-3 pl-12 pr-4 text-success-600 outline-none placeholder:text-success-600/60 focus:ring-2 focus:ring-primary-400/70 focus:border-primary-500"
+          className="w-full border border-primary-300 dark:border-dark-outline-variant block bg-white dark:bg-dark-surface rounded-2xl py-3 pl-12 pr-4 text-success-600 dark:text-dark-on-surface outline-none placeholder:text-success-600/60 dark:placeholder:text-dark-on-surface-variant focus:ring-2 focus:ring-primary-400/70 focus:border-primary-500"
           onChange={(e) => {
             handleSearch(e.target.value); // Trigger search when input changes
           }}

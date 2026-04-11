@@ -19,8 +19,14 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         const userData = req.headers.get("user");
         const user = userData ? JSON.parse(userData) : null;
         const userFromDB = await User.findById(id);
-        if (!userFromDB || !userFromDB.emailVerified) {
+        if (!userFromDB) {
+            return NextResponse.json({ message: "User not found" }, { status: 404 });
+        }
+        if (!userFromDB.emailVerified) {
             return NextResponse.json({ message: "Unauthorized: email not verified" }, { status: 400 });
+        }
+        if (!userFromDB.kycVerified) {
+            return NextResponse.json({ message: "Unauthorized: KYC not verified" }, { status: 400 });
         }
 
         const { jobId, bidAmount, coverLetter, duration, attachments } = await req.json();

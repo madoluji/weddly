@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { connectMongoDB } from "@/app/lib/mongodb";
 import User from "@/models/user";
 import { getServerSession } from "next-auth";
@@ -7,9 +7,12 @@ import { getCacheValue, setCacheValue } from "@/app/lib/serverCache";
 
 const VERIFICATION_STATUS_TTL_MS = 60 * 1000;
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   const session = await getServerSession(authOptions);
   const id = session?.user.id;
+  const searchParams = new URL(req.url).searchParams;
+  const bypassCache = searchParams.has("t"); // If 't' parameter exists, bypass cache
+  
   try {
     await connectMongoDB();
 
@@ -21,17 +24,23 @@ export async function GET() {
     }
 
     const cacheKey = `verification-status:${id}`;
-    const cached = getCacheValue<{ emailVerified: boolean; kycVerified: boolean }>(
-      cacheKey
-    );
+    
+    // Only use cache if not bypassing
+    if (!bypassCache) {
+      const cached = getCacheValue<{ emailVerified: boolean; kycVerified: boolean }>(
+        cacheKey
+      );
 
-    if (cached) {
-      return NextResponse.json(cached, {
-        headers: {
-          "Cache-Control": "private, max-age=30, stale-while-revalidate=60",
-          "X-Cache": "HIT",
-        },
-      });
+      if (cached) {
+        return NextResponse.json(cached, {
+          headers: {
+            "Cache-Control": "private, max-age=30, stale-while-revalidate=60",
+            "X-Cache": "HIT",
+          },
+        });
+      }
+    } else {
+      console.log("📝 Bypassing cache for verification status due to cache buster");
     }
 
     const user = await User.findById(id)
@@ -47,12 +56,13 @@ export async function GET() {
       kycVerified: user.kycVerified,
     };
 
+    // Update cache
     setCacheValue(cacheKey, payload, VERIFICATION_STATUS_TTL_MS);
 
     return NextResponse.json(payload, {
       headers: {
         "Cache-Control": "private, max-age=30, stale-while-revalidate=60",
-        "X-Cache": "MISS",
+        "X-Cache": bypassCache ? "MISS (cache busted)" : "MISS",
       },
     });
   } catch (error) {

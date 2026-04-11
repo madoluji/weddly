@@ -1,7 +1,7 @@
 "use client";
 import { createContext, useEffect, useState, ReactNode, useMemo, useCallback } from "react";
 import { db, auth } from "../lib/firebase";
-import { doc, getDoc, onSnapshot, updateDoc } from "firebase/firestore";
+import { doc, getDoc, onSnapshot, setDoc, updateDoc } from "firebase/firestore";
 import { Job } from "../ui/dashboard-components/job-list/jobList";
 import useFirebaseAuth from "../hooks/useFirebaseAuth";
 
@@ -32,7 +32,7 @@ interface AppContextValue {
   setUserData: React.Dispatch<React.SetStateAction<UserData | null>>;
   chatData: ChatItem[] | null;
   setChatData: React.Dispatch<React.SetStateAction<ChatItem[] | null>>;
-  loadUserData: (uid: string) => Promise<void>;
+  loadUserData: (uid: string, seed?: Partial<UserData>) => Promise<void>;
   messages: any;
   setMessages: React.Dispatch<React.SetStateAction<any>>;
   messagesId: string | null;
@@ -73,14 +73,64 @@ const Appcontextprovider: React.FC<Props> = ({ children }) => {
   useFirebaseAuth();
 
   // 1. Fixed loadUserData (Removed the internal interval conflict)
-  const loadUserData = useCallback(async (uid: string): Promise<void> => {
+  const loadUserData = useCallback(async (uid: string, seed?: Partial<UserData>): Promise<void> => {
     try {
       const userRef = doc(db, "users", uid);
+      const userChatsRef = doc(db, "chats", uid);
       const userSnap = await getDoc(userRef);
+      const now = Date.now();
+
       if (userSnap.exists()) {
         const data = userSnap.data() as UserData;
         setUserData({ ...data, id: uid });
-        await updateDoc(userRef, { lastSeen: Date.now() });
+      } else {
+        const seededData: UserData = {
+          id: uid,
+          username:
+            (typeof seed?.username === "string" && seed.username) ||
+            (typeof seed?.name === "string" && seed.name) ||
+            "User",
+          name:
+            (typeof seed?.name === "string" && seed.name) ||
+            (typeof seed?.username === "string" && seed.username) ||
+            "User",
+          email: typeof seed?.email === "string" ? seed.email : undefined,
+          avatar:
+            (typeof seed?.avatar === "string" && seed.avatar) ||
+            (typeof seed?.profilePicture === "string" && seed.profilePicture) ||
+            "/images/image.png",
+          profilePicture:
+            (typeof seed?.profilePicture === "string" && seed.profilePicture) ||
+            (typeof seed?.avatar === "string" && seed.avatar) ||
+            "/images/image.png",
+          lastSeen: now,
+          lastseen: now,
+        };
+
+        await setDoc(userRef, seededData, { merge: true });
+        setUserData(seededData);
+      }
+
+      // Keep heartbeat fields normalized and present regardless of first/returning login.
+      await setDoc(
+        userRef,
+        {
+          lastSeen: now,
+          lastseen: now,
+        },
+        { merge: true }
+      );
+
+      // Backfill only when chats doc is missing; do not overwrite existing chatsData.
+      const userChatsSnap = await getDoc(userChatsRef);
+      if (!userChatsSnap.exists()) {
+        await setDoc(
+          userChatsRef,
+          {
+            chatsData: [],
+          },
+          { merge: true }
+        );
       }
     } catch (error) {
       console.error("Error loading user data:", error);
@@ -94,7 +144,14 @@ const Appcontextprovider: React.FC<Props> = ({ children }) => {
     const userRef = doc(db, "users", userData.id);
     const intervalId = setInterval(async () => {
       if (auth.currentUser) {
-        await updateDoc(userRef, { lastSeen: Date.now() });
+        await setDoc(
+          userRef,
+          {
+            lastSeen: Date.now(),
+            lastseen: Date.now(),
+          },
+          { merge: true }
+        );
       }
     }, 60000); // Increased to 60s to prevent network spam
 

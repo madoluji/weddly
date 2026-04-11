@@ -67,6 +67,10 @@ const FreelancerList = ({ bestMatches, savedFreelancers, query }: Props) => {
           },
           next: { revalidate: 3600 },
         });
+        if (response.status === 429) {
+          setData([]);
+          return;
+        }
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }

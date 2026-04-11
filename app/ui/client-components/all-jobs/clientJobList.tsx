@@ -47,10 +47,15 @@ const AllJobsList: React.FC<AllJobsListProps> = ({ userId }) => {
     setIsLoading(true)
     try {
       const response = await fetchWithAuth(`/api/fetchJobs?userId=${userId}`)
+      if (!response.ok) {
+        throw new Error(`Failed to fetch jobs: ${response.status}`)
+      }
+
       const data = await response.json()
-      setJobs(data.jobs)
+      setJobs(Array.isArray(data?.jobs) ? data.jobs : [])
     } catch (error) {
       console.error("Error fetching jobs:", error)
+      setJobs([])
     } finally {
       setIsLoading(false)
     }
