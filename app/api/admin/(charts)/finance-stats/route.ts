@@ -1,11 +1,17 @@
 "use server";
 
+import { authorizeAdminRequest } from "@/app/lib/adminRouteAuth";
 import { connectMongoDB } from "@/app/lib/mongodb";
 import Payment from "@/models/payment";
 import User from "@/models/user"; // Assuming you have a User model
 import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(req: NextRequest) {
+    const { response } = authorizeAdminRequest(req);
+    if (response) {
+        return response;
+    }
+
     try {
         await connectMongoDB();
         const url = new URL(req.url);

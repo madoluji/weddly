@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "react";
 import { useAuth } from "@/app/providers";
 import SkeletonProfileCard from "./skeletons/skeletonProfileCard";
 import SafeImage from "@/app/ui/shared/SafeImage";
-import { fetchWithAuth } from "@/app/lib/fetchWIthAuth";
+import { useDashboardCards } from "./DashboardCardsProvider";
 
 interface Props {
   mode: string;
@@ -15,42 +15,29 @@ const ProfileCard = ({ mode }: Props) => {
   const { session, status } = useAuth();
   const [displayName, setDisplayName] = useState("");
   const [displayPicture, setDisplayPicture] = useState("");
+  const { data, loading } = useDashboardCards();
 
   useEffect(() => {
-    let mounted = true;
-
     const fallbackName = `${session?.user?.name || ""} ${session?.user?.lastName || ""}`.trim();
     if (fallbackName) setDisplayName(fallbackName);
     if (session?.user?.profilePicture) setDisplayPicture(session.user.profilePicture);
 
-    const loadLatestUser = async () => {
-      try {
-        const res = await fetchWithAuth("/api/user?fields=name,lastName,profilePicture");
-        if (!res.ok) return;
-
-        const user = await res.json();
-        if (!mounted) return;
-
-        const nextName = `${user?.name || ""} ${user?.lastName || ""}`.trim();
-        if (nextName) setDisplayName(nextName);
-        if (user?.profilePicture) setDisplayPicture(user.profilePicture);
-      } catch {
-        // Keep session fallback when the user endpoint is temporarily unavailable.
-      }
-    };
-
-    if (session?.user?.id) {
-      loadLatestUser();
+    if (data?.profile) {
+      const nextName = `${data.profile.name || ""} ${data.profile.lastName || ""}`.trim();
+      if (nextName) setDisplayName(nextName);
+      if (data.profile.profilePicture) setDisplayPicture(data.profile.profilePicture);
     }
-
-    return () => {
-      mounted = false;
-    };
-  }, [session?.user?.id, session?.user?.lastName, session?.user?.name, session?.user?.profilePicture]);
+  }, [
+    data?.profile,
+    session?.user?.id,
+    session?.user?.lastName,
+    session?.user?.name,
+    session?.user?.profilePicture,
+  ]);
   // const { data: user } = useFetch<User>(`user/${session?.user.id}`);
 
   // If the session status is loading, return a skeleton component
-  if (status === "loading") {
+  if (status === "loading" || loading) {
     return <SkeletonProfileCard />;
   }
 

@@ -1,10 +1,10 @@
 "use client";
 import { useEffect, useState } from "react";
 import StarRating from "./starRating";
-import { fetchWithAuth } from "@/app/lib/fetchWIthAuth";
 import SafeImage from "@/app/ui/shared/SafeImage";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/24/outline";
+import { useDashboardCards } from "../DashboardCardsProvider";
 
 interface Review {
   reviewerId: {
@@ -17,43 +17,13 @@ interface Review {
 }
 
 const ReviewsCard = () => {
-  // --- Missing State Variables Added Here ---
   const [recentReviews, setRecentReviews] = useState<Review[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { data, loading, error } = useDashboardCards();
 
-  // Merged the two useEffects into one clean function
   useEffect(() => {
-    const fetchReviews = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        const response = await fetchWithAuth("/api/reviews?recentReview=true");
-
-        if (!response.ok) {
-          throw new Error(`HTTP error! Status: ${response.status}`);
-        }
-
-        const data = await response.json();
-        
-        // Ensure we are accessing the correct property from your API response
-        if (data && Array.isArray(data.recentReviews)) {
-          setRecentReviews(data.recentReviews);
-        } else {
-          console.error("Unexpected response format:", data);
-          setError("Unexpected data format received.");
-        }
-      } catch (err) {
-        console.error("Error fetching reviews:", err);
-        setError("Unable to load reviews. Please try again later.");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchReviews();
-  }, []);
+    setRecentReviews(Array.isArray(data?.recentReviews) ? data.recentReviews : []);
+  }, [data?.recentReviews]);
 
   const handleNext = () => {
     if (recentReviews.length <= 2) return;
@@ -106,7 +76,7 @@ const ReviewsCard = () => {
         {loading && <p className="text-sm text-slate-400">Loading reviews...</p>}
 
         {/* Error State */}
-        {error && <p className="text-sm text-slate-500">{error}</p>}
+        {error && <p className="text-sm text-slate-500">Unable to load reviews. Please try again later.</p>}
 
         <AnimatePresence mode="wait">
           {!loading && !error && (

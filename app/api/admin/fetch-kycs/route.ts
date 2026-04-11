@@ -1,8 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import KYC from "@/models/kyc";
 import { connectMongoDB } from "@/app/lib/mongodb";
+import { authorizeAdminRequest } from "@/app/lib/adminRouteAuth";
 
 export async function GET(req: NextRequest) {
+    const { response } = authorizeAdminRequest(req);
+    if (response) {
+        return response;
+    }
+
     await connectMongoDB();
 
     try {

@@ -1,6 +1,7 @@
 "use client";
 import useFetch from "@/app/hooks/useFetch";
 import { CalendarDaysIcon, UserIcon } from "@heroicons/react/24/outline";
+import SafeImage from "@/app/ui/shared/SafeImage";
 
 type Data = {
   _id: string;
@@ -16,6 +17,7 @@ type Data = {
   statusHistory: any;
   createdAt: string;
   fileUrls: string[] | [];
+  profilePicture?: string | null;
 };
 
 export default function JobDetails({ jobId }: { jobId: string }) {
@@ -110,8 +112,18 @@ export default function JobDetails({ jobId }: { jobId: string }) {
         <div>
           <h1 className="text-2xl font-bold">{job.title}</h1>
           <div className="flex items-center mb-4">
-            <div className="h-12 w-12 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 mr-3">
-              <UserIcon className="h-6 w-6" />
+            <div className="h-12 w-12 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 mr-3 overflow-hidden">
+              {job?.profilePicture ? (
+                <SafeImage
+                  src={job.profilePicture}
+                  alt={`${job?.fullName || "Client"} profile picture`}
+                  width={48}
+                  height={48}
+                  className="h-12 w-12 object-cover"
+                />
+              ) : (
+                <UserIcon className="h-6 w-6" />
+              )}
             </div>
             <div>
               <p className="font-medium">{job?.fullName}</p>

@@ -3,21 +3,16 @@ import { Bars3Icon, XMarkIcon } from "@heroicons/react/24/solid";
 import clsx from "clsx";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useAuth } from "@/app/providers";
-import { fetchWithAuth } from "@/app/lib/fetchWIthAuth";
-
-type UserRoles = {
-  freelancer?: boolean;
-  client?: boolean;
-  venue?: boolean;
-};
+import { useUserAccess } from "../UserAccessProvider";
 
 const MenuBar = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const [roles, setRoles] = useState<UserRoles | null>(null);
   const currentPath = usePathname();
-  const { session, status } = useAuth();
+  const { session } = useAuth();
+  const { data: userAccess } = useUserAccess();
+  const roles = userAccess?.roles ?? null;
 
   const isFreelancerContext =
     currentPath.startsWith("/user") || currentPath.startsWith("/search/jobs");
@@ -29,42 +24,6 @@ const MenuBar = () => {
   const clientChatHref = session?.user?.id
     ? `/client/chatroom/${session.user.id}`
     : "/client/chatroom/0";
-
-  useEffect(() => {
-    let isMounted = true;
-
-    const loadRoles = async () => {
-      if (status !== "authenticated") {
-        if (isMounted) {
-          setRoles(null);
-        }
-        return;
-      }
-
-      try {
-        const response = await fetchWithAuth("/api/user?fields=roles", {
-          method: "GET",
-        });
-
-        if (!response.ok) {
-          return;
-        }
-
-        const data = await response.json();
-        if (isMounted) {
-          setRoles(data?.roles ?? null);
-        }
-      } catch (error) {
-        console.error("Failed to fetch user roles:", error);
-      }
-    };
-
-    loadRoles();
-
-    return () => {
-      isMounted = false;
-    };
-  }, [status]);
 
   return (
     <div className="flex-col ">

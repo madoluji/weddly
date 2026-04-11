@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { createFirebaseUser, db, storage } from "../../../lib/firebase";
 import SafeImage from "@/app/ui/shared/SafeImage";
+import { PhotoIcon } from "@heroicons/react/24/outline";
 
 import { doc, setDoc } from "firebase/firestore";
 import { useAuth } from "@/app/providers";
@@ -86,23 +87,24 @@ const ProfileUploadForm = () => {
   };
 
   const [file, setFile] = useState<File | null>(null);
-  const [preview, setPreview] = useState<string>("/image1.png");
+  const [preview, setPreview] = useState<string>("");
+  const [statusMessage, setStatusMessage] = useState("");
+  const [statusType, setStatusType] = useState<"success" | "error" | "" >("");
 
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
       setFile(file);
-      // Create instant local preview via URL.createObjectURL
       setPreview(URL.createObjectURL(file));
     }
   };
 
   const handleRemoveFile = () => {
-    setFile(null);
-    setPreview("/images/image.png");
     if (preview.startsWith("blob:")) {
       URL.revokeObjectURL(preview);
     }
+    setFile(null);
+    setPreview("");
   };
 
   // Cleanup preview URL on component unmount
@@ -148,7 +150,8 @@ const ProfileUploadForm = () => {
       );
 
       if (response.ok) {
-        alert("Portfolio submitted successfully!");
+        setStatusType("success");
+        setStatusMessage("Portfolio submitted successfully!");
         setFormData(updatedFormData);
 
         await updateSession({
@@ -157,11 +160,13 @@ const ProfileUploadForm = () => {
 
         router.push("/signup/usermode-select");
       } else {
-        alert("Error submitting portfolio.");
+        setStatusType("error");
+        setStatusMessage("Error submitting portfolio. Please try again.");
       }
     } catch (error) {
       console.error("An error occurred while submitting the form", error);
-      alert("Error submitting portfolio.");
+      setStatusType("error");
+      setStatusMessage("Error submitting portfolio. Please try again.");
     } finally {
       setUploading(false);
     }
@@ -185,39 +190,63 @@ const ProfileUploadForm = () => {
       <form className="mt-4" onSubmit={handleSubmit}>
         <div className="grid grid-cols-1 lg:grid-cols-[auto_1fr] gap-8 lg:gap-12">
           {/* Left column – Photo upload */}
-          <div className="flex flex-col items-center lg:items-start overflow-visible">
-            <div className="relative rounded-full w-[150px] h-[150px] overflow-hidden ring-4 ring-primary-100 ring-offset-2">
-              <SafeImage
-                src={preview}
-                alt="Profile preview"
-                width={150}
-                height={150}
-              />
-              {file && (
-                <button
-                  onClick={handleRemoveFile}
-                  className="absolute top-1 right-1 text-xs bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center shadow-md hover:bg-red-600 transition-colors"
-                  type="button"
-                  aria-label="Remove photo"
-                >
-                  ✕
-                </button>
-              )}
-            </div>
-
-            <input
-              type="file"
-              accept="image/*"
-              onChange={handleFileChange}
-              className="hidden"
-              id="profile-upload"
-            />
+          <div className="flex flex-col items-center lg:items-start">
             <label
               htmlFor="profile-upload"
-              className="cursor-pointer border-primary-500 border-2 text-primary-500 px-5 py-2.5 rounded-lg mt-5 inline-block text-sm font-medium hover:bg-primary-500 hover:text-white transition-colors whitespace-nowrap"
+              className="group relative flex h-[190px] w-[190px] cursor-pointer items-center justify-center rounded-full border-2 border-dashed border-slate-300 bg-slate-50 transition hover:border-primary-500"
             >
-              {file ? "Change Photo" : "+ Upload Photo"}
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleFileChange}
+                className="hidden"
+                id="profile-upload"
+              />
+
+              {file && preview ? (
+                <>
+                  <div className="absolute inset-0 overflow-hidden rounded-full">
+                    <SafeImage
+                      src={preview}
+                      alt="Profile preview"
+                      width={190}
+                      height={190}
+                      className="object-cover h-full w-full"
+                    />
+                  </div>
+                  <div className="absolute inset-0 rounded-full bg-slate-900/15 opacity-0 transition group-hover:opacity-100 flex items-center justify-center">
+                    <span className="rounded-full bg-white/90 px-3 py-1 text-xs font-semibold text-slate-900">
+                      Change photo
+                    </span>
+                  </div>
+                </>
+              ) : (
+                <div className="flex flex-col items-center justify-center gap-3 text-center px-4">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary-500 text-white shadow-sm">
+                    <PhotoIcon className="h-6 w-6" />
+                  </div>
+                  <div className="text-sm font-semibold text-slate-900">Upload Photo</div>
+                  <div className="text-xs text-slate-500">
+                    Add a clear headshot in JPG or PNG format.
+                  </div>
+                </div>
+              )}
             </label>
+
+            {file && (
+              <button
+                onClick={handleRemoveFile}
+                className="mt-4 rounded-full border border-slate-300 bg-white px-4 py-2 text-sm text-slate-700 shadow-sm transition hover:bg-slate-50"
+                type="button"
+              >
+                Remove photo
+              </button>
+            )}
+
+            <p className="mt-4 max-w-[220px] text-sm text-slate-500">
+              A professional photo helps you stand out and builds trust with
+              venues and vendors.
+            </p>
           </div>
 
           {/* Right column – Form fields */}
@@ -417,6 +446,18 @@ const ProfileUploadForm = () => {
                 )}
                 {uploading ? "Publishing..." : "Publish Profile"}
               </button>
+
+              {statusMessage && (
+                <div
+                  className={`mt-4 rounded-xl px-4 py-3 text-sm font-medium ${
+                    statusType === "success"
+                      ? "bg-emerald-50 text-emerald-700 border border-emerald-100"
+                      : "bg-rose-50 text-rose-700 border border-rose-100"
+                  }`}
+                >
+                  {statusMessage}
+                </div>
+              )}
             </div>
           </div>
         </div>

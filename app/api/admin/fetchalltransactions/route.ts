@@ -1,9 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { connectMongoDB } from '@/app/lib/mongodb';
+import { authorizeAdminRequest } from '@/app/lib/adminRouteAuth';
 import Payment from '@/models/payment';
 import Jobs from '@/models/jobs';
 
 export async function GET(req: NextRequest) {
+    const { response } = authorizeAdminRequest(req);
+    if (response) {
+        return response;
+    }
+
     await connectMongoDB();
 
     try {
@@ -21,5 +27,10 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
+    const { response } = authorizeAdminRequest(req);
+    if (response) {
+        return response;
+    }
+
     return NextResponse.json({ message: `Method ${req.method} Not Allowed` }, { status: 405 });
 }

@@ -16,11 +16,23 @@ async function sendEmail(email: string, token: string) {
     const mailOptions = {
         from: process.env.EMAIL_USER,
         to: email,
-        subject: "Welcome to Hey Job!",
-        html: `<p>Click the link below to verify your email:</p>
-           <div style="display: flex; justify-content: center; background-color: #f0f0f0; padding: 20px;">
-             <a href="${process.env.NEXTAUTH_URL}/verify?token=${token}" style="display: inline-block; padding: 10px 20px; font-size: 16px; color: #ffffff; background-color: #007bff; text-decoration: none; border-radius: 5px;">Verify Email</a>
-           </div>`,
+        subject: "Welcome to Weddly — Verify Your Email",
+        html: `
+          <div style="font-family: 'Helvetica Neue', Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e1e1e1; border-radius: 8px; overflow: hidden;">
+            <div style="background-color: #2f5f4a; padding: 25px; text-align: center;">
+              <h1 style="color: #ffffff; margin: 0; font-size: 24px;">Weddly</h1>
+            </div>
+            <div style="padding: 35px 40px; background-color: #ffffff;">
+              <p style="color: #333; font-size: 16px;">Please verify your email address to get started on Weddly.</p>
+              <div style="text-align: center; margin: 30px 0;">
+                <a href="${process.env.NEXTAUTH_URL}/verify?token=${token}" style="background-color: #2f5f4a; color: #ffffff; padding: 14px 30px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: 600; font-size: 16px;">Verify Email</a>
+              </div>
+              <p style="color: #777; font-size: 13px;">If you didn't create an account, you can safely ignore this email.</p>
+            </div>
+            <div style="background-color: #f9f9f9; padding: 20px; text-align: center; border-top: 1px solid #eee;">
+              <p style="color: #777; font-size: 13px; margin: 0;">© ${new Date().getFullYear()} Weddly. All rights reserved.</p>
+            </div>
+          </div>`,
     };
 
     await transporter.sendMail(mailOptions);

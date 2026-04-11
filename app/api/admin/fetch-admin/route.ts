@@ -1,13 +1,16 @@
 import { connectMongoDB } from "@/app/lib/mongodb";
+import { authorizeAdminRequest } from "@/app/lib/adminRouteAuth";
 import Admin from "@/models/admin";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(req: NextRequest) {
+    const { user, response } = authorizeAdminRequest(req);
+    if (response) {
+        return response;
+    }
+
     await connectMongoDB();
-    const userData = req.headers.get("user");
-    const user = userData ? JSON.parse(userData) : null;
-
-
+    const currentAdminId = user?.id || user?._id;
 
     const searchQuery = req.nextUrl.searchParams.get('searchQuery');
     const roleFilter = req.nextUrl.searchParams.get('roleFilter');
@@ -20,12 +23,12 @@ export async function GET(req: NextRequest) {
 
         if (currentUser) {
 
-            const admins = await Admin.findOne({ _id: user.id });
+            const admins = await Admin.findOne({ _id: currentAdminId });
             return NextResponse.json(admins);
         }
 
         // Build query with filters
-        const query: any = { _id: { $ne: user._id } }; // Exclude the current user
+        const query: any = currentAdminId ? { _id: { $ne: currentAdminId } } : {};
 
         if (searchQuery) {
             query.$or = [

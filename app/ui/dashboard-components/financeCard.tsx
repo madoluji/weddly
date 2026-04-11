@@ -1,43 +1,13 @@
 "use client";
 
-import { fetchWithAuth } from "@/app/lib/fetchWIthAuth";
-import { useAuth } from "@/app/providers";
-import React, { useEffect, useState } from "react";
+import React from "react";
 import FinanceSkeletonCard from "./skeletons/financeSkeletonCard"; // Assuming FinanceSkeletonCard is the skeleton component
+import { useDashboardCards } from "./DashboardCardsProvider";
 
 const FinanceCard = () => {
-  const { session } = useAuth();
-  const userId = session?.user.id;
-
-  const [earnings, setEarnings] = useState(0);
-  const [expenses, setExpenses] = useState(0);
-  const [loading, setLoading] = useState(true); // Loading state
-
-  useEffect(() => {
-    if (!userId) return;
-
-    const fetchPayments = async () => {
-      try {
-        setLoading(true); // Start loading
-        const response = await fetchWithAuth(`/api/fetchpayment/${userId}`, {
-          next: { revalidate: 3600 }, // Supports Next.js revalidation
-        });
-
-        const data = await response.json();
-
-        if (data) {
-          setEarnings(data.totalFreelancerAmount);
-          setExpenses(data.totalClientAmount);
-        }
-      } catch (error) {
-        console.error("Error fetching payments:", error);
-      } finally {
-        setLoading(false); // Stop loading
-      }
-    };
-
-    fetchPayments();
-  }, [userId]);
+  const { data, loading } = useDashboardCards();
+  const earnings = data?.finances.totalFreelancerAmount || 0;
+  const expenses = data?.finances.totalClientAmount || 0;
 
   if (loading) {
     return <FinanceSkeletonCard />;

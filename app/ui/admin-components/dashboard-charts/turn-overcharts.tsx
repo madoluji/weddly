@@ -20,6 +20,9 @@ interface ChartProps {
 const TurnOverChart = ({ timeframe }: ChartProps) => {
   const [chartData, setChartData] = useState<ChartData[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
+  const hasData = chartData.length > 0;
+  const hasTrendData = chartData.length > 1;
+  const singlePoint = chartData[0];
 
   useEffect(() => {
     async function fetchChartData() {
@@ -92,22 +95,57 @@ const TurnOverChart = ({ timeframe }: ChartProps) => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
+          {!hasData && (
+            <div className="h-60 flex items-center justify-center text-sm text-gray-500">
+              No financial analytics data available for this timeframe.
+            </div>
+          )}
+          {hasData && !hasTrendData && (
+            <p className="mb-3 text-sm text-amber-600">
+              Only one data point found. Switch timeframe to view a trend.
+            </p>
+          )}
+          {hasData && !hasTrendData && singlePoint && (
+            <div className="mb-4 rounded-lg border border-gray-200 bg-gray-50 p-4">
+              <p className="text-sm text-gray-600 mb-3">Snapshot for {singlePoint._id}</p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+                <div className="rounded border border-blue-200 bg-white p-3">
+                  <p className="text-gray-500">Turnover</p>
+                  <p className="text-xl font-semibold text-blue-600">Rs {singlePoint.turnOver.toLocaleString("en-IN")}</p>
+                </div>
+                <div className="rounded border border-emerald-200 bg-white p-3">
+                  <p className="text-gray-500">Freelancer Earnings</p>
+                  <p className="text-xl font-semibold text-emerald-600">Rs {singlePoint.freelancerEarnings.toLocaleString("en-IN")}</p>
+                </div>
+                <div className="rounded border border-amber-200 bg-white p-3">
+                  <p className="text-gray-500">Platform Revenue</p>
+                  <p className="text-xl font-semibold text-amber-600">Rs {singlePoint.platformRevenue.toLocaleString("en-IN")}</p>
+                </div>
+                <div className="rounded border border-lime-200 bg-white p-3">
+                  <p className="text-gray-500">Completed Transactions</p>
+                  <p className="text-xl font-semibold text-lime-600">{singlePoint.completedTransactions}</p>
+                </div>
+              </div>
+            </div>
+          )}
           {/* Area Chart */}
-          <AreaChart
-            data={chartData}
-            categories={[
-              "turnOver",
-              "freelancerEarnings",
-              "platformRevenue",
-              "completedTransactions",
-            ]}
-            index="_id"
-            colors={["blue", "emerald", "amber", "lime"]}
-            yAxisWidth={50}
-            title="Turn Over Metrics"
-            xAxisLabel="Time"
-            yAxisLabel="Amount"
-          />
+          {hasTrendData && (
+            <AreaChart
+              data={chartData}
+              categories={[
+                "turnOver",
+                "freelancerEarnings",
+                "platformRevenue",
+                "completedTransactions",
+              ]}
+              index="_id"
+              colors={["blue", "emerald", "amber", "lime"]}
+              yAxisWidth={50}
+              title="Turn Over Metrics"
+              xAxisLabel="Time"
+              yAxisLabel="Amount"
+            />
+          )}
 
           {/* Display Data as Text Below Chart */}
         </motion.div>

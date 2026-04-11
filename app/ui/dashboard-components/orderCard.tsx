@@ -1,44 +1,17 @@
 "use client"; // Required for Next.js client components
 
-import { useEffect, useState } from "react";
 import { CheckBadgeIcon, ClockIcon } from "@heroicons/react/24/solid";
-import { fetchWithAuth } from "@/app/lib/fetchWIthAuth";
-import { useAuth } from "@/app/providers";
 import OrderSkeletonCard from "./skeletons/orderSkeletonCard"; // Assuming OrderSkeletonCard is the skeleton component
+import { useDashboardCards } from "./DashboardCardsProvider";
 
 interface Props {
   mode: string;
 }
 
 const OrderCard = ({ mode }: Props) => {
-  const [activeCount, setActiveCount] = useState(0);
-  const [completeCount, setCompleteCount] = useState(0);
-  const [loading, setLoading] = useState(true); // Loading state
-
-  const { session } = useAuth();
-  const userId = session?.user?.id;
-
-  useEffect(() => {
-    const fetchContractData = async () => {
-      try {
-        setLoading(true); // Start loading
-        const response = await fetchWithAuth(
-          `/api/contractsFetchwithcount?userId=${userId}`
-        );
-        const data = await response.json();
-        setActiveCount(data.activeCount || 0);
-        setCompleteCount(data.completeCount || 0);
-      } catch (error) {
-        console.error("Error fetching contract data:", error);
-      } finally {
-        setLoading(false); // Stop loading
-      }
-    };
-
-    if (userId) {
-      fetchContractData();
-    }
-  }, [userId]);
+  const { data, loading } = useDashboardCards();
+  const activeCount = data?.counts.activeCount || 0;
+  const completeCount = data?.counts.completeCount || 0;
 
   if (loading) {
     return <OrderSkeletonCard />;

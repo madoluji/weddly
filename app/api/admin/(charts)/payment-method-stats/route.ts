@@ -1,8 +1,14 @@
 import { connectMongoDB } from "@/app/lib/mongodb";
+import { authorizeAdminRequest } from "@/app/lib/adminRouteAuth";
 import Payment from "@/models/payment";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(req: NextRequest) {
+    const { response } = authorizeAdminRequest(req);
+    if (response) {
+        return response;
+    }
+
     try {
         await connectMongoDB();
         const url = new URL(req.url);

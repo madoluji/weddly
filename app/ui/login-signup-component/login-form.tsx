@@ -32,6 +32,37 @@ const LoginForm = () => {
     setIsSubmitting(true);
 
     try {
+      const checkEmailResponse = await fetch(
+        `/api/auth/check-email?email=${encodeURIComponent(email)}`
+      );
+
+      if (!checkEmailResponse.ok) {
+        const errorData = await checkEmailResponse.json().catch(() => null);
+        setError(
+          errorData?.message ||
+            "Please enter a valid email address before signing in."
+        );
+        setIsSubmitting(false);
+        return;
+      }
+
+      const { exists, isOAuth } = await checkEmailResponse.json();
+      if (!exists) {
+        setError(
+          "No account was found for this email. Please sign up to continue."
+        );
+        setIsSubmitting(false);
+        return;
+      }
+
+      if (isOAuth) {
+        setError(
+          "This account was created with Google or GitHub. Please use those buttons below to sign in."
+        );
+        setIsSubmitting(false);
+        return;
+      }
+
       const res = await signIn("credentials", {
         email,
         password,
@@ -39,14 +70,16 @@ const LoginForm = () => {
       });
 
       if (res?.error) {
-        setError("Invalid Credentials");
+        setError(
+          "We couldn’t sign you in. Please check your password and try again."
+        );
         setIsSubmitting(false);
         return;
       }
 
       router.push("/");
     } catch (err) {
-      setError("An unexpected error occurred");
+      setError("An unexpected error occurred. Please try again later.");
       setIsSubmitting(false);
     }
   };

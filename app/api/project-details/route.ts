@@ -5,17 +5,32 @@ import ProjectDetails from "@/models/projectDetails";
 import Jobs from "@/models/jobs"; // Assuming this model exists
 import Contract from "@/models/contract"; // Assuming this model exists
 import { startSession } from "mongoose";
+import { deleteCacheValue, getCacheValue, setCacheValue } from "@/app/lib/serverCache";
+
+const PROJECT_DETAILS_TTL_MS = 60 * 1000;
 
 export async function GET(req: NextRequest) {
     try {
-        await connectMongoDB();
-
         const { searchParams } = new URL(req.url);
         const contractId = searchParams.get("contractId");
 
         if (!contractId) {
             return NextResponse.json({ message: "Missing contractId" }, { status: 400 });
         }
+
+        const cacheKey = `project-details:${contractId}`;
+        const cached = getCacheValue<{ message: string; project: unknown }>(cacheKey);
+        if (cached) {
+            return NextResponse.json(cached, {
+                status: 200,
+                headers: {
+                    "Cache-Control": "private, max-age=30, stale-while-revalidate=60",
+                    "X-Cache": "HIT",
+                },
+            });
+        }
+
+        await connectMongoDB();
 
         const project = await ProjectDetails.findOne({ contractId })
             .select(
@@ -28,7 +43,15 @@ export async function GET(req: NextRequest) {
             .lean();
 
         if (project) {
-            return NextResponse.json({ message: "Project retrieved successfully", project }, { status: 200 });
+            const payload = { message: "Project retrieved successfully", project };
+            setCacheValue(cacheKey, payload, PROJECT_DETAILS_TTL_MS);
+            return NextResponse.json(payload, {
+                status: 200,
+                headers: {
+                    "Cache-Control": "private, max-age=30, stale-while-revalidate=60",
+                    "X-Cache": "MISS",
+                },
+            });
         }
 
         const contract = (await Contract.findById(contractId)
@@ -72,7 +95,16 @@ export async function GET(req: NextRequest) {
             deadline: contract.deadline,
         };
 
-        return NextResponse.json({ message: "Project retrieved successfully", project: projectObject }, { status: 200 });
+        const payload = { message: "Project retrieved successfully", project: projectObject };
+        setCacheValue(cacheKey, payload, PROJECT_DETAILS_TTL_MS);
+
+        return NextResponse.json(payload, {
+            status: 200,
+            headers: {
+                "Cache-Control": "private, max-age=30, stale-while-revalidate=60",
+                "X-Cache": "MISS",
+            },
+        });
     } catch (error) {
         console.error(error);
         return NextResponse.json({ message: "Internal server error" }, { status: 500 });
@@ -95,6 +127,8 @@ export async function PATCH(req: NextRequest) {
         if (!contractId || !updates) {
             return NextResponse.json({ message: "Missing contractId or updates" }, { status: 400 });
         }
+
+        const cacheKey = `project-details:${contractId}`;
 
         // Find the project by contractId and validate the user role.
         const project = (await ProjectDetails.findOne({ contractId })
@@ -318,6 +352,7 @@ export async function PATCH(req: NextRequest) {
             );
         }
 
+        deleteCacheValue(cacheKey);
         return NextResponse.json({ message: "Project updated successfully", project: updatedProject }, { status: 200 });
     } catch (error: any) {
         console.error(error);

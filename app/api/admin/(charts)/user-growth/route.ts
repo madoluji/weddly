@@ -1,4 +1,5 @@
 import { connectMongoDB } from "@/app/lib/mongodb";
+import { authorizeAdminRequest } from "@/app/lib/adminRouteAuth";
 import User from "@/models/user";
 import FreelancerInfo from "@/models/freelancerInfo";
 import ClientInfo from "@/models/clientinfo";
@@ -20,6 +21,11 @@ const monthNames = [
 export async function GET(
     req: NextRequest
 ) {
+    const { response } = authorizeAdminRequest(req);
+    if (response) {
+        return response;
+    }
+
     await connectMongoDB();
 
     try {

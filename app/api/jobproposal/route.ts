@@ -2,17 +2,32 @@ import { NextRequest, NextResponse } from "next/server";
 import { connectMongoDB } from "@/app/lib/mongodb";
 import Proposal from "@/models/proposal";
 import ClientInfo from "@/models/clientinfo";
+import { getCacheValue, setCacheValue } from "@/app/lib/serverCache";
+
+const JOB_PROPOSAL_TTL_MS = 60 * 1000;
 
 export async function GET(req: NextRequest) {
     try {
-        await connectMongoDB(); // Ensure DB connection
-
         // Extract query parameters
         const { searchParams } = new URL(req.url);
         const jobId = searchParams.get("jobId");
         const freelancerId = searchParams.get("freelancerId");
         const proposalId = searchParams.get("proposalId");
         const status = searchParams.get("status"); // Status filter: "all", "pending", "accepted", "rejected"
+
+        const cacheKey = `jobproposal:${searchParams.toString()}`;
+        const cached = getCacheValue<{ proposals: unknown[] }>(cacheKey);
+        if (cached) {
+            return NextResponse.json(cached, {
+                status: 200,
+                headers: {
+                    "Cache-Control": "private, max-age=30, stale-while-revalidate=60",
+                    "X-Cache": "HIT",
+                },
+            });
+        }
+
+        await connectMongoDB(); // Ensure DB connection
 
         // Define filter conditions dynamically
         const filter: any = {};
@@ -63,7 +78,16 @@ export async function GET(req: NextRequest) {
             };
         });
 
-        return NextResponse.json({ proposals: enrichedProposals }, { status: 200 });
+        const payload = { proposals: enrichedProposals };
+        setCacheValue(cacheKey, payload, JOB_PROPOSAL_TTL_MS);
+
+        return NextResponse.json(payload, {
+            status: 200,
+            headers: {
+                "Cache-Control": "private, max-age=30, stale-while-revalidate=60",
+                "X-Cache": "MISS",
+            },
+        });
 
     } catch (error) {
         console.error("Error fetching proposals:", error);

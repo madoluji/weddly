@@ -1,5 +1,7 @@
 import { getAuthSessionSnapshot } from "@/app/providers";
 
+const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
 export const fetchWithAuth = async (
     url: string,
     options: RequestInit & { next?: { revalidate?: number } } = {}
@@ -12,12 +14,37 @@ export const fetchWithAuth = async (
         ...(accessToken && { Authorization: `Bearer ${accessToken}` }),
     };
 
-    return fetch(url, {
+    const requestOptions = {
         ...options,
         headers: {
             ...headers,
-            ...(options.headers ?? {}), // Ensure headers exist
+            ...(options.headers ?? {}),
         },
-        next: options.next, // Pass the `next` object for revalidation if provided
-    });
+        next: options.next,
+    };
+
+    try {
+        return await fetch(url, requestOptions);
+    } catch (error) {
+        // Next.js dev restarts can cause a brief network outage in the browser.
+        if (typeof window !== "undefined") {
+            await wait(350);
+            try {
+                return await fetch(url, requestOptions);
+            } catch {
+                return new Response(
+                    JSON.stringify({
+                        success: false,
+                        message: "Network temporarily unavailable. Please retry.",
+                    }),
+                    {
+                        status: 503,
+                        headers: { "Content-Type": "application/json" },
+                    }
+                );
+            }
+        }
+
+        throw error;
+    }
 };

@@ -9,6 +9,7 @@ import {
   CurrencyRupeeIcon,
   UserIcon,
   KeyIcon,
+  ClipboardDocumentListIcon,
   ArrowLeftStartOnRectangleIcon,
   BackwardIcon,
 } from "@heroicons/react/24/outline";
@@ -16,6 +17,7 @@ import Image from "next/image";
 import { fetchWithAuth } from "@/app/lib/fetchWIthAuth";
 import { signOut } from "next-auth/react";
 import { useAuth } from "@/app/providers";
+import SafeImage from "@/app/ui/shared/SafeImage";
 
 interface NavItemProps {
   href: string;
@@ -30,8 +32,8 @@ const NavItem: React.FC<NavItemProps> = ({ href, icon, label, isActive }) => (
       href={href}
       className={`flex items-center space-x-4 p-3 rounded-lg transition ${
         isActive
-          ? "bg-yellow-400 text-black"
-          : "hover:bg-yellow-400 hover:text-black"
+          ? "bg-primary text-white"
+          : "hover:bg-primary hover:text-white"
       }`}
     >
       <span className="w-6 h-6">{icon}</span>
@@ -82,7 +84,7 @@ const SettingsSidebar: React.FC = () => {
         {/* Logo */}
         <div className="flex items-center justify-center px-4 mb-6">
           <Image
-            src="/logo/weddlylogo-v2.png"
+            src="/logo/weddlylogo.png"
             alt="logo"
             className="w-20 h-20 p-1"
             width={50}
@@ -92,8 +94,8 @@ const SettingsSidebar: React.FC = () => {
 
         {/* Admin Profile Section */}
         <div className="flex flex-col items-center px-4 py-4 border-b">
-          <Image
-            src="/images/image.png" // Change this to the admin's actual avatar URL
+          <SafeImage
+            src={session?.user?.profilePicture || "/images/image.png"}
             alt="Admin Avatar"
             className="w-14 h-14 rounded-full border-2 border-gray-300"
             width={50}
@@ -120,6 +122,14 @@ const SettingsSidebar: React.FC = () => {
               isActive={pathname === "/admin/settings/manage-admins"}
             />
           )}
+          {adminRole === "superadmin" && (
+            <NavItem
+              href="/admin/settings/audit-logs"
+              icon={<ClipboardDocumentListIcon className="w-6 h-6" />}
+              label="Audit Logs"
+              isActive={pathname === "/admin/settings/audit-logs"}
+            />
+          )}
 
           <NavItem
             href="/admin/settings/#"
@@ -141,7 +151,7 @@ const SettingsSidebar: React.FC = () => {
           <button
             onClick={() => signOut()}
             className={`flex items-center space-x-4 p-3 w-full rounded-lg transition
-              hover:bg-yellow-400 hover:text-black`}
+              hover:bg-primary hover:text-white`}
           >
             <ArrowLeftStartOnRectangleIcon className="h-6 w-6" />
             <span className="text-sm font-medium">Logout</span>

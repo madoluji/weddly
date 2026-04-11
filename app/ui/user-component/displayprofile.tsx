@@ -102,6 +102,7 @@ export default function DisplayProfile() {
   const searchParams = useSearchParams();
   const viewingUserId = searchParams.get("userId");
   const isOwnProfile = !viewingUserId && !!session?.user?.id;
+  const isClientViewer = !!session?.user?.roles?.client;
 
   const [userData, setUserData] = useState<UserInfo | null>(null);
   const [freelancerData, setFreelancerData] = useState<FreelancerInfo | null>(null);
@@ -595,13 +596,23 @@ export default function DisplayProfile() {
                       Available Now
                     </button>
                   )}
-                  <Link
-                    href="/search/jobs"
-                    className="inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2.5 text-xs font-semibold uppercase tracking-[0.14em] text-slate-700"
-                  >
-                    <EyeIcon className="h-4 w-4" />
-                    Find Jobs
-                  </Link>
+                  {isOwnProfile || !isClientViewer ? (
+                    <Link
+                      href="/search/jobs"
+                      className="inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2.5 text-xs font-semibold uppercase tracking-[0.14em] text-slate-700"
+                    >
+                      <EyeIcon className="h-4 w-4" />
+                      Find Jobs
+                    </Link>
+                  ) : (
+                    <Link
+                      href="/client/best-matches"
+                      className="inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2.5 text-xs font-semibold uppercase tracking-[0.14em] text-slate-700"
+                    >
+                      <EyeIcon className="h-4 w-4" />
+                      Back to Matches
+                    </Link>
+                  )}
                 </div>
               </div>
 

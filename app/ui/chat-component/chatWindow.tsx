@@ -665,7 +665,7 @@ const ChatWindow: React.FC = () => {
           ) : (
             <div className={`chat-welcome rounded-2xl border border-slate-200 bg-white ${chatVisual ? "" : "hidden"}`}>
               <Image
-                src={"/logo/weddlylogo-v2.png"}
+                src={"/logo/weddlylogo.png"}
                 width={32}
                 height={32}
                 alt={"logo"}

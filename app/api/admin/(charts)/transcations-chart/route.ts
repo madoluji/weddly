@@ -1,11 +1,17 @@
 "use server";
 
 import { NextRequest, NextResponse } from "next/server";
+import { authorizeAdminRequest } from "@/app/lib/adminRouteAuth";
 
 import Payment from "@/models/payment";
 import { connectMongoDB } from "@/app/lib/mongodb";
 
 export async function GET(req: NextRequest) {
+    const { response } = authorizeAdminRequest(req);
+    if (response) {
+        return response;
+    }
+
     try {
         await connectMongoDB();
         const url = new URL(req.url);

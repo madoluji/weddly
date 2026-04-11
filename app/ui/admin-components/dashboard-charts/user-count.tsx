@@ -20,16 +20,31 @@ interface ChartProps {
 const AccountGrowthChart = ({ timeframe }: ChartProps) => {
   const [userGrowth, setUserGrowth] = useState<ChartData[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
+  const hasData = userGrowth.length > 0;
+  const hasTrendData = userGrowth.length > 1;
+  const singlePoint = userGrowth[0];
 
   useEffect(() => {
     async function fetchUserGrowth() {
       setLoading(true);
-      const res = await fetchWithAuth(
-        `/api/admin/user-growth?timeframe=${timeframe}`
-      );
-      const data: ChartData[] = await res.json();
-      setUserGrowth(data);
-      setLoading(false);
+      try {
+        const res = await fetchWithAuth(
+          `/api/admin/user-growth?timeframe=${timeframe}`
+        );
+
+        if (!res.ok) {
+          setUserGrowth([]);
+          return;
+        }
+
+        const data = await res.json();
+        setUserGrowth(Array.isArray(data) ? data : []);
+      } catch (error) {
+        console.error("Error fetching user growth data:", error);
+        setUserGrowth([]);
+      } finally {
+        setLoading(false);
+      }
     }
 
     fetchUserGrowth();
@@ -53,27 +68,57 @@ const AccountGrowthChart = ({ timeframe }: ChartProps) => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
+          {!hasData && (
+            <div className="h-60 flex items-center justify-center text-sm text-gray-500">
+              No account growth data available for this timeframe.
+            </div>
+          )}
+          {hasData && !hasTrendData && (
+            <p className="mb-3 text-sm text-amber-600">
+              Only one data point found. Switch timeframe to view a trend.
+            </p>
+          )}
+          {hasData && !hasTrendData && singlePoint && (
+            <div className="mb-4 rounded-lg border border-gray-200 bg-gray-50 p-4">
+              <p className="text-sm text-gray-600 mb-3">Snapshot for {singlePoint.date}</p>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm">
+                <div className="rounded border border-blue-200 bg-white p-3">
+                  <p className="text-gray-500">Users</p>
+                  <p className="text-xl font-semibold text-blue-600">{singlePoint.users ?? 0}</p>
+                </div>
+                <div className="rounded border border-emerald-200 bg-white p-3">
+                  <p className="text-gray-500">Freelancers</p>
+                  <p className="text-xl font-semibold text-emerald-600">{singlePoint.freelancers ?? 0}</p>
+                </div>
+                <div className="rounded border border-amber-200 bg-white p-3">
+                  <p className="text-gray-500">Clients</p>
+                  <p className="text-xl font-semibold text-amber-600">{singlePoint.clients ?? 0}</p>
+                </div>
+              </div>
+            </div>
+          )}
           {/* Area Chart */}
-          <AreaChart
-            data={userGrowth}
-            categories={["users", "freelancers", "clients"]}
-            index="date"
-            colors={["blue", "emerald", "amber"]}
-            yAxisWidth={50}
-            // animation={{ duration: 1000 }} // Smooth animation for charts
-            title="User Growth"
-            xAxisLabel="Date"
-            yAxisLabel="Users"
-          />
+          {hasTrendData && (
+            <AreaChart
+              data={userGrowth}
+              categories={["users", "freelancers", "clients"]}
+              index="date"
+              colors={["blue", "emerald", "amber"]}
+              yAxisWidth={50}
+              title="User Growth"
+              xAxisLabel="Date"
+              yAxisLabel="Users"
+            />
+          )}
           <p className="text-center flex gap-4 mt-6 text-sm">
             <span className="text-blue-500">
-              total users: {userGrowth[0].totalUsers}
+              total users: {singlePoint?.totalUsers ?? 0}
             </span>
             <span className="text-sucess-600">
-              total freelancers: {userGrowth[0].totalFreelancers}
+              total freelancers: {singlePoint?.totalFreelancers ?? 0}
             </span>{" "}
             <span className="text-primary-500">
-              total clients: {userGrowth[0].totalClients}
+              total clients: {singlePoint?.totalClients ?? 0}
             </span>
           </p>
         </motion.div>

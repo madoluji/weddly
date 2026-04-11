@@ -20,7 +20,7 @@ export default defineConfig({
   webServer: {
     command: "NEXT_PUBLIC_ENABLE_E2E=true npm run dev:app",
     url: baseURL,
-    reuseExistingServer: false,
+    reuseExistingServer: !process.env.CI,
     timeout: 180_000,
   },
 });

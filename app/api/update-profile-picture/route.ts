@@ -1,40 +1,43 @@
-import { NextApiRequest, NextApiResponse } from "next";
 import { connectMongoDB } from "@/app/lib/mongodb";
 import User from "@/models/user";
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
 import Admin from "@/models/admin";
 
 export async function POST(req: NextRequest) {
-    const session = await getServerSession();
     const userData = req.headers.get("user");
     const user = userData ? JSON.parse(userData) : null;
-    const role = session?.user.role;
+    const role = typeof user?.role === "string" ? user.role.toLowerCase() : "";
 
-    console.log("Session Data:", session);
-
-    if (!session || !session.user || !session.user.id) {
-        return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    if (!user || !(user.id || user._id)) {
+        return NextResponse.json({ message: "Unauthorized: Missing user context" }, { status: 401 });
     }
 
     try {
         const { profilePicture } = await req.json();
+        if (!profilePicture || typeof profilePicture !== "string") {
+            return NextResponse.json({ message: "Invalid profilePicture payload" }, { status: 400 });
+        }
 
-        connectMongoDB();
+        await connectMongoDB();
+        const targetId = user.id || user._id;
 
         if (role === "user") {
-            const updateResult = await User.updateOne({ _id: user.id }, { $set: { profilePicture: profilePicture } });
+            const updateResult = await User.updateOne({ _id: targetId }, { $set: { profilePicture } });
             if (updateResult.modifiedCount === 0) {
                 return NextResponse.json({ message: "No document updated" }, { status: 400 });
             }
 
         };
-        if (role === "admin") {
-            const updateResult = await Admin.updateOne({ _id: user.id }, { $set: { profilePicture: profilePicture } });
+        if (role === "useradmin" || role === "superadmin") {
+            const updateResult = await Admin.updateOne({ _id: targetId }, { $set: { profilePicture } });
             if (updateResult.modifiedCount === 0) {
                 return NextResponse.json({ message: "No document updated" }, { status: 400 });
             }
         };
+
+        if (role !== "user" && role !== "useradmin" && role !== "superadmin") {
+            return NextResponse.json({ message: "Forbidden: Unsupported role" }, { status: 403 });
+        }
 
         return NextResponse.json({ message: "successful" }, { status: 200 });
     } catch (error) {

@@ -35,6 +35,9 @@ interface Freelancer {
   saved: boolean;
   profilePicture: string;
   rating?: number;
+  upcomingJobsCount?: number;
+  hasDateConflict?: boolean;
+  availabilityStatus?: "available" | "conflict" | "unknown";
 }
 
 const FreelancerList = ({ bestMatches, savedFreelancers, query }: Props) => {
@@ -160,12 +163,30 @@ const FreelancerList = ({ bestMatches, savedFreelancers, query }: Props) => {
                 <StarRating rating={freelancer.rating || 0} />
               </div>
 
+              <div className="mt-2 flex flex-wrap items-center gap-2">
+                {freelancer.availabilityStatus === "available" && (
+                  <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700">
+                    Date available
+                  </span>
+                )}
+                {freelancer.availabilityStatus === "conflict" && (
+                  <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-700">
+                    Possible date conflict
+                  </span>
+                )}
+                {typeof freelancer.upcomingJobsCount === "number" && (
+                  <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
+                    Upcoming jobs: {freelancer.upcomingJobsCount}
+                  </span>
+                )}
+              </div>
+
               <div className="mt-2 flex justify-end">
                 <button
                   type="button"
                   onClick={(e) => {
                     e.stopPropagation();
-                    router.push(`/user/profile?userId=${freelancer.userId}`);
+                    router.push(`/client/freelancer-profile?userId=${freelancer.userId}`);
                   }}
                   className="rounded-xl bg-primary-700 px-4 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-white transition hover:bg-primary-800"
                 >

@@ -6,7 +6,6 @@ import { useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import clsx from "clsx";
-import { fetchWithAuth } from "@/app/lib/fetchWIthAuth";
 
 const LoginForm = () => {
   const [userName, setUserName] = useState("");
@@ -35,40 +34,14 @@ const LoginForm = () => {
       });
 
       if (res?.error) {
-        setError("Invalid Credentials");
+        setError(
+          res.error || "We couldn’t sign you in. Please check your username and password and try again."
+        );
         setIsSubmitting(false);
         return;
       }
 
-      // ✅ Fetch user data
-      const userRes = await fetchWithAuth(
-        `/api/admin/fetch-admin?userName=${userName}`
-      );
-      const userDataArray = await userRes.json();
-
-      console.log("Fetched User Data:", userDataArray); // Debugging
-
-      // ✅ Extract the first object from the array
-      const userData = userDataArray[0];
-
-      if (!userData) {
-        setError("User data not found");
-        setIsSubmitting(false);
-        return;
-      }
-
-      console.log("isFirstLogin Value:", userData.isFirstLogin);
-
-      // ✅ Check if user needs to change password
-      if (userData.isFirstLogin) {
-        console.log("Redirecting to change password...");
-        await new Promise((resolve) => setTimeout(resolve, 100)); // Ensure state updates
-        router.replace("/admin/change-password"); // ✅ Use `replace()` for forced navigation
-      } else {
-        console.log("Redirecting to admin panel...");
-        await new Promise((resolve) => setTimeout(resolve, 100));
-        router.replace("/admin");
-      }
+      router.replace("/admin");
     } catch (err) {
       setError("An unexpected error occurred");
     } finally {

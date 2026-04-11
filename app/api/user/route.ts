@@ -75,9 +75,10 @@ export async function GET(req: NextRequest) {
 
         // ✅ If userId is provided in the query parameter, allow only admins to override
         const userId = isAdmin && userIdParam ? userIdParam : session.user.id;
+        const projection = Array.from(new Set(["_id", ...allowedFields])).join(" ");
 
         const user = await User.findOne({ _id: userId })
-            .select("-password -internalNotes")
+            .select(projection)
             .lean<Record<string, unknown>>();
 
         if (!user) {

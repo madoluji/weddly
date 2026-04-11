@@ -1,4 +1,5 @@
 import { connectMongoDB } from "@/app/lib/mongodb";
+import { authorizeAdminRequest } from "@/app/lib/adminRouteAuth";
 import { NextRequest, NextResponse } from "next/server";
 import KYC from "@/models/kyc";
 
@@ -18,6 +19,11 @@ const monthNames = [
 export async function GET(
     req: NextRequest
 ) {
+    const { response } = authorizeAdminRequest(req);
+    if (response) {
+        return response;
+    }
+
     await connectMongoDB();
 
     try {
@@ -72,6 +78,12 @@ export async function GET(
         ]);
 
         const pendingCount = count - (rejectedCount + approvedCount);
+
+        const allDates = new Set([
+            ...submittedKYC.map((d: any) => d._id),
+            ...rejectedKYC.map((d: any) => d._id),
+            ...approvedKYC.map((d: any) => d._id),
+        ]);
 
         const mergedData = Array.from(allDates).sort().map(date => {
             const submittedData = submittedKYC.find(d => d._id === date) || { submittedKYC: 0 };

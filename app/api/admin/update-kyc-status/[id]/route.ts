@@ -1,9 +1,24 @@
 import { connectMongoDB } from "@/app/lib/mongodb";
+import { authorizeAdminRequest } from "@/app/lib/adminRouteAuth";
+import {
+    getAuditActorFromUser,
+    getClientIpAddress,
+    writeAdminAuditLog,
+} from "@/app/lib/adminAudit";
+import { adminError, adminSuccess } from "@/app/lib/adminApiResponse";
 import KYC from "@/models/kyc";
 import User from "@/models/user";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+    const { user, response } = authorizeAdminRequest(req);
+    if (response) {
+        return response;
+    }
+
+    const actor = getAuditActorFromUser(user);
+    const ipAddress = getClientIpAddress(req);
+
     const { id: userId } = await params;
     try {
         await connectMongoDB();
@@ -11,7 +26,17 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
 
         // Ensure the status is either "approved" or "rejected"
         if (!["approved", "rejected"].includes(status)) {
-            return NextResponse.json({ message: "Invalid status" }, { status: 400 });
+            await writeAdminAuditLog({
+                ...actor,
+                action: "kyc.status.update",
+                resourceType: "kyc",
+                resourceId: userId,
+                status: "failed",
+                errorMessage: "Invalid status",
+                ipAddress,
+                metadata: { requestedStatus: status },
+            });
+            return adminError("Invalid status", 400);
         }
 
         // Start a transaction to update both collections atomically
@@ -45,19 +70,47 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
             await session.commitTransaction();
             session.endSession();
 
-            return NextResponse.json({
-                message: "KYC verification updated successfully",
+            await writeAdminAuditLog({
+                ...actor,
+                action: "kyc.status.update",
+                resourceType: "kyc",
+                resourceId: userId,
+                status: "success",
+                ipAddress,
+                metadata: { status },
+            });
+
+            return adminSuccess({
                 kyc: updatedKYC,
-                user: updatedUser
-            }, { status: 200 });
+                user: updatedUser,
+            }, "KYC verification updated successfully", 200);
 
         } catch (error) {
             await session.abortTransaction();
             session.endSession();
-            return NextResponse.json({ message: "Error updating KYC", error }, { status: 500 });
+            await writeAdminAuditLog({
+                ...actor,
+                action: "kyc.status.update",
+                resourceType: "kyc",
+                resourceId: userId,
+                status: "failed",
+                errorMessage: "Error updating KYC",
+                ipAddress,
+                metadata: { status },
+            });
+            return adminError("Error updating KYC", 500);
         }
 
     } catch (error) {
-        return NextResponse.json({ message: "Server error", error }, { status: 500 });
+        await writeAdminAuditLog({
+            ...actor,
+            action: "kyc.status.update",
+            resourceType: "kyc",
+            resourceId: userId,
+            status: "failed",
+            errorMessage: "Server error",
+            ipAddress,
+        });
+        return adminError("Server error", 500);
     }
 }

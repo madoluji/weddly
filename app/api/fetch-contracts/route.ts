@@ -4,11 +4,12 @@ import Jobs from '@/models/jobs';
 import FreelancerInfo from '@/models/freelancerInfo';
 import ClientInfo from '@/models/clientinfo';
 import { NextRequest, NextResponse } from 'next/server';
+import { getCacheValue, setCacheValue } from '@/app/lib/serverCache';
+
+const FETCH_CONTRACTS_TTL_MS = 60 * 1000;
 
 export async function GET(req: NextRequest) {
     try {
-        await connectMongoDB();
-
         // Extract query parameters from URL
         const { searchParams } = new URL(req.url);
         const contractId = searchParams.get("contractId"); // Fetch specific contract
@@ -35,10 +36,23 @@ export async function GET(req: NextRequest) {
             query.freelancerId = freelancerId;
         }
 
+        const cacheKey = `fetch-contracts:${searchParams.toString()}`;
+        const cached = getCacheValue<{ success: true; data: unknown }>(cacheKey);
+        if (cached) {
+            return NextResponse.json(cached, {
+                headers: {
+                    "Cache-Control": "private, max-age=30, stale-while-revalidate=60",
+                    "X-Cache": "HIT",
+                },
+            });
+        }
+
+        await connectMongoDB();
+
         // Fetch contract(s) with job details
-        let contracts = await Contract.find(query)
-            .populate({ path: 'jobId', model: Jobs, select: "title budget description eventDate location experience tags" }) // Populate job details
-            .exec();
+        const contracts = await Contract.find(query)
+            .populate({ path: 'jobId', model: Jobs, select: "title budget description eventDate location experience tags" })
+            .lean();
 
         if (!contracts.length) {
             return NextResponse.json({ success: true, data: [] });
@@ -51,37 +65,68 @@ export async function GET(req: NextRequest) {
             return NextResponse.json({ success: false, message: 'Either clientId or freelancerId must be provided to fetch contracts.' }, { status: 400 });
         }
 
-        if (isClient) {
-            contracts = await Promise.all(
-                contracts.map(async (contract) => {
-                    if (contract.freelancerId) {
-                        const freelancerDetails = await FreelancerInfo.findOne({
-                            userId: contract.freelancerId,
-                        }).select("fullName location rate");
-                        return { ...contract.toObject(), freelancerDetails };
-                    }
-                    return contract.toObject();
-                })
-            );
-        }
+        const relatedUserIds = Array.from(
+            new Set(
+                contracts
+                    .map((contract) =>
+                        isClient ? contract.freelancerId?.toString() : contract.clientId?.toString()
+                    )
+                    .filter((value): value is string => Boolean(value))
+            )
+        );
 
-        if (isFreelancer) {
-            contracts = await Promise.all(
-                contracts.map(async (contract) => {
-                    if (contract.clientId) {
-                        const clientDetails = await ClientInfo.findOne({
-                            userId: contract.clientId,
-                        }).select("fullName location rate targetWeddingDate");
-                        return { ...contract.toObject(), clientDetails };
-                    }
-                    return contract.toObject();
-                })
-            );
-        }
+        const [freelancerProfiles, clientProfiles] = await Promise.all([
+            isClient
+                ? FreelancerInfo.find({ userId: { $in: relatedUserIds } })
+                      .select("userId fullName location rate")
+                      .lean()
+                : Promise.resolve([]),
+            isFreelancer
+                ? ClientInfo.find({ userId: { $in: relatedUserIds } })
+                      .select("userId fullName location rate targetWeddingDate")
+                      .lean()
+                : Promise.resolve([]),
+        ]);
 
-        return NextResponse.json({
-            success: true,
-            data: contractId ? contracts[0] : contracts, // Return a single object if fetching one
+        const freelancerProfileMap = new Map(
+            freelancerProfiles.map((profile) => [profile.userId.toString(), profile])
+        );
+        const clientProfileMap = new Map(
+            clientProfiles.map((profile) => [profile.userId.toString(), profile])
+        );
+
+        const enrichedContracts = contracts.map((contract) => {
+            if (isClient && contract.freelancerId) {
+                return {
+                    ...contract,
+                    freelancerDetails:
+                        freelancerProfileMap.get(contract.freelancerId.toString()) || null,
+                };
+            }
+
+            if (isFreelancer && contract.clientId) {
+                return {
+                    ...contract,
+                    clientDetails:
+                        clientProfileMap.get(contract.clientId.toString()) || null,
+                };
+            }
+
+            return contract;
+        });
+
+        const payload = {
+            success: true as const,
+            data: contractId ? enrichedContracts[0] : enrichedContracts,
+        };
+
+        setCacheValue(cacheKey, payload, FETCH_CONTRACTS_TTL_MS);
+
+        return NextResponse.json(payload, {
+            headers: {
+                "Cache-Control": "private, max-age=30, stale-while-revalidate=60",
+                "X-Cache": "MISS",
+            },
         });
 
     } catch (error) {

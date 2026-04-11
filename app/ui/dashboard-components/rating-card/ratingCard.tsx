@@ -4,46 +4,20 @@ import React, { useEffect, useState } from "react";
 import SliderRating from "./slider"; // Assuming SliderRating is a component that shows a rating slider
 import clsx from "clsx";
 import { usePathname } from "next/navigation"; // Import usePathname from Next.js
-import { fetchWithAuth } from "@/app/lib/fetchWIthAuth";
-import { useAuth } from "@/app/providers";
 import RatingSkeletonCard from "../skeletons/ratingSkeletonCard"; // Assuming RatingSkeletonCard is the skeleton component
+import { useDashboardCards } from "../DashboardCardsProvider";
 
 const Rating = () => {
   const pathname = usePathname(); // Get the current pathname
   const initialValue = 0; // Initial rating value
   const [count, setCount] = useState(initialValue); // State to hold the current rating value
-  const [rating, setRating] = useState(0); // State to hold the fetched rating
-  const [loading, setLoading] = useState(true); // Loading state
   const duration = 100; // Duration of the animation in milliseconds
 
-  const { session } = useAuth();
-  const userId = session?.user.id;
-
-  useEffect(() => {
-    if (!userId) return;
-
-    const fetchPayments = async () => {
-      try {
-        const isFreelancerPath = pathname.startsWith("/user");
-        setLoading(true); // Start loading
-        const response = await fetchWithAuth(
-          `/api/reviews?mode=${isFreelancerPath ? "freelancerRating" : "clientRating"}`,
-          {
-            next: { revalidate: 3600 }, // Supports Next.js revalidation
-          }
-        );
-
-        const { reviews } = await response.json();
-        setRating(reviews?.rating || 0); // Set the rating from the response
-      } catch (error) {
-        console.error("Error fetching payments:", error);
-      } finally {
-        setLoading(false); // Stop loading
-      }
-    };
-
-    fetchPayments();
-  }, [pathname, userId]);
+  const { data, loading } = useDashboardCards();
+  const isFreelancerPath = pathname.startsWith("/user");
+  const rating = isFreelancerPath
+    ? data?.ratings.freelancer || 0
+    : data?.ratings.client || 0;
 
   // Animation effect for rating
   useEffect(() => {

@@ -12,6 +12,7 @@ import PostingSkeleton from "@/app/ui/dashboard-components/skeletons/postingSkel
 import JobDetailsSlider from "@/app/ui/dashboard-components/job-details-slider";
 import RatingSkeletonCard from "@/app/ui/dashboard-components/skeletons/ratingSkeletonCard";
 import ScheduleBox from "@/app/ui/dashboard-components/scheduleBox";
+import { DashboardCardsProvider } from "@/app/ui/dashboard-components/DashboardCardsProvider";
 interface Props {
   children: ReactNode;
 }
@@ -21,25 +22,27 @@ export default function Layout({ children }: Props) {
     <>
       <div className="grid px-5 py-10 md:px-10 gap-16  dashboard:grid-rows-2  ">
         <UserProfileLoader />
-        <div className="hidden w-full gap-5 xl:grid xl:grid-cols-2 2xl:grid-cols-5">
-          <div className="h-full">
-            <ProfileCard mode={"Freelancer"} />
+        <DashboardCardsProvider>
+          <div className="hidden w-full gap-5 xl:grid xl:grid-cols-2 2xl:grid-cols-5">
+            <div className="h-full">
+              <ProfileCard mode={"Freelancer"} />
+            </div>
+            <div className="h-full">
+              <OrderCard mode="Freelancer" />
+            </div>
+            <div className="h-full">
+              <Suspense>
+                <RatingCard />
+              </Suspense>
+            </div>
+            <div className="h-full">
+              <FinanceCard />
+            </div>
+            <div className="h-full">
+              <ReviewsCard />
+            </div>
           </div>
-          <div className="h-full">
-            <OrderCard mode="Freelancer" />
-          </div>
-          <div className="h-full">
-            <Suspense>
-              <RatingCard />
-            </Suspense>
-          </div>
-          <div className="h-full">
-            <FinanceCard />
-          </div>
-          <div className="h-full">
-            <ReviewsCard />
-          </div>
-        </div>
+        </DashboardCardsProvider>
         <div
           className="w-full
         bg-white

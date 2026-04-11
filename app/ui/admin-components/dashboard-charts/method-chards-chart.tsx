@@ -21,6 +21,9 @@ const PaymentMethodsChart = ({ timeframe }: ChartProps) => {
   const [chartData, setChartData] = useState<any[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [percentageChange, setPercentageChange] = useState<any>({});
+  const hasData = chartData.length > 0;
+  const hasTrendData = chartData.length > 1;
+  const singlePoint = chartData[0];
 
   useEffect(() => {
     async function fetchChartData() {
@@ -139,22 +142,48 @@ const PaymentMethodsChart = ({ timeframe }: ChartProps) => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
           >
+            {!hasData && (
+              <div className="h-60 flex items-center justify-center text-sm text-gray-500">
+                No payment method data available for this timeframe.
+              </div>
+            )}
+            {hasData && !hasTrendData && (
+              <p className="mb-3 text-sm text-amber-600">
+                Only one data point found. Switch timeframe to view a trend.
+              </p>
+            )}
+            {hasData && !hasTrendData && singlePoint && (
+              <div className="mb-4 rounded-lg border border-gray-200 bg-gray-50 p-4">
+                <p className="text-sm text-gray-600 mb-3">Snapshot for {singlePoint.date}</p>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm">
+                  {Object.entries(singlePoint)
+                    .filter(([key]) => key !== "date")
+                    .map(([key, value]) => (
+                      <div key={key} className="rounded border border-slate-200 bg-white p-3">
+                        <p className="text-gray-500 capitalize">{key}</p>
+                        <p className="text-xl font-semibold text-slate-700">{Number(value) || 0}</p>
+                      </div>
+                    ))}
+                </div>
+              </div>
+            )}
             {/* Area Chart */}
-            <AreaChart
-              data={chartData}
-              categories={["esewa", "khalti", "paypal"]} // Updated to match your data
-              index="date" // Changed from _id to date
-              colors={["blue", "amber", "fuchsia"]} // Adjusted colors for better distinction
-              yAxisWidth={50}
-              title="Payment Methods Statistics"
-              xAxisLabel="Date"
-              yAxisLabel="Number of Transactions"
-              showLegend={true} // Added legend to identify payment methods
-              // Smooth curve for better visualization
-              valueFormatter={(value) => `${value}`} // Simple integer formatting
-            />
+            {hasTrendData && (
+              <AreaChart
+                data={chartData}
+                categories={["esewa", "khalti", "paypal"]}
+                index="date"
+                colors={["blue", "amber", "fuchsia"]}
+                yAxisWidth={50}
+                title="Payment Methods Statistics"
+                xAxisLabel="Date"
+                yAxisLabel="Number of Transactions"
+                showLegend={true}
+                valueFormatter={(value) => `${value}`}
+              />
+            )}
           </motion.div>
-          <ChangeDisplay change={percentageChange} />
+          {hasData && <ChangeDisplay change={percentageChange} />}
         </>
       )}
     </>

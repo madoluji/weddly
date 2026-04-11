@@ -106,6 +106,11 @@ export const authOptions: NextAuthOptions = {
             return null;
           }
 
+          if (!user.password) {
+            // Account was created via OAuth (Google/GitHub) and has no password
+            throw new Error("This account uses social login. Please sign in with Google or GitHub.");
+          }
+
           const passwordsMatch = await bcrypt.compare(password, user.password);
           if (!passwordsMatch) {
             console.log("Password mismatch for user:", email);

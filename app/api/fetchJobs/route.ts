@@ -143,23 +143,31 @@ export async function GET(req: NextRequest) {
         return NextResponse.json({ message: "Forbidden" }, { status: 403 });
       }
 
-      const [proposalCount, saved] = await Promise.all([
+      const [proposalCount, saved, clientUser] = await Promise.all([
         proposal.countDocuments({ jobId }),
         isSaved ? SavedJobs.exists({ userId, jobId: jobId }) : Promise.resolve(false),
+        User.findById(job.userId).select("name lastName profilePicture").lean(),
       ]);
+
+      const fullName = clientUser
+        ? `${clientUser.name || ""} ${clientUser.lastName || ""}`.trim()
+        : job.fullName;
+
+      const payload = {
+        ...withLocationFields(job),
+        proposalCount,
+        fullName: fullName || job.fullName || "Client",
+        profilePicture: clientUser?.profilePicture || null,
+      };
 
       if (isSaved) {
         return NextResponse.json({
-          ...withLocationFields(job),
-          proposalCount,
+          ...payload,
           isSaved: Boolean(saved),
         });
       }
 
-      return NextResponse.json({
-        ...withLocationFields(job),
-        proposalCount,
-      });
+      return NextResponse.json(payload);
     }
 
     if (clientId) {

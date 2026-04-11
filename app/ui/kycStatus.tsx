@@ -4,7 +4,7 @@ import useFetch from "../hooks/useFetch";
 import Link from "next/link";
 import { useAuth } from "@/app/providers";
 import { usePathname, useRouter } from "next/navigation"; // ✅ Use this instead of next/router
-import { fetchWithAuth } from "../lib/fetchWIthAuth";
+import { useUserAccess } from "./UserAccessProvider";
 
 export interface KYCStatusResponse {
   kycVerified: boolean;
@@ -23,34 +23,7 @@ const KYCStatus: React.FC = () => {
     { enabled: status === "authenticated" }
   );
 
-  interface UserRoles {
-    client?: boolean;
-    freelancer?: boolean;
-    venue?: boolean;
-  }
-
-  interface UserData {
-    roles: UserRoles;
-    isFirstLogin?: boolean;
-  }
-
-  const [userData, setUserData] = useState<UserData | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    if (status !== "authenticated") return;
-
-    fetchWithAuth("/api/user?fields=roles,isFirstLogin")
-      .then((res) => res.json())
-      .then((data) => {
-        setUserData(data);
-        setLoading(false);
-      })
-      .catch((err) => {
-        console.error("Error fetching user data:", err);
-        setLoading(false);
-      });
-  }, [status]);
+  const { data: userData, loading } = useUserAccess();
 
   useEffect(() => {
     if (loading || !userData || !verificationData) return;

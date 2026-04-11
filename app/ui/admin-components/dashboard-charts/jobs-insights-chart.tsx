@@ -25,6 +25,8 @@ interface ChartProps {
 const JobsProposalChart = ({ timeframe }: ChartProps) => {
   const [data, setData] = useState<ChartData[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
+  const hasData = data.length > 0;
+  const hasTrendData = data.length > 1;
 
   useEffect(() => {
     async function fetchJobsProposals() {
@@ -59,25 +61,37 @@ const JobsProposalChart = ({ timeframe }: ChartProps) => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
+          {!hasData && (
+            <div className="h-60 flex items-center justify-center text-sm text-gray-500">
+              No jobs/proposals data available for this timeframe.
+            </div>
+          )}
+          {hasData && !hasTrendData && (
+            <p className="mb-3 text-sm text-amber-600">
+              Only one data point found. Switch timeframe to view a trend.
+            </p>
+          )}
           {/* Area Chart */}
-          <AreaChart
-            data={data}
-            categories={[
-              "activeJobs",
-              "inProgressJobs",
-              "completedJobs",
-              "canceledJobs",
-              "submitedProposals",
-              "acceptedProposals",
-            ]}
-            index="date"
-            colors={["blue", "emerald", "amber", "pink", "cyan", "lime"]}
-            yAxisWidth={50}
-            showXAxis={true}
-            xAxisLabel="Date"
-            yAxisLabel="Jobs & Proposals Count"
-            title="Jobs & Proposals Growth"
-          />
+          {hasData && (
+            <AreaChart
+              data={data}
+              categories={[
+                "activeJobs",
+                "inProgressJobs",
+                "completedJobs",
+                "canceledJobs",
+                "submitedProposals",
+                "acceptedProposals",
+              ]}
+              index="date"
+              colors={["blue", "emerald", "amber", "pink", "cyan", "lime"]}
+              yAxisWidth={50}
+              showXAxis={true}
+              xAxisLabel="Date"
+              yAxisLabel="Jobs & Proposals Count"
+              title="Jobs & Proposals Growth"
+            />
+          )}
 
           {/* Summary Data */}
           <p className="text-center flex gap-4 mt-6 text-sm">

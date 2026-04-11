@@ -4,6 +4,7 @@ import AuthProvider from "./providers";
 import Appcontextprovider from "./context/appContext";
 import { getServerSession } from "next-auth";
 import { authOptions } from "./lib/auth";
+import { UserAccessProvider } from "./ui/UserAccessProvider";
 
 export default async function RootLayout({
   children,
@@ -34,7 +35,9 @@ export default async function RootLayout({
       <body>
         <div className="min-h-screen">
           <AuthProvider session={session}>
-            <Appcontextprovider>{children}</Appcontextprovider>
+            <UserAccessProvider>
+              <Appcontextprovider>{children}</Appcontextprovider>
+            </UserAccessProvider>
           </AuthProvider>
         </div>
       </body>

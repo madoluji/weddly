@@ -6,6 +6,8 @@ import { NextRequest, NextResponse } from "next/server";
 import SavedFreelancers from "@/models/savedFreelancers";
 import User from "@/models/user";
 import clientinfo from "@/models/clientinfo";
+import Contract from "@/models/contract";
+import mongoose from "mongoose";
 
 export async function GET(req: NextRequest) {
   const session = await getServerSession(authOptions);
@@ -129,6 +131,84 @@ export async function GET(req: NextRequest) {
       new Set(freelancers.map((freelancer) => freelancer.userId.toString()))
     );
 
+    const clientPreferences = await clientinfo
+      .findOne({ userId })
+      .select("targetWeddingDate")
+      .lean();
+
+    const targetWeddingDateRaw = clientPreferences?.targetWeddingDate;
+    const targetWeddingDate = targetWeddingDateRaw
+      ? new Date(targetWeddingDateRaw)
+      : null;
+    const hasValidTargetDate = Boolean(
+      targetWeddingDate && !Number.isNaN(targetWeddingDate.getTime())
+    );
+
+    const upcomingContractCounts = new Map<string, number>();
+    const conflictContractCounts = new Map<string, number>();
+
+    if (freelancerUserIds.length > 0) {
+      const now = new Date();
+      const freelancerObjectIds = freelancerUserIds
+        .filter((id) => mongoose.Types.ObjectId.isValid(id))
+        .map((id) => new mongoose.Types.ObjectId(id));
+
+      const upcomingRows = freelancerObjectIds.length
+        ? await Contract.aggregate([
+            {
+              $match: {
+                freelancerId: { $in: freelancerObjectIds },
+                status: { $in: ["pending", "active"] },
+                deadline: { $gte: now },
+              },
+            },
+            {
+              $group: {
+                _id: "$freelancerId",
+                count: { $sum: 1 },
+              },
+            },
+          ])
+        : [];
+
+      for (const row of upcomingRows) {
+        upcomingContractCounts.set(row._id.toString(), Number(row.count) || 0);
+      }
+
+      if (hasValidTargetDate && targetWeddingDate) {
+        const windowDays = 7;
+        const conflictStart = new Date(targetWeddingDate);
+        conflictStart.setDate(conflictStart.getDate() - windowDays);
+        conflictStart.setHours(0, 0, 0, 0);
+
+        const conflictEnd = new Date(targetWeddingDate);
+        conflictEnd.setDate(conflictEnd.getDate() + windowDays);
+        conflictEnd.setHours(23, 59, 59, 999);
+
+        const conflictRows = freelancerObjectIds.length
+          ? await Contract.aggregate([
+              {
+                $match: {
+                  freelancerId: { $in: freelancerObjectIds },
+                  status: { $in: ["pending", "active"] },
+                  deadline: { $gte: conflictStart, $lte: conflictEnd },
+                },
+              },
+              {
+                $group: {
+                  _id: "$freelancerId",
+                  count: { $sum: 1 },
+                },
+              },
+            ])
+          : [];
+
+        for (const row of conflictRows) {
+          conflictContractCounts.set(row._id.toString(), Number(row.count) || 0);
+        }
+      }
+    }
+
     const [savedFreelancerRecords, users] = await Promise.all([
       SavedFreelancers.find({ userId }).select("freelancerId").lean(),
       User.find({ _id: { $in: freelancerUserIds } })
@@ -160,11 +240,30 @@ export async function GET(req: NextRequest) {
         saved: savedFreelancerIds.has(freelancer.userId.toString()), // Check if saved
         profilePicture:
           userMetaByUserId.get(freelancer.userId.toString())?.profilePicture || "/images/image.png", // Include profile picture
+        upcomingJobsCount: upcomingContractCounts.get(freelancer.userId.toString()) || 0,
+        hasDateConflict: hasValidTargetDate
+          ? (conflictContractCounts.get(freelancer.userId.toString()) || 0) > 0
+          : false,
+        availabilityStatus: hasValidTargetDate
+          ? (conflictContractCounts.get(freelancer.userId.toString()) || 0) > 0
+            ? "conflict"
+            : "available"
+          : "unknown",
       }));
 
+    const orderedFreelancers = bestMatches
+      ? freelancersWithSavedFlag.sort((a, b) => {
+          if (a.hasDateConflict !== b.hasDateConflict) {
+            return a.hasDateConflict ? 1 : -1;
+          }
+          return (a.upcomingJobsCount || 0) - (b.upcomingJobsCount || 0);
+        })
+      : freelancersWithSavedFlag;
 
-
-    return NextResponse.json({ freelancers: freelancersWithSavedFlag });
+    return NextResponse.json({
+      freelancers: orderedFreelancers,
+      targetWeddingDate: hasValidTargetDate ? targetWeddingDateRaw : null,
+    });
   } catch (error) {
     console.error("Error fetching Freelancers:", error);
     return NextResponse.json(

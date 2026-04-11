@@ -4,7 +4,7 @@ export default async function LoginPage() {
   return (
     <div className="flex justify-center p-10 items-center align-middle   h-screen relative ">
       {/* <Image
-        src="/logo/weddlylogo-v2.png"
+        src="/logo/weddlylogo.png"
         alt="logo"
         width={50}
         height={50}

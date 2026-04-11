@@ -19,6 +19,7 @@
     "test": "tsx --test tests/**/*.test.ts",
     "test:filters": "tsx --test tests/job-filters.test.ts",
     "test:flow": "tsx --test tests/find-job-flow.test.ts",
+    "seed:superadmin": "tsx scripts/seed-superadmin.ts",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:headed": "playwright test --headed"
